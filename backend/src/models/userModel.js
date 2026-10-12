@@ -27,7 +27,7 @@ function createUserModel(pool) {
             return rows[0] || null;
         },
 
-        async createUser({ fullname, email, passwordHash, roleId }) {
+        async createUser({ fullname, email, passwordHash, roleId, invitationToken }) {
             // Lightweight injected models used by unit tests expose query only.
             if (typeof pool.connect !== "function") {
                 const { rows } = await query("createUser", `
@@ -40,22 +40,29 @@ function createUserModel(pool) {
             const client = await pool.connect();
             try {
                 await client.query("BEGIN");
+                let invitation;
+                if (invitationToken !== undefined) {
+                    if (typeof invitationToken!=="string" || !/^[a-f0-9]{64}$/.test(invitationToken)) throw Object.assign(new Error("Lời mời không hợp lệ"),{ status:400,expose:true });
+                    const hash=require("node:crypto").createHash("sha256").update(invitationToken).digest("hex");
+                    invitation=(await client.query("SELECT * FROM project_invitations WHERE token_hash=$1 AND lower(email)=lower($2) AND status='pending' AND expires_at>CURRENT_TIMESTAMP FOR UPDATE",[hash,email])).rows[0];
+                    if (!invitation) throw Object.assign(new Error("Lời mời đã hết hạn hoặc đã bị hủy"),{ status:409,expose:true });
+                }
                 const { rows } = await client.query(`
                     INSERT INTO users (fullname, email, password_hash, role_id)
                     VALUES ($1, $2, $3, $4)
                     RETURNING id, fullname, email, role_id, created_at
                 `, [fullname, email, passwordHash, roleId]);
                 const user = rows[0];
-                await client.query(`
+                if (invitation) await client.query(`
                     INSERT INTO project_members(user_id,project_id,role_id)
-                    SELECT $1,project_id,role_id FROM project_invitations
-                    WHERE lower(email)=lower($2) AND status='pending'
+                    SELECT $1,project_id,role_id FROM project_invitations WHERE id=$2
                     ON CONFLICT(user_id,project_id) DO NOTHING
-                `, [user.id, email]);
-                await client.query(`
+                `, [user.id, invitation.id]);
+                if (invitation) await client.query(`
                     UPDATE project_invitations SET status='accepted',accepted_by=$1,accepted_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
-                    WHERE lower(email)=lower($2) AND status='pending'
-                `, [user.id, email]);
+                    WHERE id=$2
+                `, [user.id, invitation.id]);
+                if (invitation) await client.query(`INSERT INTO audit_logs(project_id,actor_id,module,action,object_id,after_value) VALUES($1,$2,'members','accept_invitation',$3,$4)`,[invitation.project_id,user.id,String(invitation.id),{ email }]);
                 await client.query("COMMIT");
                 return user;
             } catch (error) {
@@ -72,6 +79,8 @@ function createUserModel(pool) {
                     users.fullname,
                     users.email,
                     users.role_id,
+                    users.system_role,
+                    users.is_active,
                     roles.name AS role
                 FROM users
                 LEFT JOIN roles ON roles.id = users.role_id
@@ -93,6 +102,8 @@ function createUserModel(pool) {
                         users.email,
                         users.password_hash,
                         users.role_id,
+                        users.system_role,
+                        users.is_active,
                         roles.name AS role,
                         users.failed_login_attempts,
                         users.locked_until,

@@ -11,9 +11,14 @@ import DashboardLayout from "../components/DashboardLayout";
 import { Empty, NoProject, Modal } from "../components/OperationsUI";
 import { Skeleton, SectionHeading, StatusDistribution } from "../components/OperationsVisuals";
 import Icon from "../components/OperationsIcon";
+import useRemote from "../hooks/useRemote";
 import { validProjectId } from "../services/navigation";
 
 function ProjectWorkItems({ projectId }) {
+    const permissions=useRemote(`/projects/${projectId}/overview`);
+    const projectRole=permissions.data?.project?.member_role;
+    const canEdit=["admin","manager","project_manager","engineer","member"].includes(projectRole);
+    const canMilestone=["admin","manager","project_manager","viewer"].includes(projectRole);
     const [items, setItems] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [dependencies, setDependencies] = useState([]);
@@ -121,17 +126,17 @@ function ProjectWorkItems({ projectId }) {
         <div className="work-items-page">
             <div className="wbs-overview"><section className="ops-card wbs-project-summary"><SectionHeading icon="building" title="Cấu trúc phân rã công việc" description={`Dự án #${projectId} · Hạng mục → Hạng mục con → Công việc`} /><div className="wbs-summary-counts"><div><strong>{loading ? "—" : items.length}</strong><span>Hạng mục</span></div><div><strong>{loading ? "—" : tasks.length}</strong><span>Công việc</span></div><div><strong>{loading ? "—" : dependencies.length}</strong><span>Quan hệ phụ thuộc</span></div></div><Link className="wbs-schedule-link" to={`/schedule?projectId=${projectId}`}>Xem tiến độ công việc <Icon name="arrow" size={16} /></Link></section><section className="ops-card"><StatusDistribution title="Trạng thái hạng mục" entries={[["todo","Chưa thực hiện","#a6b4c8"],["doing","Đang thực hiện","#1677ff"],["done","Hoàn thành","#17b26a"]].map(([status,label,color])=>({label,color,value:items.filter((item)=>item.status===status).length}))} label="Hạng mục" /></section></div>
             <section className="ops-card work-items-panel">
-                <SectionHeading icon="tree" title="Cây hạng mục" description="Chọn tên hạng mục để xem chi tiết và các công việc bên trong." action={<Button onClick={() => setParentId(null)}><Icon name="plus" size={15} />Thêm hạng mục gốc</Button>} />
-                <div className="wbs-create"><span>{parentId !== null ? `Thêm vào: ${items.find((item)=>item.id===parentId)?.title || "Hạng mục con"}` : "Thêm hạng mục gốc"}</span>
+                <SectionHeading icon="tree" title="Cây hạng mục" description="Chọn tên hạng mục để xem chi tiết và các công việc bên trong." action={canEdit && <Button onClick={() => setParentId(null)}><Icon name="plus" size={15} />Thêm hạng mục gốc</Button>} />
+                {canEdit && <div className="wbs-create"><span>{parentId !== null ? `Thêm vào: ${items.find((item)=>item.id===parentId)?.title || "Hạng mục con"}` : "Thêm hạng mục gốc"}</span>
                 <Form form={form} layout="inline" onFinish={(values) => save(null, values)}>
                     <Form.Item name="title" rules={[{ required: true, message: "Nhập tên hạng mục" }]}>
                         <Input placeholder="Tên hạng mục mới" />
                     </Form.Item>
                     <Button type="primary" htmlType="submit">Tạo</Button>
                 </Form>
-                </div>
+                </div>}
                 {error && <Alert type="error" message={error} />}
-                {loading ? <Skeleton /> : !items.length ? <Empty icon="tree" title="Bắt đầu từ hạng mục đầu tiên">Tạo hạng mục gốc, sau đó thêm hạng mục con và công việc để xây dựng cấu trúc dự án.</Empty> : <div className="wbs-tree-scroll" role="region" aria-label="Cấu trúc hạng mục" tabIndex={0}><WorkItemTree items={items} tasks={tasks}
+                {loading ? <Skeleton /> : !items.length ? <Empty icon="tree" title="Bắt đầu từ hạng mục đầu tiên">Tạo hạng mục gốc, sau đó thêm hạng mục con và công việc để xây dựng cấu trúc dự án.</Empty> : <div className="wbs-tree-scroll" role="region" aria-label="Cấu trúc hạng mục" tabIndex={0}><WorkItemTree items={items} tasks={tasks} readOnly={!canEdit}
                     onSelect={setSelectedId} selectedId={selectedId}
                     onAddTask={(work_item_id) => setTaskEditor({ work_item_id })} onEditTask={setTaskEditor}
                     onSave={save} onDelete={remove}
@@ -166,13 +171,13 @@ function ProjectWorkItems({ projectId }) {
                                                     Hạn hoàn thành: <b>{m.target_date}</b>
                                                 </div>
                                             </div>
-                                            <Button size="small" danger onClick={() => handleDeleteMilestone(m.id)}>
+                                            {canMilestone && <Button size="small" danger onClick={() => handleDeleteMilestone(m.id)}>
                                                 Xóa mốc
-                                            </Button>
+                                            </Button>}
                                         </div>
                                     );
                                 }
-                                return (
+                                return canMilestone ? (
                                     <Form form={milestoneForm} layout="vertical" onFinish={handleSaveMilestone}>
                                         <Form.Item name="name" label="Tên mốc bàn giao" rules={[{ required: true, message: "Nhập tên mốc" }]}>
                                             <Input placeholder="Ví dụ: Bàn giao phần thô, Nghiệm thu móng..." />
@@ -184,7 +189,7 @@ function ProjectWorkItems({ projectId }) {
                                             Đặt mốc bàn giao
                                         </Button>
                                     </Form>
-                                );
+                                ) : <p>Chưa có mốc bàn giao.</p>;
                             })()}
                         </div>
 
@@ -192,7 +197,7 @@ function ProjectWorkItems({ projectId }) {
                         {selectedTasks.length ? (
                             <div className="wbs-detail-tasks">
                                 {selectedTasks.map((task) => (
-                                    <button key={task.id} onClick={() => { setSelectedId(null); setTaskEditor(task); }}>
+                                    <button key={task.id} disabled={!canEdit} onClick={() => { setSelectedId(null); setTaskEditor(task); }}>
                                         <Icon name="task" />
                                         <span>
                                             <strong>{task.name}</strong>
@@ -210,7 +215,7 @@ function ProjectWorkItems({ projectId }) {
                         )}
                     </Modal>
                 )}
-                {taskEditor && <TaskForm key={`${projectId}-${taskEditor.id || "new"}`} projectId={projectId}
+                {canEdit && taskEditor && <TaskForm key={`${projectId}-${taskEditor.id || "new"}`} projectId={projectId}
                     task={taskEditor} items={items} tasks={tasks} dependencies={dependencies}
                     onSave={persistTask} onClose={() => setTaskEditor(null)}
                     onDependencyAdded={(dependency) => setDependencies((current) => [...current, dependency])}

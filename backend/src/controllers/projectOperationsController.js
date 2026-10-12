@@ -1,9 +1,9 @@
 function createProjectOperationsController({ service }) {
     const project = (req) => Number(req.params.projectId);
-    const actor = (req) => ({ id: req.user.id, role: req.projectMember?.role || req.user.role });
+    const actor = (req) => ({ id: req.user.id, role: req.projectMember?.role,system_role:req.user.system_role });
     const task = (req) => Number(req.params.taskId);
     return {
-        listProjects: async (req, res) => res.json({ projects: await service.listProjects(req.user.id), can_create: req.user.role === "admin" }),
+        listProjects: async (req, res) => res.json({ projects: await service.listProjects(req.user.id,req.user.system_role==="super_admin"), can_create: req.user.system_role === "super_admin" }),
         createProject: async (req, res) => res.status(201).json({ project: await service.createProject(actor(req), req.body || {}) }),
         project: async (req, res) => res.json({ project: await service.project(project(req), actor(req)) }),
         updateProject: async (req, res) => res.json({ project: await service.updateProject(project(req), actor(req), req.body || {}) }),
@@ -17,6 +17,7 @@ function createProjectOperationsController({ service }) {
         changeMemberRole: async (req,res) => res.json({ member:await service.changeMemberRole(project(req),actor(req),Number(req.params.userId),req.body || {}) }),
         removeMember: async (req,res) => { await service.removeMember(project(req),actor(req),Number(req.params.userId)); res.sendStatus(204); },
         cancelInvitation: async (req,res) => { await service.cancelInvitation(project(req),actor(req),Number(req.params.invitationId)); res.sendStatus(204); },
+        renewInvitation: async (req,res) => res.json(await service.renewInvitation(project(req),actor(req),Number(req.params.invitationId))),
         teams: async (req, res) => res.json({ teams: await service.teams(project(req), actor(req)) }),
         createTeam: async (req, res) => res.status(201).json({ team: await service.createTeam(project(req), actor(req), req.body || {}) }),
         assignments: async (req, res) => res.json(await service.assignments(project(req), actor(req))),

@@ -79,18 +79,18 @@ function statements(client) {
 
 describe("Migration runner (no database connection)", () => {
     test("adopts the verified 015 baseline history and applies actuals without rerunning baseline DDL", async () => {
-        const legacy = { ...history.at(-1), name: "015_create_baselines_and_milestones.sql" };
+        const legacy = { ...history.find((h) => h.name==="016_create_baselines_and_milestones.sql"), name: "015_create_baselines_and_milestones.sql" };
         const client = makeClient({ applied: [...history.slice(0, 14), legacy] });
-        expect(await runMigrations({ client })).toEqual(["Applied: 015_add_task_actuals.sql"]);
-        expect(statements(client).filter(statement => sql.includes(statement))).toEqual([sql[14]]);
+        expect(await runMigrations({ client })).toEqual(["Applied: 015_add_task_actuals.sql","Applied: 017_sprint4_5.sql","Applied: 018_system_administration.sql"]);
+        expect(statements(client).filter(statement => sql.includes(statement))).toEqual([sql[14],sql[16],sql[17]]);
         expect(client.query).toHaveBeenCalledWith("UPDATE schema_migrations SET name = $1 WHERE name = $2 AND checksum = $3",
-            [history.at(-1).name, legacy.name, legacy.checksum]);
+            ["016_create_baselines_and_milestones.sql", legacy.name, legacy.checksum]);
     });
     test("legacy baseline status is read-only and an unknown checksum is rejected", async () => {
-        const legacy = { ...history.at(-1), name: "015_create_baselines_and_milestones.sql" };
+        const legacy = { ...history.find((h) => h.name==="016_create_baselines_and_milestones.sql"), name: "015_create_baselines_and_milestones.sql" };
         const client = makeClient({ applied: [...history.slice(0, 14), legacy] });
         const messages = await runMigrations({ client, command: "status" });
-        expect(messages.slice(-2)).toEqual(["pending: 015_add_task_actuals.sql", "applied: 016_create_baselines_and_milestones.sql"]);
+        expect(messages.slice(-4)).toEqual(["pending: 015_add_task_actuals.sql", "applied: 016_create_baselines_and_milestones.sql","pending: 017_sprint4_5.sql","pending: 018_system_administration.sql"]);
         expect(statements(client).some(statement => statement.startsWith("UPDATE"))).toBe(false);
         await expect(runMigrations({ client: makeClient({ applied: [...history.slice(0, 14), { ...legacy, checksum: "bad" }] }) })).rejects.toThrow("checksum/history");
     });

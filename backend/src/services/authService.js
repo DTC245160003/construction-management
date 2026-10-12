@@ -22,7 +22,7 @@ function createAuthService({
     hashPassword = hashArgon2id
 }) {
     return {
-        async register({ fullname, email, password, role } = {}) {
+        async register({ fullname, email, password, role, invitation_token } = {}) {
             if (
                 typeof fullname !== "string"
                 || !fullname.trim()
@@ -47,6 +47,8 @@ function createAuthService({
                 throw registrationError(400, "Mật khẩu phải có ít nhất 8 ký tự và tối đa 1024 byte");
             }
 
+            role ??= "engineer";
+            if (role === "user") role = "engineer";
             if (typeof role !== "string" || !role.trim()) {
                 throw registrationError(400, "Vui lòng chọn vai trò");
             }
@@ -76,9 +78,10 @@ function createAuthService({
                     fullname: fullname.trim(),
                     email,
                     passwordHash,
-                    roleId: selectedRole.id
+                    roleId: selectedRole.id,
+                    invitationToken: invitation_token
                 });
-                return { ...user, role: selectedRole.name };
+                return { ...user, role: selectedRole.name,system_role:"user",is_active:true };
             } catch (error) {
                 if (error.code === "23505") {
                     const conflict = registrationError(409, "Email đã được sử dụng");
@@ -112,10 +115,11 @@ function createAuthService({
                 email.trim().toLowerCase(),
                 async (user, changes) => {
                     // Unknown and locked accounts use the dummy hash.
-                    const hash = user && !user.is_locked ? user.password_hash : null;
+                    const hash = user && !user.is_locked && user.is_active!==false ? user.password_hash : null;
                     const matches = await verifyPassword(hash, password);
 
                     if (!user) return null;
+                    if (user.is_active===false) return null;
 
                     if (user.is_locked) {
                         return {
@@ -150,7 +154,9 @@ function createAuthService({
                         fullname: user.fullname,
                         email: user.email,
                         role_id: user.role_id,
-                        role: user.role
+                        role: user.role,
+                        system_role:user.system_role || "user",
+                        is_active:user.is_active!==false
                     };
                 }
             );

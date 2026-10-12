@@ -1,0 +1,131 @@
+{
+  "checkedOn": "2026-10-09",
+  "backend": {
+    "total": 241,
+    "passed": 241,
+    "failed": 0,
+    "skipped": 0,
+    "suites": 23,
+    "durationMs": 50238,
+    "postgresFiles": [
+      {
+        "file": "sprint2.postgres.test.js",
+        "total": 28,
+        "passed": 28
+      },
+      {
+        "file": "siteManagement.postgres.test.js",
+        "total": 10,
+        "passed": 10
+      },
+      {
+        "file": "projectOperations.postgres.test.js",
+        "total": 9,
+        "passed": 9
+      },
+      {
+        "file": "systemAdmin.postgres.test.js",
+        "total": 12,
+        "passed": 12
+      },
+      {
+        "file": "sprint45.postgres.test.js",
+        "total": 10,
+        "passed": 10
+      },
+      {
+        "file": "sprint3.integration.postgres.test.js",
+        "total": 4,
+        "passed": 4
+      }
+    ]
+  },
+  "frontend": {
+    "uiRegression": {
+      "startTime": "2026-10-08T17:17:45.019Z",
+      "duration": 112892.188,
+      "expected": 32,
+      "skipped": 1,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "realRegression": {
+      "startTime": "2026-10-08T17:26:04.770Z",
+      "duration": 66017.55500000001,
+      "expected": 12,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "sprint45": {
+      "startTime": "2026-10-08T17:20:16.672Z",
+      "duration": 134791.364,
+      "expected": 9,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "workerDevelopment": {
+      "startTime": "2026-10-08T17:22:10.272Z",
+      "duration": 7419.38,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "systemAdmin": {
+      "startTime": "2026-10-08T17:30:15.517Z",
+      "duration": 20315.547,
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "unit": {
+      "total": 17,
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 210.5869
+    }
+  },
+  "lint": {
+    "backend": "PASS",
+    "frontend": "PASS"
+  },
+  "build": "PASS",
+  "remoteCI": "NOT_RUN",
+  "docker": "NOT_RUN",
+  "demoGrant": "DRY_RUN_ONLY",
+  "backup": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "mode": "Original T46/T47 shell scripts + native PostgreSQL 17, isolated test databases",
+    "counts": {
+      "users": 1,
+      "projects": 1,
+      "work_items": 1,
+      "tasks": 2,
+      "dependencies": 1,
+      "schedule_results": 2,
+      "baselines": 2,
+      "milestones": 1,
+      "milestone_alerts": 1,
+      "site_journals": 1,
+      "site_photos": 1,
+      "journal_versions": 2,
+      "journal_writes": 1,
+      "journal_catalog": 7,
+      "system_admin_guard": 1,
+      "audit_logs": 3
+    },
+    "originalPhotoBytesMatch": true,
+    "restoredSystemAdmin": true,
+    "restoredLastSuperGuard": true,
+    "atomicBackup": true,
+    "retentionCount": 2,
+    "rejectNonempty": true,
+    "rejectSourceAsTarget": true
+  }
+}

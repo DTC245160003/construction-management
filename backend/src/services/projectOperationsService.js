@@ -1,9 +1,12 @@
 const v = require("./operationValidation");
+const { randomBytes,createHash } = require("node:crypto");
+const inviteToken = () => randomBytes(32).toString("hex");
+const tokenHash = (token) => createHash("sha256").update(token).digest("hex");
 const { workingDate } = require("./workingCalendar");
 const MANAGERS = ["admin", "project_manager", "manager"];
 const workerId = (actor) => actor.role === "worker" ? actor.id : null;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const MEMBER_ROLES = ["admin", "project_manager", "engineer", "worker", "accountant", "viewer"];
+const MEMBER_ROLES = ["admin", "manager", "project_manager", "engineer", "worker", "accountant", "viewer"];
 
 function peakAssignments(tasks, task) {
     const events = [];
@@ -39,9 +42,9 @@ function createProjectOperationsService({ model }) {
         return task;
     }
     return {
-        listProjects: (userId) => model.listProjects(userId),
+        listProjects: (userId,allProjects=false) => model.listProjects(userId,allProjects),
         async createProject(actor, body) {
-            if (actor.role !== "admin") throw v.problem(403, "Chỉ ban quản lý được tạo dự án");
+            if (actor.system_role !== "super_admin") throw v.problem(403, "Chỉ Super Admin được tạo dự án");
             return model.createProject(actor.id, projectValues(body));
         },
         async project(projectId, actor) {
@@ -117,9 +120,10 @@ function createProjectOperationsService({ model }) {
                     await tx.audit(projectId,actor.id,"members","add",user.id,null,{ email,role:role.name });
                     return { kind:"member",member:{ ...user,role:role.name,status:"active",team:"",last_login_at:null } };
                 }
-                const invitation = await tx.createInvitation(projectId,email,role.id,actor.id);
+                const token=inviteToken();
+                const invitation = await tx.createInvitation(projectId,email,role.id,actor.id,tokenHash(token));
                 await tx.audit(projectId,actor.id,"members","invite",invitation.id,null,{ email,role:role.name });
-                return { kind:"invitation",invitation:{ ...invitation,role:role.name } };
+                return { kind:"invitation",invitation:{ ...invitation,role:role.name },acceptance_path:`/accept-invitation?token=${token}&email=${encodeURIComponent(email)}` };
             });
         },
         async changeMemberRole(projectId,actor,userId,body) {
@@ -158,6 +162,16 @@ function createProjectOperationsService({ model }) {
                 await tx.audit(projectId,actor.id,"members","cancel_invitation",invitationId,previous,null);
             });
         },
+        async renewInvitation(projectId,actor,invitationId) {
+            v.id(invitationId);
+            return transaction(projectId,async (tx) => {
+                const token=inviteToken();
+                const invitation=await tx.renewInvitation(projectId,invitationId,tokenHash(token));
+                if (!invitation) throw v.problem(404,"Không tìm thấy lời mời đang chờ");
+                await tx.audit(projectId,actor.id,"members","renew_invitation",invitationId,null,{ expires_at:invitation.expires_at });
+                return { invitation,acceptance_path:`/accept-invitation?token=${token}&email=${encodeURIComponent(invitation.email)}` };
+            });
+        },
         teams: (projectId, actor) => model.teams(projectId, workerId(actor)),
         async createTeam(projectId, actor, body) {
             const name = v.text(body.name, "Tên đội");
@@ -187,6 +201,7 @@ function createProjectOperationsService({ model }) {
                     const status = task.planned_quantity && task.reported_quantity >= task.planned_quantity ? "completed" : task.reported_quantity > 0 ? "active" : "planned";
                     return { ...task, start_date, finish_date, status, is_late: Boolean(finish_date && finish_date < today && status !== "completed") };
                 });
+                tasks.sort((a,b) => (a.start_date || "").localeCompare(b.start_date || "") || a.id-b.id);
                 return { tasks, teams, member_role: actor.role, can_manage: MANAGERS.includes(actor.role), project };
             });
         },

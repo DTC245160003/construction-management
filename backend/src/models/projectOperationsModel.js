@@ -14,8 +14,8 @@ function createProjectOperationsModel(pool) {
             await query(`INSERT INTO audit_logs (project_id, actor_id, module, action, object_id, before_value, after_value)
                 VALUES ($1,$2,$3,$4,$5,$6,$7)`, [projectId, actorId, module, action, String(objectId), before, after]);
         },
-        async listProjects(userId) {
-            return (await query(`SELECT p.*, p.start_date::text AS start_date, r.name AS member_role,
+        async listProjects(userId,allProjects=false) {
+            return (await query(`SELECT p.*, p.start_date::text AS start_date, CASE WHEN $2 THEN 'admin' ELSE r.name END AS member_role,
                 (SELECT count(*)::int FROM project_members WHERE project_id = p.id) AS member_count,
                 (SELECT CASE WHEN count(t.id) > 0 AND count(t.id) = count(q.task_id)
                     THEN round(sum(least(coalesce(d.quantity,0) / q.planned_quantity,1) * t.duration_days)
@@ -24,8 +24,8 @@ function createProjectOperationsModel(pool) {
                  LEFT JOIN task_field_quantities q ON q.task_id=t.id
                  LEFT JOIN (SELECT task_id,sum(quantity) quantity FROM daily_progress GROUP BY task_id) d ON d.task_id=t.id
                  WHERE w.project_id=p.id)::float AS progress
-                FROM projects p JOIN project_members m ON m.project_id=p.id
-                JOIN roles r ON r.id=m.role_id WHERE m.user_id=$1 ORDER BY p.created_at DESC,p.id DESC`, [userId])).rows;
+                FROM projects p LEFT JOIN project_members m ON m.project_id=p.id AND m.user_id=$1
+                LEFT JOIN roles r ON r.id=m.role_id WHERE $2 OR m.user_id=$1 ORDER BY p.created_at DESC,p.id DESC`, [userId,allProjects])).rows;
         },
         project: (projectId) => one("SELECT *,start_date::text AS start_date FROM projects WHERE id=$1", [projectId]),
         async createProject(userId, values) {
@@ -73,7 +73,7 @@ function createProjectOperationsModel(pool) {
             const invitations = (await query(`SELECT i.id,i.email,r.name AS role,i.created_at,u.fullname AS invited_by_name
                 FROM project_invitations i JOIN roles r ON r.id=i.role_id JOIN users u ON u.id=i.invited_by
                 WHERE i.project_id=$1 AND i.status='pending' ORDER BY i.created_at DESC,i.id DESC`, [projectId])).rows;
-            const roles = (await query("SELECT name FROM roles WHERE name=ANY($1::text[]) ORDER BY id", [["admin","project_manager","engineer","worker","accountant","viewer"]])).rows.map((row) => row.name);
+            const roles = (await query("SELECT name FROM roles WHERE name=ANY($1::text[]) ORDER BY id", [["admin","manager","project_manager","engineer","worker","accountant","viewer"]])).rows.map((row) => row.name);
             return { project, members, invitations, roles };
         },
         member: (projectId, userId) => one(`SELECT u.id,u.fullname,u.email,r.name AS role FROM project_members m
@@ -82,8 +82,10 @@ function createProjectOperationsModel(pool) {
         roleByName: (role) => one("SELECT id,name FROM roles WHERE name=$1", [role]),
         addMember: (projectId,userId,roleId) => one(`INSERT INTO project_members(project_id,user_id,role_id) VALUES($1,$2,$3)
             RETURNING user_id AS id`, [projectId,userId,roleId]),
-        createInvitation: (projectId,email,roleId,actorId) => one(`INSERT INTO project_invitations(project_id,email,role_id,invited_by)
-            VALUES($1,$2,$3,$4) RETURNING id,email,created_at`, [projectId,email,roleId,actorId]),
+        createInvitation: (projectId,email,roleId,actorId,tokenHash) => one(`INSERT INTO project_invitations(project_id,email,role_id,invited_by,token_hash,expires_at)
+            VALUES($1,$2,$3,$4,$5,CURRENT_TIMESTAMP+INTERVAL '7 days') RETURNING id,email,created_at,expires_at`, [projectId,email,roleId,actorId,tokenHash]),
+        renewInvitation: (projectId,id,tokenHash) => one(`UPDATE project_invitations SET token_hash=$3,expires_at=CURRENT_TIMESTAMP+INTERVAL '7 days',updated_at=CURRENT_TIMESTAMP
+            WHERE project_id=$1 AND id=$2 AND status='pending' RETURNING id,email,expires_at`, [projectId,id,tokenHash]),
         updateMemberRole: (projectId,userId,roleId) => one(`UPDATE project_members SET role_id=$3,updated_at=CURRENT_TIMESTAMP
             WHERE project_id=$1 AND user_id=$2 RETURNING user_id AS id`, [projectId,userId,roleId]),
         removeMember: (projectId,userId) => one("DELETE FROM project_members WHERE project_id=$1 AND user_id=$2 RETURNING user_id AS id", [projectId,userId]),

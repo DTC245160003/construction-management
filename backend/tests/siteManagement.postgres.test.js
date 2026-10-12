@@ -67,7 +67,9 @@ describePostgres("Site management against real PostgreSQL and session authorizat
         await agents.engineer.post(url("/journals")).send({ ...body,content:"Changed payload" }).expect(409);
         await agents.engineer.post(url("/journals")).send(journal({ work_item_id:otherLeaf })).expect(404);
         const edited=(await agents.engineer.put(url(`/journals/${created.id}`)).send({ ...body,content:"Đã cập nhật",revision:1,daily_revision:1 }).expect(200)).body.journal;
-        await agents.engineer.put(url(`/journals/${created.id}`)).send({ ...body,revision:1 }).expect(409);
+        const unchanged=await agents.engineer.put(url(`/journals/${created.id}`)).send({ ...body,revision:1 }).expect(200);
+        expect(unchanged.body.merged).toBe(true);
+        expect(unchanged.body.journal.content).toBe("Đã cập nhật");
         const sync=await agents.engineer.post(url("/journals/sync")).send({ entries:[journal({ work_item_id:otherLeaf }),journal({ content:"Bản tiếp theo" })] }).expect(200);
         expect(sync.body.results.map((entry) => entry.ok)).toEqual([false,true]);
         await agents.engineer.put(url("/journals/lock")).send({ day:body.day,locked:true }).expect(200);
@@ -77,7 +79,7 @@ describePostgres("Site management against real PostgreSQL and session authorizat
         await agents.engineer.put(url("/journals/lock")).send({ day:body.day,locked:false,reason:"Need edit" }).expect(403);
         await agents.admin.put(url("/journals/lock")).send({ day:body.day,locked:false,reason:"" }).expect(400);
         await agents.admin.put(url("/journals/lock")).send({ day:body.day,locked:false,reason:"Bổ sung hồ sơ" }).expect(200);
-        await agents.engineer.delete(url(`/journals/${created.id}`)).send({ revision:edited.revision }).expect(200);
+        await agents.engineer.delete(url(`/journals/${created.id}`)).send({ revision:unchanged.body.journal.revision }).expect(200);
         expect((await agents.engineer.get(url("/journals"))).body.journals).toHaveLength(1);
         const audit=(await agents.admin.get(url("/audit-logs"))).body.entries;
         expect(audit.some((entry) => entry.action==="unlock_day" && entry.after_value.reason==="Bổ sung hồ sơ")).toBe(true);
@@ -205,12 +207,14 @@ describePostgres("Site management against real PostgreSQL and session authorizat
     test("013 rollback refuses data, then roundtrips safely on an unused schema", async () => {
         const model=createSiteManagementModel(pool);
         await model.transaction(project,async (t) => t.saveSettings(project,{ latitude:21,longitude:105,radius_m:50 }));
+        expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
+        expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
         expect((await migrate("down"))[0]).toContain("016_create_baselines_and_milestones.sql");
         expect((await migrate("down"))[0]).toContain("015_add_task_actuals.sql");
         expect((await migrate("down"))[0]).toContain("014_create_project_invitations.sql");
         await expect(migrate("down")).rejects.toThrow(/operational data/);
         await pool.query("TRUNCATE projects CASCADE"); await pool.query("DELETE FROM notification_preferences");
         expect((await migrate("down"))[0]).toContain("013_create_site_management.sql");
-        expect(await migrate("up")).toEqual(["Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql"]);
+        expect(await migrate("up")).toEqual(["Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql"]);
     });
 });

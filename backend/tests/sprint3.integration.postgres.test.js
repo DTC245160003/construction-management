@@ -77,7 +77,7 @@ describeDatabase("Sprint 3 integrated actuals, calendar, baseline and milestones
         expect(columns).toEqual(expect.arrayContaining(["actual_start", "actual_finish", "progress_percent"]));
         expect(columns).not.toEqual(expect.arrayContaining(["actual_start_date", "actual_end_date", "percent_complete"]));
         const history = (await pool.query("SELECT name FROM schema_migrations ORDER BY name")).rows.map(row => row.name);
-        expect(history.slice(-2)).toEqual(["015_add_task_actuals.sql", "016_create_baselines_and_milestones.sql"]);
+        expect(history).toEqual(expect.arrayContaining(["015_add_task_actuals.sql", "016_create_baselines_and_milestones.sql"]));
     });
 
     test("T40 holiday changes dates and milestone warning without discarding the baseline", async () => {

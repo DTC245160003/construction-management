@@ -12,6 +12,11 @@ function createProjectAccess({ memberModel }) {
                 return res.status(403).json({ message: "Project access denied" });
             }
 
+            if (req.user.system_role === "super_admin") {
+                req.projectMember = { project_id:projectId,user_id:req.user.id,role:"admin",system_access:true };
+                return next();
+            }
+
             const member = await memberModel.findByProjectAndUser({
                 projectId,
                 userId: req.user.id

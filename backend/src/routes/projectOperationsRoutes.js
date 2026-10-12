@@ -29,6 +29,7 @@ function createProjectOperationsRoutes({ pool, authorization = { requireAuth } }
     route("patch", "/:projectId/members/:userId", MANAGE, controller.changeMemberRole);
     route("delete", "/:projectId/members/:userId", MANAGE, controller.removeMember);
     route("delete", "/:projectId/invitations/:invitationId", MANAGE, controller.cancelInvitation);
+    route("post", "/:projectId/invitations/:invitationId/renew", MANAGE, controller.renewInvitation);
     route("get", "/:projectId/teams", READ, controller.teams);
     route("post", "/:projectId/teams", MANAGE, controller.createTeam);
     route("get", "/:projectId/assignments", [...MANAGE, "worker", "engineer", "viewer"], controller.assignments);

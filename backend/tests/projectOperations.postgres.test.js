@@ -55,19 +55,15 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
     const plan = (task, value = 10) => agents.project_manager.put(url(`/assignments/${task}/quantity`)).send({ planned_quantity: value, unit: "m³" });
     const report = (task, body) => agents.worker.post(url(`/assignments/${task}/progress`)).send(body);
 
-    test("project list is membership scoped, admin-only creation persists membership/calendar and survives reload", async () => {
+    test("project list is membership scoped and legacy global admin cannot create or bypass project membership", async () => {
         await request(app).get("/projects").expect(401);
         const list = await agents.admin.get("/projects").expect(200);
         expect(list.body.projects.map((entry) => entry.id)).toEqual([project]);
         expect(list.body.projects[0]).toMatchObject({ member_count: 6, progress: null });
         const body = { name: "New project", location: "Hải Phòng", start_date: "2026-10-05" };
         await agents.project_manager.post("/projects").send(body).expect(403);
-        await agents.admin.post("/projects").send({ ...body, start_date: "2026-02-30" }).expect(400);
-        const created = await agents.admin.post("/projects").send(body).expect(201);
-        const id = created.body.project.id;
-        expect((await agents.admin.get(url("/overview", id)).expect(200)).body.project).toMatchObject({ ...body, member_role: "admin" });
-        expect((await agents.admin.get(url("/calendar", id)).expect(200)).body.calendar.working_days).toEqual([1,2,3,4,5,6]);
-        expect((await agents.admin.get("/projects")).body.projects[0]).toMatchObject({ id, member_count: 1 });
+        await agents.admin.post("/projects").send(body).expect(403);
+        expect(list.body.can_create).toBe(false);
         await agents.outsider.get(url("/overview")).expect(403);
         await agents.admin.get(url("/overview", other)).expect(403);
     });
@@ -102,12 +98,13 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
         expect((await agents.outsider.get(url("/members")).expect(200)).body.members.find((member) => member.id===users.outsider).role).toBe("engineer");
         await agents.outsider.patch(url(`/members/${users.worker}`)).send({ role:"admin" }).expect(403);
 
-        const invitation=(await agents.admin.post(url("/members")).send({ email:"invited@operations.test",role:"worker" }).expect(201)).body.invitation;
+        const inviteResult=(await agents.admin.post(url("/members")).send({ email:"invited@operations.test",role:"worker" }).expect(201)).body;
+        const invitation=inviteResult.invitation;
         await agents.admin.post(url("/members")).send({ email:"invited@operations.test",role:"worker" }).expect(409);
         result=await agents.admin.get(url("/members")).expect(200);
         expect(result.body.invitations).toHaveLength(1);
 
-        await request(app).post("/auth/register").send({ fullname:"Invited user",email:"invited@operations.test",password:"Invited-user-123!",role:"viewer" }).expect(201);
+        await request(app).post("/auth/register").send({ fullname:"Invited user",email:"invited@operations.test",password:"Invited-user-123!",role:"viewer",invitation_token:new URL(inviteResult.acceptance_path,"http://test").searchParams.get("token") }).expect(201);
         const invited=(await pool.query("SELECT id FROM users WHERE email='invited@operations.test'")).rows[0];
         expect((await pool.query(`SELECT r.name AS role FROM project_members m JOIN roles r ON r.id=m.role_id
             WHERE m.project_id=$1 AND m.user_id=$2`,[project,invited.id])).rows[0].role).toBe("worker");
@@ -208,6 +205,8 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
         const audit = (await agents.admin.get(url("/audit-logs"))).body.entries;
         expect(audit.filter((entry) => entry.action === "close_issue")).toHaveLength(1);
         await expect(pool.query("DELETE FROM audit_logs")).rejects.toMatchObject({ code: "23514" });
+        expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
+        expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
         expect((await migrate("down"))[0]).toContain("016_create_baselines_and_milestones.sql");
         expect((await migrate("down"))[0]).toContain("015_add_task_actuals.sql");
         expect((await migrate("down"))[0]).toContain("014_create_project_invitations.sql");
@@ -218,12 +217,14 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
 
     test("012 rollback roundtrip works on unused schema without changing migrations 001–011", async () => {
         await pool.query("TRUNCATE projects CASCADE");
+        expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
+        expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
         expect((await migrate("down"))[0]).toContain("016_create_baselines_and_milestones.sql");
         expect((await migrate("down"))[0]).toContain("015_add_task_actuals.sql");
         expect((await migrate("down"))[0]).toContain("014_create_project_invitations.sql");
         expect((await migrate("down"))[0]).toContain("013_create_site_management.sql");
         expect((await migrate("down"))[0]).toContain("012_create_project_operations.sql");
         expect((await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count).toBe(11);
-        expect(await migrate("up")).toEqual(["Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql"]);
+        expect(await migrate("up")).toEqual(["Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql"]);
     });
 });

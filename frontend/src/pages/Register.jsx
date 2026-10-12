@@ -80,11 +80,6 @@ const IconArrow = () => (
   </svg>
 );
 
-const IconCaret = () => (
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 const FEATURES = [
   { icon: <IconShield />, tone: "blue", title: "Bảo mật dữ liệu", desc: "An toàn, tin cậy, đạt chuẩn doanh nghiệp" },
@@ -111,11 +106,6 @@ const PROJECTS = [
 
 const BARS = [38, 44, 52, 48, 60, 56, 66, 62, 72, 68, 82, 76];
 
-const ROLES = [
-  { value: "engineer", label: "Kỹ sư" },
-  { value: "worker", label: "Công nhân" },
-  { value: "viewer", label: "Người xem" },
-];
 
 async function registerAccount(payload) {
   const res = await fetch("/auth/register", {
@@ -146,7 +136,6 @@ export default function Register() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -168,10 +157,6 @@ export default function Register() {
       errors.email = "Vui lòng nhập email.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errors.email = "Email không hợp lệ.";
-    }
-
-    if (!role) {
-      errors.role = "Vui lòng chọn vai trò.";
     }
 
     if (!password) {
@@ -218,7 +203,6 @@ export default function Register() {
         fullname: fullName.trim(),
         email: email.trim().toLowerCase(),
         password,
-        role,
       });
 
       setSuccess(
@@ -472,37 +456,7 @@ export default function Register() {
                 </div>
               </div>
 
-              <div className="xds-register-field">
-                <label className="xds-register-label" htmlFor="xds-role">
-                  Vai trò
-                </label>
-                <div className="xds-register-input-wrap">
-                  <span className="xds-register-input-icon"><IconTeam /></span>
-                  <select
-                    id="xds-role"
-                    value={role}
-                    onChange={(e) => {
-                      setRole(e.target.value);
-                      clearFieldError("role");
-                    }}
-                    className={`${role ? "" : "is-placeholder"} ${
-                      fieldErrors.role ? "has-error" : ""
-                    }`}
-                    disabled={loading}
-                  >
-                    <option value="">Chọn vai trò</option>
-                    {ROLES.map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="xds-register-input-caret"><IconCaret /></span>
-                </div>
-                {fieldErrors.role && (
-                  <span className="xds-register-error">{fieldErrors.role}</span>
-                )}
-              </div>
+              <p className="xds-register-hint">Tài khoản mới là người dùng thông thường. Vai trò dự án được quản trị viên cấp sau khi đăng ký.</p>
 
               <div className="xds-register-row2">
                 <div className="xds-register-field">

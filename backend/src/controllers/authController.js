@@ -3,12 +3,13 @@ const INVALID_CREDENTIALS = "Thông tin đăng nhập không chính xác";
 function createAuthController({ authService, cookieName, cookieOptions }) {
     return {
         async register(req, res) {
-            const { fullname, email, password, role } = req.body || {};
+            const { fullname, email, password, role, invitation_token } = req.body || {};
             const user = await authService.register({
                 fullname,
                 email,
                 password,
-                role
+                role,
+                invitation_token
             });
 
             return res.status(201).json({

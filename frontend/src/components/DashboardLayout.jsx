@@ -2,9 +2,10 @@ import { useEffect,useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useRemote from "../hooks/useRemote";
 import OperationsIcon from "./OperationsIcon";
+import PwaUpdate from "./PwaUpdate";
 import { Modal } from "./OperationsUI";
 import { api, roleLabels } from "../services/operationsApi";
-import { navigation, scopedLink, validProjectId } from "../services/navigation";
+import { navigation, scopedLink, validProjectId,visibleNavigation } from "../services/navigation";
 import { clearOfflineIdentity } from "../services/journalOffline";
 import constructionImage from "../assets/anh_login.png";
 import "../styles/Operations.css";
@@ -20,7 +21,9 @@ export default function DashboardLayout({ title, description, actions, children,
   const pageIcon = headingIcon || navigation.find((entry) => entry[1] === location.pathname)?.[2] || "folder";
   const navigate = useNavigate();
   const projects = useRemote("/projects", `${projectId}:${refreshKey}`);
-  const account = useRemote("/auth/me",refreshKey);
+  const [permissionRevision,setPermissionRevision]=useState(0);
+  const account = useRemote("/auth/me",`${refreshKey}:${permissionRevision}`);
+  useEffect(() => { const changed=() => setPermissionRevision(v => v+1); window.addEventListener("xds-permissions-changed",changed); return () => window.removeEventListener("xds-permissions-changed",changed); },[]);
   const [notificationRevision,setNotificationRevision] = useState(0);
   const feed = useRemote(validProjectId(projectId) ? `/projects/${projectId}/notifications` : null,notificationRevision);
   useEffect(() => { const changed=() => setNotificationRevision((value) => value+1); window.addEventListener("xds-notifications-changed",changed); return () => window.removeEventListener("xds-notifications-changed",changed); },[]);
@@ -39,7 +42,7 @@ export default function DashboardLayout({ title, description, actions, children,
     {menuOpen && <button className="ops-shell-scrim" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} />}
     <aside className={`ops-shell-sidebar ${menuOpen ? "is-open" : ""}`} aria-label="Menu chính">
       <Link className="ops-shell-brand" to={scopedLink("/home", projectId)}><span className="ops-shell-mark">◈</span><span><strong>XÂY DỰNG SỐ</strong><small>Nền tảng điều hành thi công</small></span></Link>
-      <nav>{navigation.map(([label, path, icon]) => <NavLink key={path} aria-label={label} to={scopedLink(path, projectId)} onClick={() => setMenuOpen(false)}><OperationsIcon name={icon} /><span>{label}</span>{path === "/notifications" && feed.data?.unread_count > 0 && <span className="ops-nav-count">{feed.data.unread_count}</span>}</NavLink>)}</nav>
+      <nav>{visibleNavigation(current?.member_role,account.data?.user?.system_role).map(([label, path, icon]) => <NavLink key={path} aria-label={label} to={path==="/system-admin" ? path : scopedLink(path, projectId)} onClick={() => setMenuOpen(false)}><OperationsIcon name={icon} /><span>{label}</span>{path === "/notifications" && feed.data?.unread_count > 0 && <span className="ops-nav-count">{feed.data.unread_count}</span>}</NavLink>)}</nav>
       <div className="ops-shell-picture" style={{ backgroundImage: `linear-gradient(0deg,#0b294b,transparent),url(${constructionImage})` }}><strong>KIẾN TẠO CÔNG TRÌNH</strong><span>Từ dữ liệu đến hiệu quả</span></div>
     </aside>
     <div className="ops-shell-body">
@@ -50,11 +53,11 @@ export default function DashboardLayout({ title, description, actions, children,
         <form className="ops-shell-search" role="search" onSubmit={(event) => { event.preventDefault(); const next = new URLSearchParams(); if (validProjectId(projectId)) next.set("projectId", projectId); if (query.trim()) next.set("q", query.trim()); navigate(`/projects?${next}`); }}>
           <OperationsIcon name="search" size={18} /><input aria-label="Tìm dự án trong hệ thống" placeholder="Tìm tên dự án, địa điểm…" value={query} onChange={(event) => setQuery(event.target.value)} /><button type="submit" aria-label="Tìm dự án"><OperationsIcon name="arrow" size={16} /></button>
         </form>
-        <div className="ops-shell-account"><NotificationLink key={projectId} projectId={projectId} state={feed} /><button className="ops-shell-help" aria-label="Trợ giúp" onClick={() => setHelpOpen(true)}><OperationsIcon name="help" /></button><div className="ops-shell-avatar" aria-hidden="true">{account.data?.user?.fullname?.slice(0, 1) || "•"}</div><div><strong>{account.data?.user?.fullname || "Tài khoản"}</strong><small>{roleLabels[current?.member_role || account.data?.user?.role] || ""}</small></div><button className="ops-btn ops-logout" disabled={loggingOut} onClick={logout}>Đăng xuất</button></div>
+        <div className="ops-shell-account"><NotificationLink key={projectId} projectId={projectId} state={feed} /><button className="ops-shell-help" aria-label="Trợ giúp" onClick={() => setHelpOpen(true)}><OperationsIcon name="help" /></button><div className="ops-shell-avatar" aria-hidden="true">{account.data?.user?.fullname?.slice(0, 1) || "•"}</div><div><strong>{account.data?.user?.fullname || "Tài khoản"}</strong><small>{[account.data?.user?.system_role==="super_admin" ? "Super Admin" : "Người dùng",roleLabels[current?.member_role]].filter(Boolean).join(" · ")}</small></div><button className="ops-btn ops-logout" disabled={loggingOut} onClick={logout}>Đăng xuất</button></div>
       </header>
       <main className="ops-content">{logoutError && <p className="ops-notice ops-notice-error" role="alert">{logoutError}</p>}
         <div className="ops-page-heading"><div className="ops-heading-with-icon"><span className="ops-heading-icon"><OperationsIcon name={pageIcon} size={26} /></span><div><h1>{title}</h1><p>{description}</p></div></div>{actions && <div className="ops-actions">{actions}</div>}</div>
-        {children}
+        <PwaUpdate />{children}
       </main>
     </div>
     {helpOpen && <Modal title="Trợ giúp điều hành dự án" onClose={() => setHelpOpen(false)}><p className="ops-muted">Chọn dự án ở thanh trên cùng để xem đúng dữ liệu công trường. Các thao tác hiển thị theo vai trò của bạn trong dự án.</p><div className="ops-help-links"><Link to="/projects" onClick={() => setHelpOpen(false)}><OperationsIcon name="folder" />Chọn hoặc tạo dự án<OperationsIcon name="right" /></Link>{validProjectId(projectId) && <><Link to={scopedLink("/members", projectId)} onClick={() => setHelpOpen(false)}><OperationsIcon name="users" />Thành viên & phân quyền<OperationsIcon name="right" /></Link><Link to={scopedLink("/calendar", projectId)} onClick={() => setHelpOpen(false)}><OperationsIcon name="calendar" />Thiết lập lịch làm việc<OperationsIcon name="right" /></Link></>}</div><p className="ops-muted">Nếu cần thêm quyền truy cập, hãy liên hệ ban quản lý dự án.</p></Modal>}

@@ -10,3 +10,16 @@ export const navigation = [
 ];
 export const validProjectId = (value) => /^\d+$/.test(String(value)) && Number(value) > 0 && Number(value) <= 2147483647;
 export const scopedLink = (path, projectId) => validProjectId(projectId) ? `${path}?projectId=${Number(projectId)}` : path;
+
+const projectNavigation={
+  admin: null,project_manager:null,manager:null,
+  engineer:["/members","/work-items","/schedule","/calendar","/field-assignments","/site-journal","/acceptance","/site-photos","/notifications","/settings"],
+  worker:["/field-assignments","/site-photos","/notifications","/settings"],
+  accountant:["/members","/calendar","/payments","/costs-materials","/site-photos","/reports","/notifications","/settings"],
+  viewer:["/members","/work-items","/schedule","/calendar","/field-assignments","/site-journal","/acceptance","/payments","/costs-materials","/site-photos","/reports","/notifications","/settings"],
+};
+export function visibleNavigation(memberRole,systemRole) {
+  const allowed=projectNavigation[memberRole];
+  const entries=navigation.filter(([,path]) => ["/home","/projects"].includes(path) || systemRole==="super_admin" || (memberRole && Object.hasOwn(projectNavigation,memberRole) && (allowed===null || allowed.includes(path))));
+  return systemRole==="super_admin" ? [["Quản trị hệ thống","/system-admin","settings"],...entries] : entries;
+}

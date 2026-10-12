@@ -20,15 +20,15 @@ function createTaskRoutes({ authorization = { requireAuth }, memberModel, model,
     const controller = createTaskController({ service: createTaskService({ model }),
         progressService: createTaskProgressService({ model: progressModel || model }) });
     const membership = access.requireProjectMember("admin", "manager", "engineer", "member", "project_manager");
+    const read = access.requireProjectMember("admin", "manager", "engineer", "member", "project_manager", "viewer");
     router.use(authorization.requireAuth);
-    router.use(["/:projectId/tasks", "/:projectId/dependencies"], membership);
-    router.get("/:projectId/tasks", controller.list);
-    router.post("/:projectId/tasks", controller.create);
-    router.patch("/:projectId/tasks/:taskId", controller.update);
-    router.patch("/:projectId/tasks/:taskId/progress", controller.updateProgress);
-    router.get("/:projectId/dependencies", controller.listDependencies);
-    router.post("/:projectId/tasks/:taskId/dependencies", controller.addDependency);
-    router.delete("/:projectId/tasks/:taskId/dependencies/:dependencyId", controller.removeDependency);
+    router.get("/:projectId/tasks", read,controller.list);
+    router.post("/:projectId/tasks", membership,controller.create);
+    router.patch("/:projectId/tasks/:taskId", membership,controller.update);
+    router.patch("/:projectId/tasks/:taskId/progress", membership,controller.updateProgress);
+    router.get("/:projectId/dependencies", read,controller.listDependencies);
+    router.post("/:projectId/tasks/:taskId/dependencies", membership,controller.addDependency);
+    router.delete("/:projectId/tasks/:taskId/dependencies/:dependencyId", membership,controller.removeDependency);
     return router;
 }
 
