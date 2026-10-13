@@ -31,7 +31,12 @@ function createSiteManagementService({ model }) {
         catch (error) {
             if (error.code==="23505") throw v.problem(409,"Dữ liệu đã tồn tại hoặc phiếu nghiệm thu đã thuộc đề nghị thanh toán khác.");
             if (error.code==="23503") throw v.problem(409,"Đối tượng liên quan không còn tồn tại.");
-            if (error.code==="23514") throw v.problem(422,"Thao tác không hợp lệ: kiểm tra giới hạn hợp đồng, tồn kho hoặc trạng thái đã khóa.");
+            if (error.code==="23514") {
+                if (error.message && (error.message.includes("Journal day is locked") || error.message.includes("locked"))) {
+                    throw v.problem(403,"Nhật ký ngày đã bị khóa sổ, không thể chỉnh sửa hoặc xóa.");
+                }
+                throw v.problem(422,"Thao tác không hợp lệ: kiểm tra giới hạn hợp đồng, tồn kho hoặc trạng thái đã khóa.");
+            }
             throw error;
         }
     }
@@ -45,7 +50,13 @@ function createSiteManagementService({ model }) {
         const entries = await transaction.photoIds(projectId,ids);
         if (entries.length!==ids.length || entries.some((entry) => (actor.role==="worker" && entry.uploaded_by!==actor.id) || (itemId && entry.work_item_id!==itemId))) throw v.problem(422,"Ảnh phải thuộc đúng dự án và hạng mục");
     }
-    async function unlocked(transaction,projectId,day) { if ((await transaction.dayLock(projectId,day))?.locked) throw v.problem(409,"Ngày nhật ký đã khóa sổ. Ban quản lý cần mở khóa trước khi sửa."); }
+    async function unlocked(transaction,projectId,day,recordId = null) {
+        const dayLock = day ? await transaction.dayLock(projectId,day) : null;
+        const record = recordId ? await transaction.journal(projectId,recordId) : null;
+        if ((dayLock && (dayLock.locked || dayLock.is_locked)) || (record && (record.is_locked || record.locked))) {
+            throw v.problem(403,"Nhật ký ngày đã bị khóa sổ, không thể chỉnh sửa hoặc xóa.");
+        }
+    }
     function canEditRecord(actor,record) { if (record.created_by!==actor.id && !MANAGE.includes(actor.role)) throw v.problem(403,"Bạn chỉ được chỉnh sửa phiếu do mình lập"); }
     async function notifyReturn(transaction,projectId,record,type,route) {
         await transaction.notify(projectId,record.created_by,type,"Phiếu của bạn đã được trả lại. Xem lý do và cập nhật hồ sơ.",`/${route}?projectId=${projectId}`,`${type}:${record.id}:${record.revision}`);
@@ -89,14 +100,15 @@ function createSiteManagementService({ model }) {
                 await item(t,projectId,prepared.work_item_id);
                 const upload=await t.photoUpload(prepared.client_uuid);
                 const journalId=body.journal_id ? v.id(body.journal_id) : upload?.journal_id;
+                let journal;
                 if (journalId) {
-                    const journal=await t.journal(projectId,journalId);
+                    journal=await t.journal(projectId,journalId);
                     if (!journal || journal.work_item_id!==prepared.work_item_id || !upload || upload.journal_id!==journalId || upload.uploaded_by!==actor.id) throw v.problem(403,"Ảnh không thuộc nhật ký hoặc tài khoản này");
-                    await unlocked(t,projectId,journal.day);
                 }
                 if (actor.role==="worker" && !await t.workerCanUseItem(projectId,prepared.work_item_id,actor.id)) throw v.problem(403,"Chỉ được tải ảnh cho hạng mục của đội mình");
                 const existing=await t.photoByUuid(prepared.client_uuid);
-                if (existing) { if (existing.project_id!==projectId || existing.uploaded_by!==actor.id || existing.content_hash!==prepared.content_hash || existing.work_item_id!==prepared.work_item_id) throw v.problem(409,"Mã tải ảnh đã được sử dụng"); return existing; }
+                if (existing) { if (existing.project_id!==projectId || existing.uploaded_by!==actor.id || existing.content_hash!==prepared.content_hash || existing.work_item_id!==prepared.work_item_id || (upload && upload.photo_id!==existing.id)) throw v.problem(409,"Mã tải ảnh đã được sử dụng"); return existing; }
+                if (journal) await unlocked(t,projectId,journal.day,journal.id);
                 const site=await t.settings(projectId);
                 prepared.distance_m=site?.latitude!=null && prepared.latitude!=null ? Math.round(distance(site.latitude,site.longitude,prepared.latitude,prepared.longitude)) : null;
                 prepared.suspicious=prepared.distance_m!==null && prepared.distance_m>site.radius_m;
@@ -123,6 +135,7 @@ function createSiteManagementService({ model }) {
             });
         },
         ...require("./journalService").createJournalService({ model }),
+
         async acceptanceData(projectId,actor) { return { forms:await model.acceptances(projectId),contracts:await model.contracts(projectId),items:await model.items(projectId),member_role:actor.role,can_edit:[...MANAGE,"engineer"].includes(actor.role),can_approve:ACCEPT_APPROVE.includes(actor.role) }; },
         async saveContract(projectId,actor,itemId,body) {
             const values={ quantity:v.decimal(body.quantity,4),unit:v.text(body.unit,"Đơn vị",30),unit_price:v.decimal(body.unit_price,2,true) };

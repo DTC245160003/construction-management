@@ -39,7 +39,10 @@ function createSiteManagementRoutes({ pool,authorization={ requireAuth } } = {})
     route("post","/:projectId/journals",FIELD,controller.saveJournal);
     route("post","/:projectId/journals/sync",FIELD,controller.syncJournals);
     route("put","/:projectId/journals/lock",FIELD,controller.lockJournal);
+    route("post","/:projectId/journals/lock",FIELD,controller.lockJournal);
+    route("post","/:projectId/journals/:recordId/lock",FIELD,controller.lockJournal);
     route("put","/:projectId/journals/:recordId",FIELD,controller.saveJournal);
+    route("patch","/:projectId/journals/:recordId",FIELD,controller.saveJournal);
     route("delete","/:projectId/journals/:recordId",FIELD,controller.deleteJournal);
     route("get","/:projectId/acceptance",READ,controller.acceptance);
     route("put","/:projectId/contracts/:recordId",MANAGE,controller.contract);

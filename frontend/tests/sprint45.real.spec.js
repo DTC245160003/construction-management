@@ -111,7 +111,35 @@ test("conflict comparison UI retains both versions and lock/unlock is enforced t
   await expect(page.locator(".journal-compare article")).toHaveCount(2); await expect(page.locator(".journal-compare")).toContainText("Bản A"); await expect(page.locator(".journal-compare")).toContainText("Bản B");
   await page.getByRole("button",{ name:"Giữ bản gửi đến",exact:true }).click(); await expect(page.getByRole("dialog")).toHaveCount(0); await expect(page.locator(".ops-journal-entry")).toContainText("Bản B");
   await page.request.put(`/projects/${projectId}/journals/lock`,{ data:{ day:base.day,locked:true } });
-  expect((await page.request.put(`/projects/${projectId}/journals/${j.id}`,{ data:{ ...base,operation_uuid:crypto.randomUUID(),revision:3 } })).status()).toBe(409);
+  expect((await page.request.put(`/projects/${projectId}/journals/${j.id}`,{ data:{ ...base,operation_uuid:crypto.randomUUID(),revision:3 } })).status()).toBe(403);
+  await page.getByRole("button",{ name:"Tải lại",exact:true }).click();
+  const entry=page.locator(".ops-journal-entry");
+  await expect(entry).toContainText("Đã khóa sổ");
+  await expect(entry.getByRole("button",{ name:"Sửa",exact:true })).toHaveCount(0);
+  await expect(entry.getByRole("button",{ name:"Xóa",exact:true })).toHaveCount(0);
+  await entry.getByRole("button",{ name:"Xem chi tiết",exact:true }).click();
+  let dialog=page.getByRole("dialog");
+  await expect(dialog.getByLabel("Nội dung công việc")).toBeDisabled();
+  await expect(dialog.getByLabel("Ngày",{ exact:true })).toBeDisabled();
+  await expect(dialog.getByLabel("Nhân lực trong ngày")).toBeDisabled();
+  await expect(dialog.getByRole("combobox",{ name:"Thời tiết",exact:true })).toBeDisabled();
+  await expect(dialog.locator('input[type="file"]')).toHaveCount(0);
+  await expect(dialog.getByRole("button",{ name:"Lưu nhật ký",exact:true })).toHaveCount(0);
+  await dialog.getByRole("button",{ name:"Đóng",exact:true }).last().click();
+  await page.getByRole("button",{ name:"Khóa / mở sổ",exact:true }).click();
+  dialog=page.getByRole("dialog");
+  await expect(dialog.getByLabel("Thao tác").locator('option[value="false"]')).toHaveCount(0);
+  await dialog.getByRole("button",{ name:"Hủy",exact:true }).click();
+  // A new draft must also respect a selected locked day, and can return to an open day.
+  await page.getByRole("button",{ name:"＋ Ghi nhật ký",exact:true }).click();
+  dialog=page.getByRole("dialog");
+  await dialog.getByLabel("Ngày",{ exact:true }).fill(base.day);
+  await expect(dialog.getByLabel("Nội dung công việc")).toBeDisabled();
+  await expect(dialog.getByLabel("Ngày",{ exact:true })).toBeEnabled();
+  await dialog.getByLabel("Ngày",{ exact:true }).fill("2026-10-06");
+  await expect(dialog.getByLabel("Nội dung công việc")).toBeEnabled();
+  await expect(dialog.getByLabel("Chụp ảnh hiện trường")).toHaveAttribute("capture","environment");
+  await dialog.getByRole("button",{ name:"Hủy",exact:true }).click();
   expect((await page.request.put(`/projects/${projectId}/journals/lock`,{ data:{ day:base.day,locked:false,reason:"Bổ sung" } })).status()).toBe(403);
   await page.request.post("/auth/login",{ data:{ email:"admin@e2e.test",password:"Operations-only-E2E-123!" } });
   expect((await page.request.put(`/projects/${projectId}/journals/lock`,{ data:{ day:base.day,locked:false,reason:"" } })).status()).toBe(400);
@@ -127,6 +155,20 @@ test("service worker caches only shell, has install icons, and logout retains dr
   expect(await page.evaluate(async () => (await globalThis.XdsJournalQueue.all("queue")).length)).toBe(1);
   const keys=await page.evaluate(async () => { const result=[]; for (const name of await caches.keys()) for (const r of await (await caches.open(name)).keys()) result.push(new URL(r.url).pathname); return result; });
   expect(keys.some((k) => /^\/(auth|projects)(\/|$)/.test(k))).toBe(false); expect(keys.some((k) => k.startsWith("/assets/"))).toBe(true);
+});
+
+test("reconnect refreshes locks with an empty queue",async ({ page,context }) => {
+  const { projectId,workItemId }=await setup(page);
+  const body={ work_item_id:workItemId,client_uuid:crypto.randomUUID(),operation_uuid:crypto.randomUUID(),day:"2026-10-05",time:"08:30",content:"Khóa từ thiết bị khác",photo_ids:[],manpower:8,weather_code:"sunny",equipment_codes:[],daily_revision:0 };
+  expect((await page.request.post(`/projects/${projectId}/journals`,{ data:body })).status()).toBe(201);
+  await page.getByRole("button",{ name:"Tải lại",exact:true }).click();
+  await expect(page.locator(".ops-journal-entry").getByRole("button",{ name:"Sửa",exact:true })).toBeVisible();
+  await expect(page.getByTestId("pending-journals")).toHaveText("0 nhật ký chưa đồng bộ");
+  await context.setOffline(true);
+  expect((await page.request.put(`/projects/${projectId}/journals/lock`,{ data:{ day:body.day,locked:true } })).status()).toBe(200);
+  await context.setOffline(false);
+  await expect(page.locator(".ops-journal-entry")).toContainText("Đã khóa sổ");
+  await expect(page.locator(".ops-journal-entry").getByRole("button",{ name:"Sửa",exact:true })).toHaveCount(0);
 });
 
 test("member UI creates a usable invitation, accepts first password, adds existing accounts and preserves last manager",async ({ page,browser }) => {

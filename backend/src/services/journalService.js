@@ -2,6 +2,7 @@ const { randomUUID } = require("node:crypto");
 const v=require("./siteValidation");
 const WRITE=["admin","manager","project_manager","engineer"];
 const MANAGE=WRITE.filter((r) => r!=="engineer");
+const LOCKED_MESSAGE="Nhật ký ngày đã bị khóa sổ, không thể chỉnh sửa hoặc xóa.";
 const fields=["work_item_id","day","time","content","photo_ids"];
 const equal=(a,b) => JSON.stringify(a)===JSON.stringify(b);
 const snapshot=(j,photos=[]) => ({ ...j,time:j.time.slice(0,5),photo_ids:photos });
@@ -9,9 +10,12 @@ function createJournalService({ model }) {
     const role=(actor,roles=WRITE) => { if (!roles.includes(actor.role)) throw v.problem(403,"Bạn không có quyền thực hiện thao tác này"); };
     const tx=async (pid,fn) => {
         try { return await model.transaction(pid,fn); }
-        catch (e) { if (e.code==="23514") throw v.problem(409,"Ngày nhật ký đã khóa hoặc ảnh không thuộc đúng hạng mục"); if (e.code==="23505") throw v.problem(409,"Mã đồng bộ đã được sử dụng"); throw e; }
+        catch (e) { if (e.code==="23514") { if (e.message?.includes("locked")) throw v.problem(403,LOCKED_MESSAGE); throw v.problem(422,"Ảnh không thuộc đúng dự án hoặc hạng mục"); } if (e.code==="23505") throw v.problem(409,"Mã đồng bộ đã được sử dụng"); throw e; }
     };
-    const unlocked=async (t,pid,day) => { if ((await t.dayLock(pid,day))?.locked) throw v.problem(409,"Ngày nhật ký đã khóa sổ. Ban quản lý cần mở khóa trước khi sửa."); };
+    const unlocked=async (t,pid,day,record=null) => {
+        const lock=await t.dayLock(pid,day);
+        if (lock?.locked || lock?.is_locked || record?.is_locked || record?.locked) throw v.problem(403,LOCKED_MESSAGE);
+    };
     async function validate(t,pid,j) {
         if (!await t.item(pid,j.work_item_id)) throw v.problem(404,"Không tìm thấy hạng mục trong dự án");
         const photos=await t.photoIds(pid,j.photo_ids);
@@ -48,7 +52,7 @@ function createJournalService({ model }) {
         },
         async saveDaily(pid,actor,body) {
             role(actor); const day=v.date(body.day);
-            return tx(pid,async (t) => { await unlocked(t,pid,day); const values=await dailyValues(t,pid,body); const before=await t.daily(pid,day); v.revision(before?.revision || 0,body.revision); const result=await t.saveDaily(pid,day,values); await t.audit(pid,actor.id,"journal","daily_info",day,before,result); return result; });
+            return tx(pid,async (t) => { const before=await t.daily(pid,day); await unlocked(t,pid,day,before); const values=await dailyValues(t,pid,body); v.revision(before?.revision || 0,body.revision); const result=await t.saveDaily(pid,day,values); await t.audit(pid,actor.id,"journal","daily_info",day,before,result); return result; });
         },
         async saveCatalog(pid,actor,body) {
             role(actor,MANAGE);
@@ -73,7 +77,7 @@ function createJournalService({ model }) {
                     const old=await t.journalByUuid(j.client_uuid);
                     if (old) { if (old.project_id!==pid || old.author_id!==actor.id || old.input_hash!==inputHash) throw v.problem(409,"Mã nhật ký đã được sử dụng"); return { journal:old,replayed:true }; }
                 }
-                await unlocked(t,pid,j.day); if (previous) await unlocked(t,pid,previous.day);
+                await unlocked(t,pid,j.day,previous); if (previous) await unlocked(t,pid,previous.day,previous);
                 await validate(t,pid,j);
                 let merged=false;
                 if (previous) {
@@ -97,10 +101,13 @@ function createJournalService({ model }) {
                     }
                 }
                 const previousDaily=await t.daily(pid,j.day);
-                if (!previousDaily || body.daily_revision!==undefined) {
+                // A stale edit can merge onto the server's newer day. Its header
+                // still describes the submitted day and must not overwrite it.
+                if (!previousDaily && j.day!==body.day) throw v.problem(409,"Thông tin ngày nhật ký đã thay đổi. Tải lại trước khi lưu.");
+                if (j.day===body.day && (!previousDaily || body.daily_revision!==undefined)) {
                     const d=await dailyValues(t,pid,body);
                     const changed=!previousDaily || Object.keys(d).some((k) => !equal(previousDaily[k],d[k]));
-                    if (changed) { v.revision(previousDaily?.revision || 0,body.daily_revision ?? 0); await t.saveDaily(pid,j.day,d); }
+                    if (changed) { await unlocked(t,pid,j.day,previousDaily); v.revision(previousDaily?.revision || 0,body.daily_revision ?? 0); await t.saveDaily(pid,j.day,d); }
                 }
                 const journal=id ? await t.updateJournal(pid,id,{ ...j,revision:previous.revision }) : await t.createJournal(pid,actor.id,j);
                 await t.linkJournalPhotos(journal.id,j.photo_ids);
@@ -138,7 +145,7 @@ function createJournalService({ model }) {
             return tx(pid,async (t) => {
                 const c=await t.conflict(pid,v.id(conflictId)); if (!c || c.resolved_at) throw v.problem(409,"Xung đột không còn chờ xử lý");
                 const current=await t.journal(pid,c.journal_id); if (!current) throw v.problem(404,"Nhật ký đã xóa");
-                await unlocked(t,pid,current.day); v.revision(current.revision,body.revision);
+                await unlocked(t,pid,current.day,current); v.revision(current.revision,body.revision);
                 const chosen=body.chosen==="server" ? snapshot(current,(await t.version(current.id,current.revision)).snapshot.photo_ids) : c.incoming_snapshot;
                 await unlocked(t,pid,chosen.day); await validate(t,pid,chosen);
                 const journal=await t.updateJournal(pid,current.id,{ ...chosen,revision:current.revision });
@@ -151,16 +158,35 @@ function createJournalService({ model }) {
             });
         },
         async deleteJournal(pid,actor,id,body) {
-            role(actor); return tx(pid,async (t) => { const j=await t.journal(pid,v.id(id)); if (!j) throw v.problem(404,"Không tìm thấy nhật ký"); if (j.author_id!==actor.id && !MANAGE.includes(actor.role)) throw v.problem(403,"Chỉ được xóa nhật ký do mình ghi"); await unlocked(t,pid,j.day); v.revision(j.revision,body.revision); await t.deleteJournal(pid,id,body.revision); await t.saveVersion({ ...j,revision:j.revision+1,deleted:true },actor.id); await t.audit(pid,actor.id,"journal","delete",id,j,null); return { id }; });
+            role(actor); return tx(pid,async (t) => { const j=await t.journal(pid,v.id(id)); if (!j) throw v.problem(404,"Không tìm thấy nhật ký"); if (j.author_id!==actor.id && !MANAGE.includes(actor.role)) throw v.problem(403,"Chỉ được xóa nhật ký do mình ghi"); await unlocked(t,pid,j.day,j); v.revision(j.revision,body.revision); await t.deleteJournal(pid,id,body.revision); await t.saveVersion({ ...j,revision:j.revision+1,deleted:true },actor.id); await t.audit(pid,actor.id,"journal","delete",id,j,null); return { id }; });
         },
         async lockJournal(pid,actor,body) {
-            role(actor); const day=v.date(body.day);
-            if (typeof body.locked!=="boolean") throw v.problem(400,"Trạng thái khóa không hợp lệ");
-            if (!body.locked) role(actor,MANAGE);
+            role(actor);
+            const locked=body.is_locked!==undefined ? body.is_locked : body.locked!==undefined ? body.locked : true;
+            if (typeof locked!=="boolean" || (body.is_locked!==undefined && body.locked!==undefined && body.is_locked!==body.locked)) throw v.problem(400,"Trạng thái khóa không hợp lệ");
+            if (!locked) role(actor,["admin"]);
+            const day=body.day ? v.date(body.day) : null;
+            const recordId=body.recordId || body.id ? v.id(body.recordId || body.id) : null;
+            if (!day && !recordId) throw v.problem(400,"Cần ngày hoặc id nhật ký để khóa sổ");
             const now=new Intl.DateTimeFormat("en-CA",{ timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit" }).format(new Date());
-            if (body.locked && day>=now) throw v.problem(400,"Chỉ khóa sổ ngày đã qua");
-            const reason=v.text(body.reason,"Lý do mở khóa",2000,body.locked);
-            return tx(pid,async (t) => { const before=await t.dayLock(pid,day); const lock=await t.setDayLock(pid,day,actor.id,body.locked,reason); await t.audit(pid,actor.id,"journal",body.locked ? "lock_day" : "unlock_day",day,before,lock); return lock; });
+            const reason=v.text(body.reason,"Lý do mở khóa",2000,locked);
+            return tx(pid,async (t) => {
+                const record=recordId ? await t.journal(pid,recordId) : null;
+                if (recordId && !record) throw v.problem(404,"Không tìm thấy nhật ký");
+                if (record && day && record.day!==day) throw v.problem(400,"Ngày khóa phải trùng ngày của nhật ký");
+                if (locked && (day || record.day)>=now) throw v.problem(400,"Chỉ khóa sổ ngày đã qua");
+                let result;
+                if (day) {
+                    const before=await t.dayLock(pid,day);
+                    result=await t.setDayLock(pid,day,actor.id,locked,reason);
+                    await t.audit(pid,actor.id,"journal",locked ? "lock_day" : "unlock_day",day,before,result);
+                } else {
+                    await unlocked(t,pid,record.day);
+                    result=await t.lockJournalRecord(pid,recordId,actor.id,locked);
+                    await t.audit(pid,actor.id,"journal",locked ? "lock_record" : "unlock_record",recordId,record,{ ...result,reason });
+                }
+                return { ...result,is_locked:locked,locked,locked_at:locked ? result.locked_at || result.updated_at : null,locked_by:locked ? result.locked_by || result.changed_by || actor.id : null };
+            });
         }
     };
 }

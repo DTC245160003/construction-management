@@ -35,6 +35,7 @@ function operationsApp(pool) {
     app.use("/admin",createSystemAdminRoutes({ pool,authorization }));
     app.use("/projects", createProjectOperationsRoutes({ pool, authorization }));
     app.use("/projects", createSiteManagementRoutes({ pool, authorization }));
+    app.use("/api/v1/projects", createSiteManagementRoutes({ pool, authorization }));
     app.use("/projects", createWorkItemRoutes({ model: createWorkItemCrudModel(pool), memberModel, authorization }));
     app.use("/projects", createTaskRoutes({ model: createTaskModel(pool), progressModel: createTaskProgressModel(pool), memberModel, authorization }));
     app.use("/projects", createScheduleRoutes({ model: createScheduleModel(pool), memberModel, authorization }));

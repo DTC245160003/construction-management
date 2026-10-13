@@ -74,6 +74,16 @@ describeDb("Sprint 4–5: real PostgreSQL concurrency, versions, photo manifests
     const replay=await agents.engineer2.put(url(`/journals/${j.id}`)).send(edit).expect(200); expect(replay.body.replayed).toBe(true); expect(replay.body.journal.revision).toBe(3);
     expect((await agents.engineer.get(url(`/journals/${j.id}/history`))).body.conflicts).toHaveLength(0);
   });
+  test("a stale content edit follows a server date move without overwriting the destination daily header",async () => {
+    const b=body(),j=await create(b),destination="2026-10-06";
+    const header={ day:destination,manpower:50,weather_code:"rain",equipment_codes:["crane"],revision:0 };
+    await agents.engineer.put(url("/journals/daily")).send(header).expect(200);
+    await agents.engineer.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,day:destination,manpower:50,weather_code:"rain",equipment_codes:["crane"],daily_revision:1 }).expect(200);
+    const merged=await agents.engineer2.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,content:"Nội dung offline từ ngày cũ",daily_revision:1 }).expect(200);
+    expect(merged.body).toMatchObject({ merged:true,journal:{ day:destination,content:"Nội dung offline từ ngày cũ",revision:3 } });
+    const daily=(await agents.viewer.get(url(`/journals/daily?day=${destination}`))).body.daily;
+    expect(daily).toMatchObject({ manpower:50,weather_code:"rain",equipment_codes:["crane"],revision:1 });
+  });
   test("resolution must match the latest reviewed revision; refreshed incoming choice preserves newer server history",async () => {
     const b=body(),j=await create(b);
     await agents.engineer.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,content:"A",daily_revision:1 }).expect(200);
@@ -113,20 +123,112 @@ describeDb("Sprint 4–5: real PostgreSQL concurrency, versions, photo manifests
     const after=(await agents.viewer.get(url("/journals"))).body.journals[0]; expect(after.photo_ids).toHaveLength(10); expect(after.photo_uploads.every((p) => p.photo_id)).toBe(true);
     await agents.engineer.post(url("/photos")).send({ client_uuid:randomUUID(),filename:"bad.jpg",work_item_id:item,data:image.toString("base64"),checksum:"0".repeat(64) }).expect(400);
   });
-  test("locks reject uploads, SQL photo links, sync, deletes and conflict resolution; manager unlock needs an audited reason",async () => {
+  test("locks reject uploads, SQL photo links, sync, deletes and conflict resolution; only admin unlocks with an audited reason",async () => {
     const pending={ client_uuid:randomUUID(),filename:"pending.jpg" },b=body({ pending_photos:[pending] }),j=await create(b);
     await agents.engineer.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,content:"A",daily_revision:1 }).expect(200);
     const conflict=(await agents.engineer2.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,content:"B",pending_photos:[],daily_revision:1 }).expect(409)).body.conflict;
     await agents.engineer.put(url("/journals/lock")).send({ day:b.day,locked:true }).expect(200);
-    await agents.engineer.post(url("/photos")).send({ ...pending,journal_id:j.id,work_item_id:item,data:image.toString("base64") }).expect(409);
-    await agents.engineer.delete(url(`/journals/${j.id}`)).send({ revision:2 }).expect(409);
-    const sync=(await agents.engineer.post(url("/journals/sync")).send({ entries:[body()] }).expect(200)).body; expect(sync.results[0].status).toBe(409);
-    await agents.engineer.post(url(`/journals/conflicts/${conflict.id}/resolve`)).send({ chosen:"incoming",revision:2 }).expect(409);
+    await agents.engineer.post(url("/photos")).send({ ...pending,journal_id:j.id,work_item_id:item,data:image.toString("base64") }).expect(403);
+    await agents.engineer.delete(url(`/journals/${j.id}`)).send({ revision:2 }).expect(403);
+    const sync=(await agents.engineer.post(url("/journals/sync")).send({ entries:[body()] }).expect(200)).body; expect(sync.results[0].status).toBe(403);
+    await agents.engineer.post(url(`/journals/conflicts/${conflict.id}/resolve`)).send({ chosen:"incoming",revision:2 }).expect(403);
     await expect(pool.query("INSERT INTO journal_photo_uploads(client_uuid,journal_id,uploaded_by,filename) VALUES($1,$2,$3,'x.jpg')",[randomUUID(),j.id,users.engineer])).rejects.toMatchObject({ code:"23514" });
     await agents.engineer.put(url("/journals/lock")).send({ day:b.day,locked:false,reason:"Bổ sung" }).expect(403);
-    await agents.manager.put(url("/journals/lock")).send({ day:b.day,locked:false,reason:"" }).expect(400);
-    await agents.manager.put(url("/journals/lock")).send({ day:b.day,locked:false,reason:"Bổ sung hồ sơ" }).expect(200);
-    const audit=(await pool.query("SELECT * FROM audit_logs WHERE action='unlock_day'")).rows[0]; expect(audit.actor_id).toBe(users.manager); expect(audit.after_value.reason).toBe("Bổ sung hồ sơ");
+    await agents.manager.put(url("/journals/lock")).send({ day:b.day,locked:false,reason:"Bổ sung hồ sơ" }).expect(403);
+    await agents.admin.put(url("/journals/lock")).send({ day:b.day,locked:false,reason:"" }).expect(400);
+    await agents.admin.put(url("/journals/lock")).send({ day:b.day,locked:false,reason:"Bổ sung hồ sơ" }).expect(200);
+    const audit=(await pool.query("SELECT * FROM audit_logs WHERE action='unlock_day'")).rows[0]; expect(audit.actor_id).toBe(users.admin); expect(audit.after_value.reason).toBe("Bổ sung hồ sơ");
+  });
+  test("record locks protect dates, shared daily data, photo manifests and conflicts while accepted offline retries remain idempotent",async () => {
+    const pending={ client_uuid:randomUUID(),filename:"record-pending.jpg" },b=body({ pending_photos:[pending] }),j=await create(b);
+    const sibling=await create(body({ content:"Nhật ký khác cùng ngày" }));
+    const edit={ ...b,operation_uuid:randomUUID(),revision:1,content:"A",daily_revision:1 };
+    await agents.engineer.put(url(`/journals/${j.id}`)).send(edit).expect(200);
+    const conflict=(await agents.engineer2.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,content:"B",pending_photos:[],daily_revision:1 }).expect(409)).body.conflict;
+    const lock=(await agents.engineer.post(url(`/journals/${j.id}/lock`)).send({ is_locked:true }).expect(200)).body.lock;
+    expect(lock).toMatchObject({ is_locked:true,locked:true,locked_by:users.engineer });
+    expect((await pool.query("SELECT * FROM journal_day_locks WHERE project_id=$1 AND day=$2",[pid,b.day])).rows).toHaveLength(0);
+    const listed=(await agents.viewer.get(url("/journals"))).body.journals;
+    expect(listed.find((entry) => entry.id===j.id)).toMatchObject({ locked:true,is_locked:true,day_locked:false });
+    expect(listed.find((entry) => entry.id===sibling.id)).toMatchObject({ locked:false,is_locked:false,day_locked:false });
+    expect((await agents.viewer.get(url(`/journals/daily?day=${b.day}`))).body.daily.is_locked).toBe(true);
+    await agents.engineer.patch(url(`/journals/${j.id}`)).send({ ...edit,operation_uuid:randomUUID(),revision:2,day:"2026-10-06" }).expect(403);
+    await agents.engineer.delete(url(`/journals/${j.id}`)).send({ revision:2 }).expect(403);
+    await agents.engineer.post(url(`/journals/conflicts/${conflict.id}/resolve`)).send({ chosen:"server",revision:2 }).expect(403);
+    await agents.engineer.post(url("/photos")).send({ ...pending,journal_id:j.id,work_item_id:item,data:image.toString("base64") }).expect(403);
+    await agents.engineer.put(url("/journals/daily")).send({ day:b.day,manpower:99,weather_code:"sunny",equipment_codes:["compactor"],revision:1 }).expect(403);
+    await agents.engineer.put(url(`/journals/${sibling.id}`)).send({ ...body(),revision:1,daily_revision:1,manpower:99 }).expect(403);
+    await agents.engineer.put(url(`/journals/${sibling.id}`)).send({ ...body(),revision:1,daily_revision:1,content:"Nội dung khác, giữ thông tin ngày" }).expect(200);
+    const replay=await agents.engineer.put(url(`/journals/${j.id}`)).send(edit).expect(200); expect(replay.body.replayed).toBe(true); expect(replay.body.journal.revision).toBe(2);
+    const sync=(await agents.engineer.post(url("/journals/sync")).send({ entries:[{ ...edit,id:j.id },{ ...edit,id:j.id,operation_uuid:randomUUID(),revision:2,content:"Queued edit after lock" }] }).expect(200)).body.results;
+    expect(sync.map((entry) => entry.ok)).toEqual([true,false]); expect(sync[1].status).toBe(403);
+    expect((await pool.query("SELECT count(*)::int n FROM journal_versions WHERE journal_id=$1",[j.id])).rows[0].n).toBe(2);
+    await expect(pool.query("UPDATE site_journals SET content='Bypass' WHERE id=$1",[j.id])).rejects.toMatchObject({ code:"23514" });
+    await expect(pool.query("UPDATE journal_daily_info SET manpower=99 WHERE project_id=$1 AND day=$2",[pid,b.day])).rejects.toMatchObject({ code:"23514" });
+    await expect(pool.query("INSERT INTO journal_photo_uploads(client_uuid,journal_id,uploaded_by,filename) VALUES($1,$2,$3,'bypass.jpg')",[randomUUID(),j.id,users.engineer])).rejects.toMatchObject({ code:"23514" });
+    await agents.manager.post(url(`/journals/${j.id}/lock`)).send({ locked:false,reason:"Bổ sung" }).expect(403);
+    await agents.admin.post(url(`/journals/${j.id}/lock`)).send({ locked:false,reason:"Bổ sung" }).expect(200);
+    expect((await agents.viewer.get(url(`/journals/daily?day=${b.day}`))).body.daily.is_locked).toBe(false);
+    const audit=(await pool.query("SELECT * FROM audit_logs WHERE action='unlock_record'")).rows[0]; expect(audit.after_value.reason).toBe("Bổ sung");
+  });
+  test("project serialization makes locking atomic with concurrent journal writes",async () => {
+    const b=body(),j=await create(b),update={ ...b,operation_uuid:randomUUID(),revision:1,content:"Concurrent update",daily_revision:1 };
+    const [locked,write]=await Promise.all([
+      agents.engineer.post(url("/journals/lock")).send({ day:b.day,is_locked:true }),
+      agents.engineer.put(url(`/journals/${j.id}`)).send(update)
+    ]);
+    expect(locked.status).toBe(200); expect([200,403]).toContain(write.status);
+    const row=(await pool.query("SELECT * FROM site_journals WHERE id=$1",[j.id])).rows[0]; expect(row.is_locked).toBe(true);
+    expect(row.content).toBe(write.status===200 ? "Concurrent update" : b.content);
+    await agents.engineer.put(url(`/journals/${j.id}`)).send({ ...update,operation_uuid:randomUUID(),revision:row.revision }).expect(403);
+  });
+  test("SQL cannot move photos or manifests away from a record lock, and rollback preserves lock metadata",async () => {
+    const photo=(await agents.engineer.post(url("/photos")).send({ client_uuid:randomUUID(),work_item_id:item,filename:"linked.jpg",data:image.toString("base64") }).expect(201)).body.photo;
+    const pending={ client_uuid:randomUUID(),filename:"not-yet-uploaded.jpg" };
+    const j=await create(body({ photo_ids:[photo.id],pending_photos:[pending] })),sibling=await create(body());
+    await agents.engineer.post(url(`/journals/${j.id}/lock`)).send({ is_locked:true }).expect(200);
+    await expect(pool.query("UPDATE journal_photos SET journal_id=$2 WHERE journal_id=$1",[j.id,sibling.id])).rejects.toMatchObject({ code:"23514" });
+    await expect(pool.query("DELETE FROM journal_photos WHERE journal_id=$1",[j.id])).rejects.toMatchObject({ code:"23514" });
+    await expect(pool.query("UPDATE journal_photo_uploads SET journal_id=$2 WHERE journal_id=$1",[j.id,sibling.id])).rejects.toMatchObject({ code:"23514" });
+    await expect(pool.query("DELETE FROM journal_photo_uploads WHERE journal_id=$1",[j.id])).rejects.toMatchObject({ code:"23514" });
+    await expect(migrate("down")).rejects.toThrow(/preserve lock metadata/);
+    expect((await pool.query("SELECT photo_id FROM journal_photos WHERE journal_id=$1",[j.id])).rows).toEqual([{ photo_id:photo.id }]);
+    expect((await agents.viewer.get(url(`/journals/${j.id}/history`))).body.journal.is_locked).toBe(true);
+  });
+  test("accepted photo retries after locking preserve their binding without new writes",async () => {
+    const accepted={ client_uuid:randomUUID(),filename:"accepted.jpg" },pending={ client_uuid:randomUUID(),filename:"pending.jpg" };
+    const j=await create(body({ pending_photos:[accepted,pending] }));
+    const upload={ ...accepted,journal_id:j.id,work_item_id:item,data:image.toString("base64") };
+    const photo=(await agents.engineer.post(url("/photos")).send(upload).expect(201)).body.photo;
+    await agents.engineer.post(url(`/journals/${j.id}/lock`)).send({ is_locked:true }).expect(200);
+    const replay=await agents.engineer.post(url("/photos")).send(upload).expect(201); expect(replay.body.photo.id).toBe(photo.id);
+    await agents.engineer.post(url("/photos")).send({ ...upload,...pending }).expect(403);
+    const altered=await sharp({ create:{ width:100,height:100,channels:3,background:"#ff0000" } }).jpeg().toBuffer();
+    await agents.engineer.post(url("/photos")).send({ ...upload,data:altered.toString("base64") }).expect(409);
+    expect((await pool.query("SELECT count(*)::int n FROM site_photos")).rows[0].n).toBe(1);
+    expect((await pool.query("SELECT count(*)::int n FROM journal_versions WHERE journal_id=$1",[j.id])).rows[0].n).toBe(2);
+    expect((await agents.viewer.get(url(`/journals/${j.id}/history`))).body.journal.revision).toBe(2);
+  });
+  test("repeated day locks remain stable and day unlock preserves an earlier individual record lock",async () => {
+    const b=body(),individual=await create(b),other=await create(body());
+    const individualLock=(await agents.engineer.post(url(`/journals/${individual.id}/lock`)).send({ locked:true }).expect(200)).body.lock;
+    const first=(await agents.engineer.post(url("/journals/lock")).send({ day:b.day,locked:true }).expect(200)).body.lock;
+    const repeated=(await agents.manager.post(url("/journals/lock")).send({ day:b.day,is_locked:true }).expect(200)).body.lock;
+    expect(repeated.locked_at).toBe(first.locked_at); expect(repeated.locked_by).toBe(first.locked_by);
+    await agents.admin.post(url("/journals/lock")).send({ day:b.day,is_locked:false,reason:"Mở ngày, giữ khóa riêng" }).expect(200);
+    const journals=(await agents.viewer.get(url("/journals"))).body.journals;
+    expect(journals.find((entry) => entry.id===individual.id)).toMatchObject({ locked:true,day_locked:false,locked_at:individualLock.locked_at });
+    expect(journals.find((entry) => entry.id===other.id)).toMatchObject({ locked:false,is_locked:false,locked_at:null,locked_by:null });
+    await agents.admin.post(url(`/journals/${individual.id}/lock`)).send({ locked:false,reason:"Bổ sung" }).expect(200);
+    expect((await agents.viewer.get(url(`/journals/daily?day=${b.day}`))).body.daily.is_locked).toBe(false);
+  });
+  test("conflict resolution cannot move an unlocked journal into a locked destination day",async () => {
+    const b=body(),j=await create(b),destination="2026-10-06";
+    await agents.engineer.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,content:"A",daily_revision:1 }).expect(200);
+    const conflict=(await agents.engineer2.put(url(`/journals/${j.id}`)).send({ ...b,operation_uuid:randomUUID(),revision:1,content:"B",day:destination,daily_revision:0 }).expect(409)).body.conflict;
+    await agents.engineer.post(url("/journals/lock")).send({ day:destination,is_locked:true }).expect(200);
+    await agents.engineer2.post(url(`/journals/conflicts/${conflict.id}/resolve`)).send({ chosen:"incoming",revision:2 }).expect(403);
+    expect((await agents.viewer.get(url(`/journals/${j.id}/history`))).body.journal).toMatchObject({ day:b.day,content:"A",revision:2 });
   });
   test("original camera EXIF timestamp and GPS are extracted from bytes and preserved without inventing missing metadata",async () => {
     const original=await sharp({ create:{ width:120,height:100,channels:3,background:"#2489ce" } }).withExif({ IFD0:{ Make:"Test camera" },IFD2:{ DateTimeOriginal:"2026:10:05 08:30:00" },IFD3:{ GPSLatitudeRef:"N",GPSLatitude:"10/1 46/1 48/1",GPSLongitudeRef:"E",GPSLongitude:"106/1 42/1 0/1" } }).jpeg().toBuffer();
@@ -149,10 +251,10 @@ describeDb("Sprint 4–5: real PostgreSQL concurrency, versions, photo manifests
     await request(app).post("/auth/register").send({ email:"expired@s45.test",fullname:"Mới",password:"Test-user-123!",role:"worker",invitation_token:new URL(expired.acceptance_path,"http://test").searchParams.get("token") }).expect(409);
   });
   test("017 migration refuses data loss and roundtrips on a separate empty test schema",async () => {
-    await create(); await migrate("down"); await expect(migrate("down")).rejects.toThrow(/preserve business data/); await migrate("up");
+    await create(); await migrate("down"); await migrate("down"); await expect(migrate("down")).rejects.toThrow(/preserve business data/); await migrate("up");
     const empty=`empty45_${randomUUID().replaceAll("-","")}`;
     await admin.query(`CREATE SCHEMA "${empty}"`); const isolated=new Pool({ connectionString:process.env.SPRINT2_TEST_DATABASE_URL,options:`-c search_path=${empty}` });
-    try { const c=await isolated.connect(); try { await runMigrations({ client:c }); await runMigrations({ client:c,command:"down" }); expect(await runMigrations({ client:c,command:"down" })).toEqual(["Rolled back: 017_sprint4_5.sql"]); expect(await runMigrations({ client:c })).toEqual(["Applied: 017_sprint4_5.sql","Applied: 018_system_administration.sql"]); } finally { c.release(); } }
+    try { const c=await isolated.connect(); try { await runMigrations({ client:c }); await runMigrations({ client:c,command:"down" }); await runMigrations({ client:c,command:"down" }); expect(await runMigrations({ client:c,command:"down" })).toEqual(["Rolled back: 017_sprint4_5.sql"]); expect(await runMigrations({ client:c })).toEqual(["Applied: 017_sprint4_5.sql","Applied: 018_system_administration.sql","Applied: 019_reconcile_journal_lock_guards.sql"]); } finally { c.release(); } }
     finally { await isolated.end(); await admin.query(`DROP SCHEMA "${empty}" CASCADE`); }
   });
 });

@@ -135,12 +135,12 @@ describeDb("Two-level system and project RBAC on real PostgreSQL",() => {
     for (const sql of ["DELETE FROM users WHERE id=$1","UPDATE users SET system_role='user' WHERE id=$1","UPDATE users SET is_active=FALSE WHERE id=$1"]) await expect(pool.query(sql,[users.root])).rejects.toMatchObject({ code:"23514" });
   });
   test("018 rollback refuses privilege/audit loss and roundtrips on a separate empty schema",async () => {
-    const c=await pool.connect(); try { await expect(runMigrations({ client:c,command:"down" })).rejects.toThrow(/preserve privileges/); } finally { c.release(); }
+    const c=await pool.connect(); try { await runMigrations({ client:c,command:"down" }); await expect(runMigrations({ client:c,command:"down" })).rejects.toThrow(/preserve privileges/); await runMigrations({ client:c }); } finally { c.release(); }
     const empty=`empty_admin_${randomUUID().replaceAll("-","")}`;
     await admin.query(`CREATE SCHEMA "${empty}"`);
     const isolated=new Pool({ connectionString:process.env.SPRINT2_TEST_DATABASE_URL,options:`-c search_path=${empty}` });
     const x=await isolated.connect();
-    try { await runMigrations({ client:x }); expect(await runMigrations({ client:x,command:"down" })).toEqual(["Rolled back: 018_system_administration.sql"]); expect(await runMigrations({ client:x })).toEqual(["Applied: 018_system_administration.sql"]); }
+    try { await runMigrations({ client:x }); expect(await runMigrations({ client:x,command:"down" })).toEqual(["Rolled back: 019_reconcile_journal_lock_guards.sql"]); expect(await runMigrations({ client:x,command:"down" })).toEqual(["Rolled back: 018_system_administration.sql"]); expect(await runMigrations({ client:x })).toEqual(["Applied: 018_system_administration.sql","Applied: 019_reconcile_journal_lock_guards.sql"]); }
     finally { x.release(); await isolated.end(); await admin.query(`DROP SCHEMA "${empty}" CASCADE`); }
   });
   test("concurrent demotions of two Super Admins leave exactly one active administrator",async () => {

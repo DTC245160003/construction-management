@@ -1,4 +1,4 @@
-import { api,projectPath } from "./operationsApi";
+import { api,projectPath } from "./operationsApi.js";
 const q=() => globalThis.XdsJournalQueue;
 const cacheKey=(pid,uid) => `project:${pid}:user:${uid}`;
 export const pendingJournals=(pid,uid) => q().pending(pid,uid);
@@ -19,12 +19,18 @@ export async function storageStatus() {
 }
 export const requestPersistentStorage=() => navigator.storage?.persist?.() || Promise.resolve(false);
 export async function loadJournals(pid,signal) {
+  const identity=await q().get("control","identity");
+  const sessionChanged=async () => signal?.aborted || (await q().get("control","identity"))?.generation!==identity?.generation;
+  const aborted=() => new DOMException("Phiên làm việc đã thay đổi.","AbortError");
   try {
     const [{ user },data]=await Promise.all([api("/auth/me",{ signal }),api(projectPath(pid,"/journals"),{ signal })]);
-    if ((await q().get("control","identity"))?.userId!==user.id) await setOfflineIdentity(user.id);
+    if (await sessionChanged()) throw aborted();
+    const current=await q().get("control","identity");
+    if (!signal?.aborted && current?.generation===identity?.generation && current?.userId!==user.id) await setOfflineIdentity(user.id);
     const result={ user,data,offline:false }; await q().put("cache",{ key:cacheKey(pid,user.id),value:result }); await q().put("control",{ key:`last-project:${user.id}`,projectId:Number(pid) }); return result;
   } catch(e) {
-    if (signal?.aborted || e.status) { if (e.status===401 || e.status===403) await clearOfflineIdentity(); throw e; }
+    if (e.name==="AbortError" || await sessionChanged()) throw aborted();
+    if (e.status) { if (e.status===401 || e.status===403) await clearOfflineIdentity(); throw e; }
     let who=await q().get("control","identity");
     if (!who) { const legacy=await q().get("cache","last-user"); if (legacy) { await setOfflineIdentity(legacy.value); who=await q().get("control","identity"); } }
     const stored=who && await q().get("cache",cacheKey(pid,who.userId));

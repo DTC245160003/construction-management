@@ -78,19 +78,28 @@ function statements(client) {
 }
 
 describe("Migration runner (no database connection)", () => {
+    const history016 = history.find(entry => entry.name === "016_create_baselines_and_milestones.sql");
     test("adopts the verified 015 baseline history and applies actuals without rerunning baseline DDL", async () => {
-        const legacy = { ...history.find((h) => h.name==="016_create_baselines_and_milestones.sql"), name: "015_create_baselines_and_milestones.sql" };
+        const legacy = { ...history016, name: "015_create_baselines_and_milestones.sql" };
         const client = makeClient({ applied: [...history.slice(0, 14), legacy] });
-        expect(await runMigrations({ client })).toEqual(["Applied: 015_add_task_actuals.sql","Applied: 017_sprint4_5.sql","Applied: 018_system_administration.sql"]);
-        expect(statements(client).filter(statement => sql.includes(statement))).toEqual([sql[14],sql[16],sql[17]]);
+        expect(await runMigrations({ client })).toEqual([
+            "Applied: 015_add_task_actuals.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql",
+            "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql",
+            "Applied: 019_reconcile_journal_lock_guards.sql"
+        ]);
+        expect(statements(client).filter(statement => sql.includes(statement))).toEqual([sql[14], ...sql.slice(16)]);
         expect(client.query).toHaveBeenCalledWith("UPDATE schema_migrations SET name = $1 WHERE name = $2 AND checksum = $3",
-            ["016_create_baselines_and_milestones.sql", legacy.name, legacy.checksum]);
+            [history016.name, legacy.name, legacy.checksum]);
     });
     test("legacy baseline status is read-only and an unknown checksum is rejected", async () => {
-        const legacy = { ...history.find((h) => h.name==="016_create_baselines_and_milestones.sql"), name: "015_create_baselines_and_milestones.sql" };
+        const legacy = { ...history016, name: "015_create_baselines_and_milestones.sql" };
         const client = makeClient({ applied: [...history.slice(0, 14), legacy] });
         const messages = await runMigrations({ client, command: "status" });
-        expect(messages.slice(-4)).toEqual(["pending: 015_add_task_actuals.sql", "applied: 016_create_baselines_and_milestones.sql","pending: 017_sprint4_5.sql","pending: 018_system_administration.sql"]);
+        expect(messages.slice(14)).toEqual([
+            "pending: 015_add_task_actuals.sql", "applied: 016_create_baselines_and_milestones.sql",
+            "pending: 017_add_lock_fields_to_daily_logs.sql", "pending: 017_sprint4_5.sql",
+            "pending: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql"
+        ]);
         expect(statements(client).some(statement => statement.startsWith("UPDATE"))).toBe(false);
         await expect(runMigrations({ client: makeClient({ applied: [...history.slice(0, 14), { ...legacy, checksum: "bad" }] }) })).rejects.toThrow("checksum/history");
     });
@@ -111,6 +120,81 @@ describe("Migration runner (no database connection)", () => {
         expect(statements(client).filter(statement => sql.includes(statement))).toEqual([]);
         expect(statements(client).some(statement => statement.startsWith("INSERT"))).toBe(false);
     });
+
+    test("upgrades main's S-24 history without changing its lock migration", async () => {
+        const applied = history.filter(entry => entry.name <= "017_add_lock_fields_to_daily_logs.sql");
+        const client = makeClient({ applied });
+        await expect(runMigrations({ client })).resolves.toEqual([
+            "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql",
+            "Applied: 019_reconcile_journal_lock_guards.sql"
+        ]);
+        expect(statements(client).filter(statement => sql.includes(statement)))
+            .toEqual(sql.filter((_, index) => !applied.some(entry => entry.name === names[index])));
+        expect(statements(client).some(statement => statement.startsWith("UPDATE schema_migrations"))).toBe(false);
+    });
+
+    test("upgrades deployed Sprint 4-5 and 018 without replaying their SQL", async () => {
+        const applied = history.filter(entry => entry.name !== "017_add_lock_fields_to_daily_logs.sql"
+            && entry.name <= "018_system_administration.sql");
+        const client = makeClient({ applied });
+        await expect(runMigrations({ client })).resolves.toEqual([
+            "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 019_reconcile_journal_lock_guards.sql"
+        ]);
+        expect(statements(client).filter(statement => sql.includes(statement))).toEqual([
+            sql[names.indexOf("017_add_lock_fields_to_daily_logs.sql")], sql.at(-1)
+        ]);
+        expect(statements(client).some(statement => statement.startsWith("UPDATE schema_migrations"))).toBe(false);
+    });
+
+    test("status reports the known Sprint 4-5 history gap without changing history", async () => {
+        const applied = history.filter(entry => entry.name !== "017_add_lock_fields_to_daily_logs.sql"
+            && entry.name <= "018_system_administration.sql");
+        const client = makeClient({ applied });
+        expect((await runMigrations({ client, command: "status" })).slice(16)).toEqual([
+            "pending: 017_add_lock_fields_to_daily_logs.sql", "applied: 017_sprint4_5.sql",
+            "applied: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql"
+        ]);
+        expect(statements(client).some(statement => /CREATE|INSERT|UPDATE|DELETE/.test(statement))).toBe(false);
+    });
+
+    test.each(["017_add_lock_fields_to_daily_logs.sql", "017_sprint4_5.sql", "018_system_administration.sql"])(
+        "branch upgrades reject a changed checksum for %s", async name => {
+            const applied = history.filter(entry => entry.name <= "018_system_administration.sql"
+                && (name === "017_add_lock_fields_to_daily_logs.sql" || entry.name !== "017_add_lock_fields_to_daily_logs.sql"))
+                .map(entry => entry.name === name ? { ...entry, checksum: "bad" } : entry);
+            const client = makeClient({ applied });
+            await expect(runMigrations({ client })).rejects.toThrow(`Applied migration has changed: ${name}`);
+            expect(statements(client).filter(statement => sql.includes(statement))).toEqual([]);
+            expect(statements(client).at(-1)).toBe("ROLLBACK");
+        }
+    );
+
+    test.each(["014_create_project_invitations.sql", "017_add_lock_fields_to_daily_logs.sql", "017_sprint4_5.sql", "018_system_administration.sql"])(
+        "branch compatibility still rejects an unrelated history gap at %s", async name => {
+            const client = makeClient({ applied: history.filter(entry => entry.name !== name) });
+            await expect(runMigrations({ client })).rejects.toThrow("Migration history does not match");
+            expect(statements(client).filter(statement => sql.includes(statement))).toEqual([]);
+        }
+    );
+
+    test("unordered and unknown history entries are rejected", async () => {
+        for (const applied of [[history[1], history[0]], [...history, { name: "999_unknown.sql", checksum: "bad" }]]) {
+            const client = makeClient({ applied });
+            await expect(runMigrations({ client })).rejects.toThrow("Migration history does not match");
+            expect(statements(client).filter(statement => sql.includes(statement))).toEqual([]);
+        }
+    });
+
+    test.each(["017_unrecognized.sql", "018_unrecognized.sql"])(
+        "the released 017 pair does not permit another duplicate version: %s", async name => {
+            const files = jest.spyOn(fs, "readdirSync").mockReturnValue([...names, name]);
+            const client = makeClient();
+            try {
+                await expect(runMigrations({ client })).rejects.toThrow("Migration version numbers must be unique");
+                expect(client.query).not.toHaveBeenCalled();
+            } finally { files.mockRestore(); }
+        }
+    );
 
     test("an untracked T-01 table requires an explicit baseline", async () => {
         const client = makeClient({ usersExist: true });

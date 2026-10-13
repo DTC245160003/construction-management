@@ -35,6 +35,7 @@ function createApp({ authService, sessionStore, sessionSecret, secureCookies, tr
     app.use("/projects", createProjectRoutes());
     app.use("/projects", createProjectOperationsRoutes());
     app.use("/projects", createSiteManagementRoutes());
+    app.use("/api/v1/projects", createSiteManagementRoutes());
     app.use("/projects", createWorkItemRoutes());
     app.use("/projects", createTaskRoutes());
     app.use("/projects", createScheduleRoutes());

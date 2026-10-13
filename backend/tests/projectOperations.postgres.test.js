@@ -205,8 +205,10 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
         const audit = (await agents.admin.get(url("/audit-logs"))).body.entries;
         expect(audit.filter((entry) => entry.action === "close_issue")).toHaveLength(1);
         await expect(pool.query("DELETE FROM audit_logs")).rejects.toMatchObject({ code: "23514" });
+        expect((await migrate("down"))[0]).toContain("019_reconcile_journal_lock_guards.sql");
         expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
         expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
+        expect((await migrate("down"))[0]).toContain("017_add_lock_fields_to_daily_logs.sql");
         expect((await migrate("down"))[0]).toContain("016_create_baselines_and_milestones.sql");
         expect((await migrate("down"))[0]).toContain("015_add_task_actuals.sql");
         expect((await migrate("down"))[0]).toContain("014_create_project_invitations.sql");
@@ -217,14 +219,16 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
 
     test("012 rollback roundtrip works on unused schema without changing migrations 001–011", async () => {
         await pool.query("TRUNCATE projects CASCADE");
+        expect((await migrate("down"))[0]).toContain("019_reconcile_journal_lock_guards.sql");
         expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
         expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
+        expect((await migrate("down"))[0]).toContain("017_add_lock_fields_to_daily_logs.sql");
         expect((await migrate("down"))[0]).toContain("016_create_baselines_and_milestones.sql");
         expect((await migrate("down"))[0]).toContain("015_add_task_actuals.sql");
         expect((await migrate("down"))[0]).toContain("014_create_project_invitations.sql");
         expect((await migrate("down"))[0]).toContain("013_create_site_management.sql");
         expect((await migrate("down"))[0]).toContain("012_create_project_operations.sql");
         expect((await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count).toBe(11);
-        expect(await migrate("up")).toEqual(["Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql"]);
+        expect(await migrate("up")).toEqual(["Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql"]);
     });
 });

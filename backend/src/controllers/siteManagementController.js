@@ -29,7 +29,7 @@ function createSiteManagementController({ service, pdfService }) {
         saveJournal:async (req,res) => { const result=await service.saveJournal(project(req),actor(req),record(req),body(req)); return res.status(result.conflicted ? 409 : record(req) ? 200 : 201).json({ ...(result.conflicted ? { message:"Xung đột phiên bản. Cả hai bản đã được giữ lại." } : {}),...result }); },
         deleteJournal:async (req,res) => res.json(await service.deleteJournal(project(req),actor(req),record(req),body(req))),
         syncJournals:async (req,res) => res.json(await service.syncJournals(project(req),actor(req),body(req))),
-        lockJournal:async (req,res) => res.json({ lock:await service.lockJournal(project(req),actor(req),body(req)) }),
+        lockJournal:async (req,res) => res.json({ lock:await service.lockJournal(project(req),actor(req),{ ...body(req),...(req.params.recordId ? { recordId:record(req) } : {}) }) }),
         acceptance:async (req,res) => res.json(await service.acceptanceData(project(req),actor(req))),
         contract:async (req,res) => res.json({ contract:await service.saveContract(project(req),actor(req),record(req),body(req)) }),
         saveAcceptance:async (req,res) => res.status(record(req) ? 200 : 201).json({ form:await service.saveAcceptance(project(req),actor(req),record(req),body(req)) }),
