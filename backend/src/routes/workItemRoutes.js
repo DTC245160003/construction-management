@@ -24,5 +24,7 @@ function createWorkItemRoutes({ authorization = { requireAuth }, memberModel, mo
     router.delete("/:projectId/items/:itemId",write,controller.remove);
     return router;
 }
+// Thêm hàm này vào trong workItemModel.js
+
 
 module.exports = { createWorkItemRoutes };
