@@ -85,7 +85,8 @@ describe("Migration runner (no database connection)", () => {
         expect(await runMigrations({ client })).toEqual([
             "Applied: 015_add_task_actuals.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql",
             "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql",
-            "Applied: 019_reconcile_journal_lock_guards.sql"
+            "Applied: 019_reconcile_journal_lock_guards.sql",
+            "Applied: 020_add_contract_fields_to_work_items.sql"
         ]);
         expect(statements(client).filter(statement => sql.includes(statement))).toEqual([sql[14], ...sql.slice(16)]);
         expect(client.query).toHaveBeenCalledWith("UPDATE schema_migrations SET name = $1 WHERE name = $2 AND checksum = $3",
@@ -98,7 +99,8 @@ describe("Migration runner (no database connection)", () => {
         expect(messages.slice(14)).toEqual([
             "pending: 015_add_task_actuals.sql", "applied: 016_create_baselines_and_milestones.sql",
             "pending: 017_add_lock_fields_to_daily_logs.sql", "pending: 017_sprint4_5.sql",
-            "pending: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql"
+            "pending: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql",
+            "pending: 020_add_contract_fields_to_work_items.sql"
         ]);
         expect(statements(client).some(statement => statement.startsWith("UPDATE"))).toBe(false);
         await expect(runMigrations({ client: makeClient({ applied: [...history.slice(0, 14), { ...legacy, checksum: "bad" }] }) })).rejects.toThrow("checksum/history");
@@ -126,7 +128,8 @@ describe("Migration runner (no database connection)", () => {
         const client = makeClient({ applied });
         await expect(runMigrations({ client })).resolves.toEqual([
             "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql",
-            "Applied: 019_reconcile_journal_lock_guards.sql"
+            "Applied: 019_reconcile_journal_lock_guards.sql",
+            "Applied: 020_add_contract_fields_to_work_items.sql"
         ]);
         expect(statements(client).filter(statement => sql.includes(statement)))
             .toEqual(sql.filter((_, index) => !applied.some(entry => entry.name === names[index])));
@@ -138,10 +141,13 @@ describe("Migration runner (no database connection)", () => {
             && entry.name <= "018_system_administration.sql");
         const client = makeClient({ applied });
         await expect(runMigrations({ client })).resolves.toEqual([
-            "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 019_reconcile_journal_lock_guards.sql"
+            "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 019_reconcile_journal_lock_guards.sql",
+            "Applied: 020_add_contract_fields_to_work_items.sql"
         ]);
         expect(statements(client).filter(statement => sql.includes(statement))).toEqual([
-            sql[names.indexOf("017_add_lock_fields_to_daily_logs.sql")], sql.at(-1)
+            sql[names.indexOf("017_add_lock_fields_to_daily_logs.sql")],
+            sql[names.indexOf("019_reconcile_journal_lock_guards.sql")],
+            sql[names.indexOf("020_add_contract_fields_to_work_items.sql")]
         ]);
         expect(statements(client).some(statement => statement.startsWith("UPDATE schema_migrations"))).toBe(false);
     });
@@ -152,7 +158,8 @@ describe("Migration runner (no database connection)", () => {
         const client = makeClient({ applied });
         expect((await runMigrations({ client, command: "status" })).slice(16)).toEqual([
             "pending: 017_add_lock_fields_to_daily_logs.sql", "applied: 017_sprint4_5.sql",
-            "applied: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql"
+            "applied: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql",
+            "pending: 020_add_contract_fields_to_work_items.sql"
         ]);
         expect(statements(client).some(statement => /CREATE|INSERT|UPDATE|DELETE/.test(statement))).toBe(false);
     });

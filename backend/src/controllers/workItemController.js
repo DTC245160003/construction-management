@@ -14,12 +14,19 @@ function createWorkItemController({ model }) {
 
         async create(req, res, next) {
             try {
-                const { title, description, parentId, status } = req.body;
+                const { title, description, parentId, status, contract_quantity, unit, contract_unit_price } = req.body;
                 if (typeof title !== "string" || !title.trim()) {
                     return res.status(400).json({ message: "Tên hạng mục là bắt buộc" });
                 }
                 const item = await model.create({
-                    projectId: projectId(req), parentId, title: title.trim(), description, status
+                    projectId: projectId(req),
+                    parentId,
+                    title: title.trim(),
+                    description,
+                    status,
+                    contract_quantity,
+                    unit,
+                    contract_unit_price
                 });
                 return res.status(201).json({ item });
             } catch (error) {
@@ -29,8 +36,8 @@ function createWorkItemController({ model }) {
 
         async update(req, res, next) {
             try {
-                const { title, description, parentId, status } = req.body;
-                if (typeof title !== "string" || !title.trim()) {
+                const { title, description, parentId, status, contract_quantity, unit, contract_unit_price } = req.body;
+                if (title !== undefined && (typeof title !== "string" || !title.trim())) {
                     return res.status(400).json({ message: "Tên hạng mục là bắt buộc" });
                 }
                 if (typeof model.findParentCycle === "function"
@@ -50,9 +57,12 @@ function createWorkItemController({ model }) {
                     projectId: projectId(req),
                     itemId: Number(req.params.itemId),
                     parentId,
-                    title: title.trim(),
+                    title: title !== undefined ? title.trim() : undefined,
                     description,
-                    status
+                    status,
+                    contract_quantity,
+                    unit,
+                    contract_unit_price
                 });
                 if (!item) {
                     return res.status(404).json({ message: "Không tìm thấy hạng mục" });

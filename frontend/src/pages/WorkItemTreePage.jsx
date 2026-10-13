@@ -6,6 +6,8 @@ import TaskForm from "../components/TaskForm";
 import { listTasks, listDependencies, saveTask } from "../services/taskApi";
 import { createWorkItem, deleteWorkItem, listWorkItems, updateWorkItem } from "../services/workItemApi";
 import { listWorkItemMilestones, createWorkItemMilestone, deleteWorkItemMilestone } from "../services/scheduleApi";
+import { numberLabel } from "../services/operationsApi";
+import { moneyLabel } from "../services/siteApi";
 import "../styles/WorkItemTreePage.css";
 import DashboardLayout from "../components/DashboardLayout";
 import { Empty, NoProject, Modal } from "../components/OperationsUI";
@@ -28,6 +30,7 @@ function ProjectWorkItems({ projectId }) {
     const [error, setError] = useState("");
     const [parentId, setParentId] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
+    const [editingId, setEditingId] = useState(null);
     const [form] = Form.useForm();
     const [milestoneForm] = Form.useForm();
     const [milestoneLoading, setMilestoneLoading] = useState(false);
@@ -138,6 +141,7 @@ function ProjectWorkItems({ projectId }) {
                 {error && <Alert type="error" message={error} />}
                 {loading ? <Skeleton /> : !items.length ? <Empty icon="tree" title="Bắt đầu từ hạng mục đầu tiên">Tạo hạng mục gốc, sau đó thêm hạng mục con và công việc để xây dựng cấu trúc dự án.</Empty> : <div className="wbs-tree-scroll" role="region" aria-label="Cấu trúc hạng mục" tabIndex={0}><WorkItemTree items={items} tasks={tasks} readOnly={!canEdit}
                     onSelect={setSelectedId} selectedId={selectedId}
+                    editingId={editingId} setEditingId={setEditingId}
                     onAddTask={(work_item_id) => setTaskEditor({ work_item_id })} onEditTask={setTaskEditor}
                     onSave={save} onDelete={remove}
                     onAdd={(id) => { setParentId(id); form.getFieldInstance("title")?.focus(); }} /></div>}
@@ -154,6 +158,62 @@ function ProjectWorkItems({ projectId }) {
                             <dt>Công việc trực tiếp</dt>
                             <dd>{selectedTasks.length}</dd>
                         </dl>
+
+                        {/* S-35: Khối lượng, đơn vị tính và đơn giá hợp đồng */}
+                        {(() => {
+                            const isLeaf = items.filter((item) => item.parent_id === selected.id).length === 0;
+                            return (
+                                <div className="wbs-contract-detail-card">
+                                    <div className="wbs-contract-header">
+                                        <div className="wbs-contract-title-wrap">
+                                            <Icon name="cube" size={16} />
+                                            <h4>Hợp đồng kinh tế (S-35)</h4>
+                                        </div>
+                                        <span className={`wbs-type-badge ${isLeaf ? "is-leaf" : "is-parent"}`}>
+                                            {isLeaf ? "Hạng mục lá" : "Hạng mục cha"}
+                                        </span>
+                                    </div>
+                                    {isLeaf ? (
+                                        <>
+                                            <dl className="ops-details-list wbs-contract-list">
+                                                <dt>Khối lượng HĐ</dt>
+                                                <dd>{selected.contract_quantity != null ? `${numberLabel(selected.contract_quantity)} ${selected.unit || ""}` : <span className="text-muted">Chưa khai báo</span>}</dd>
+                                                <dt>Đơn vị tính</dt>
+                                                <dd>{selected.unit || <span className="text-muted">Chưa khai báo</span>}</dd>
+                                                <dt>Đơn giá HĐ</dt>
+                                                <dd>{selected.contract_unit_price != null ? `${moneyLabel(selected.contract_unit_price)} ₫` : <span className="text-muted">Chưa khai báo</span>}</dd>
+                                                <dt>Giá trị hợp đồng</dt>
+                                                <dd className="wbs-highlight-amount">
+                                                    {selected.contract_amount != null ? `${moneyLabel(selected.contract_amount)} ₫` : <span className="text-muted">Chưa có</span>}
+                                                </dd>
+                                            </dl>
+                                            {canEdit && (
+                                                <div className="wbs-contract-actions">
+                                                    <Button size="small" type="primary" ghost onClick={() => {
+                                                        setEditingId(selected.id);
+                                                        setSelectedId(null);
+                                                    }}>
+                                                        <Icon name="edit" size={13} style={{ marginRight: 4 }} />
+                                                        Chỉnh sửa hợp đồng
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="wbs-parent-contract-info">
+                                            <p className="wbs-parent-notice">
+                                                <Icon name="info" size={14} />
+                                                Hạng mục cha không được nhập trực tiếp các giá trị hợp đồng. Giá trị hợp đồng được tổng hợp tự động từ các hạng mục lá.
+                                            </p>
+                                            <div className="wbs-parent-total-box">
+                                                <span>Tổng giá trị hợp đồng:</span>
+                                                <strong>{selected.contract_amount != null ? `${moneyLabel(selected.contract_amount)} ₫` : "0 ₫"}</strong>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
 
                         {/* T-43: Mốc bàn giao bắt buộc của hạng mục */}
                         <div style={{ margin: "20px 0", padding: "16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
