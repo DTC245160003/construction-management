@@ -1,8 +1,12 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import process from 'node:process'
+import fs from 'node:fs'
+import path from 'node:path'
+import { createHash } from 'node:crypto'
 
 const proxy = {
+  '/admin': { target: process.env.API_PROXY_TARGET || 'http://127.0.0.1:3000', changeOrigin: true },
   '/auth': {
     target: process.env.API_PROXY_TARGET || 'http://127.0.0.1:3000',
     changeOrigin: true,
@@ -50,7 +54,17 @@ const developmentServiceWorkerCleanup = {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [developmentServiceWorkerCleanup, react()],
+  plugins: [developmentServiceWorkerCleanup, react(), {
+    name: 'version-journal-service-worker', apply: 'build',
+    closeBundle() {
+      const directory=path.resolve('dist');
+      const digest=createHash('sha256');
+      for (const file of ['index.html','journal-sw.js','journal-queue.js','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png']) digest.update(fs.readFileSync(path.join(directory,file)));
+      const version=digest.digest('hex').slice(0,16);
+      const worker=path.join(directory,'journal-sw.js');
+      fs.writeFileSync(worker,fs.readFileSync(worker,'utf8').replace('__XDS_BUILD__',version));
+    },
+  }],
   build: {
     rolldownOptions: {
       output: {

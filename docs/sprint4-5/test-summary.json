@@ -1,0 +1,21 @@
+{
+  "verifiedOn": "2026-10-08",
+  "environment": "Windows / Node.js 24 / PostgreSQL 17 local / Chrome",
+  "backend": { "total": 233, "passed": 233, "failed": 0, "skipped": 0, "suites": 23, "realPostgresCasesIncluded": 63, "postgresIntegrationFiles": 6, "preConnectionValidationCasesInThoseFiles": 2, "durationMs": 40130 },
+  "frontendUnit": { "total": 17, "passed": 17, "failed": 0, "skipped": 0 },
+  "frontendUiRegression": { "total": 33, "passed": 32, "failed": 0, "skipped": 1 },
+  "frontendRealRegression": { "total": 12, "passed": 12, "failed": 0, "skipped": 0 },
+  "frontendSprint45": { "total": 9, "passed": 9, "failed": 0, "skipped": 0, "durationMs": 120668.371, "mainCaseDurationMs": 76756, "measuredOfflineScenarioMs": 69548 },
+  "frontendWorkerDevelopment": { "total": 1, "passed": 1, "failed": 0, "skipped": 0, "note": "Separate opt-in execution of the worker case skipped in the default UI suite." },
+  "frontendInvocationTotals": { "total": 72, "passed": 71, "failed": 0, "skipped": 1, "uniqueTestCount": false },
+  "nativeBackupRestore": { "total": 4, "passed": 4, "failed": 0, "skipped": 0, "dockerTested": false },
+  "checks": { "backendLint": "PASS", "frontendLint": "PASS", "productionBuild": "PASS" },
+  "storyAcceptance": { "total": 14, "passed": 11, "failed": 0, "blocked": 3 },
+  "unverified": [
+    "S-27: Home Screen installation and standalone behavior on a physical phone",
+    "S-30: native OS/browser Background Sync while the app stays closed",
+    "S-34: remote CI run and runner timing",
+    "Docker daemon-based checks",
+    "Existing database upgrade blocked by the pre-existing migration 014 checksum mismatch"
+  ]
+}

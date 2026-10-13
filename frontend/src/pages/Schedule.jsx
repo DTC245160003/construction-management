@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Checkbox, Empty, Spin, Table, Tag } from "antd";
 import { Link, useSearchParams } from "react-router-dom";
 import { getSchedule, saveBaseline, listMilestoneAlerts } from "../services/scheduleApi";
+import useRemote from "../hooks/useRemote";
 import DashboardLayout from "../components/DashboardLayout";
 import Icon from "../components/OperationsIcon";
 import { SectionHeading } from "../components/OperationsVisuals";
@@ -22,6 +23,8 @@ const columns = [
 ];
 
 function ProjectSchedule({ projectId }) {
+    const permissions=useRemote(`/projects/${projectId}/overview`);
+    const canManage=["admin","project_manager","manager"].includes(permissions.data?.project?.member_role);
     const [criticalOnly, setCriticalOnly] = useState(false);
     const [attempt, setAttempt] = useState(0);
     const [state, setState] = useState({ loading: true, schedule: [], error: "" });
@@ -80,7 +83,7 @@ function ProjectSchedule({ projectId }) {
                 icon="trend"
                 title="Tiến độ công việc"
                 description={`Dự án #${projectId} · Kế hoạch theo đường găng CPM`}
-                action={
+                action={canManage &&
                     <Button
                         type="primary"
                         onClick={handleLockBaseline}
@@ -96,7 +99,7 @@ function ProjectSchedule({ projectId }) {
                 <Link to={`/field-assignments?projectId=${projectId}`}>Giao việc hiện trường</Link>
             </div>
 
-            {!state.loading && state.schedule.length > 0 && !hasBaseline && (
+            {canManage && !state.loading && state.schedule.length > 0 && !hasBaseline && (
                 <div className="baseline-alert-notice">
                     <span>
                         <Icon name="info" size={16} /> <strong>Chưa chốt kế hoạch gốc</strong>: Sơ đồ hiện tại đang chạy theo kế hoạch tính toán động. Bấm &quot;Chốt kế hoạch gốc&quot; để lưu mốc chuẩn làm căn cứ so sánh.

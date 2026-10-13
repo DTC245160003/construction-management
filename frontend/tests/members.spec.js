@@ -73,6 +73,9 @@ test("missing project, forbidden state and responsive layout remain usable",asyn
 
 test("Home, Login and Register public routes still render",async ({ page })=>{
   const errors=[]; page.on("pageerror",(error)=>errors.push(error.message));
+  await page.route("**/projects",route=>route.fulfill({ json:{ projects:[{ id:37,name:"Chung cư Riverside",member_role:"admin" }],can_create:false } }));
+  await page.route("**/auth/me",route=>route.fulfill({ json:{ user:{ id:1,fullname:"Trần Văn Hùng",system_role:"user" } } }));
+  await page.route("**/projects/37/overview",route=>route.fulfill({ json:{ project:{ id:37,name:"Chung cư Riverside",member_role:"admin",status:"active",start_date:"2026-10-01" } } }));
   await page.goto("/home?projectId=37"); await expect(page.locator(".xds-dashboard")).toBeVisible(); await expect(page.getByRole("navigation").getByRole("link",{ name:"Thành viên & phân quyền" })).toHaveAttribute("href","/members?projectId=37");
   await page.goto("/login"); await expect(page.getByRole("button",{ name:"Đăng nhập",exact:true })).toBeVisible();
   await page.goto("/register"); await expect(page.getByRole("button",{ name:"Tạo tài khoản",exact:true })).toBeVisible();

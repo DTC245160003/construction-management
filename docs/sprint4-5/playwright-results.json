@@ -1,0 +1,412 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.sprint45.config.js"
+    ],
+    "configFile": "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\playwright.sprint45.config.js",
+    "rootDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\tests\\sprint45.teardown.js",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/test-results/sprint45",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "sprint45.real.spec.js"
+        ],
+        "timeout": 170000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../docs/sprint4-5/playwright-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report/sprint45",
+          "open": "never"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "sprint45.real.spec.js",
+      "file": "sprint45.real.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "S-34: offline 20 journals + 30 photos survive reload and browser restart, sync once and replay without duplicates",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 86327,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:20:21.341Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "postgres-evidence",
+                      "contentType": "application/json",
+                      "body": "ewogICJzY2hlbWEiOiAib3BlcmF0aW9uc19lMmVfMjU0NGNmOGU0NDgzNDI4OThkMTQ3MDE2MmE1OWRhNzAiLAogICJqb3VybmFscyI6IFsKICAgIHsKICAgICAgImlkIjogMSwKICAgICAgImNsaWVudF91dWlkIjogIjFhMjBjYzcyLWUzY2YtNDZjYS05OTRkLTA4NzlkODZjMDBhYiIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMCIsCiAgICAgICJyZXZpc2lvbiI6IDMKICAgIH0sCiAgICB7CiAgICAgICJpZCI6IDIsCiAgICAgICJjbGllbnRfdXVpZCI6ICJhZmU4ZWYxNi1iZDg3LTRiMDctYTc0Yi1jYzU2NGQ2MDM5N2UiLAogICAgICAiY29udGVudCI6ICJPZmZsaW5lIFNwcmludDQ1IDEiLAogICAgICAicmV2aXNpb24iOiAzCiAgICB9LAogICAgewogICAgICAiaWQiOiAzLAogICAgICAiY2xpZW50X3V1aWQiOiAiN2UwNTM0YTctMThmZC00Y2UyLTg5OTctYWE3ODQ1ZmYyOTk2IiwKICAgICAgImNvbnRlbnQiOiAiT2ZmbGluZSBTcHJpbnQ0NSAyIiwKICAgICAgInJldmlzaW9uIjogMwogICAgfSwKICAgIHsKICAgICAgImlkIjogNCwKICAgICAgImNsaWVudF91dWlkIjogIjcxZWM4NWQ1LTk1NjEtNDVmMy05ZjBlLWZjNjY0Zjk1NzdjNyIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMyIsCiAgICAgICJyZXZpc2lvbiI6IDMKICAgIH0sCiAgICB7CiAgICAgICJpZCI6IDUsCiAgICAgICJjbGllbnRfdXVpZCI6ICIyODA5MGMzMC0wZDIzLTRkYjgtYTE5Zi02MTEwZWIwNDZlNzIiLAogICAgICAiY29udGVudCI6ICJPZmZsaW5lIFNwcmludDQ1IDQiLAogICAgICAicmV2aXNpb24iOiAzCiAgICB9LAogICAgewogICAgICAiaWQiOiA2LAogICAgICAiY2xpZW50X3V1aWQiOiAiNDAxNzhiYmEtOGEzYy00NmNhLTg4NjEtYTVjNjI2NDliMWU5IiwKICAgICAgImNvbnRlbnQiOiAiT2ZmbGluZSBTcHJpbnQ0NSA1IiwKICAgICAgInJldmlzaW9uIjogMwogICAgfSwKICAgIHsKICAgICAgImlkIjogNywKICAgICAgImNsaWVudF91dWlkIjogImUxZTBkMzM0LWIyYWQtNGFjYy1iNmY5LWNlZjU3NDBkMWQyMCIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgNiIsCiAgICAgICJyZXZpc2lvbiI6IDMKICAgIH0sCiAgICB7CiAgICAgICJpZCI6IDgsCiAgICAgICJjbGllbnRfdXVpZCI6ICJmOTdmNjU4Zi1mYThkLTQzNDMtOWMzYS01YjA3MjUxZDJhYWUiLAogICAgICAiY29udGVudCI6ICJPZmZsaW5lIFNwcmludDQ1IDciLAogICAgICAicmV2aXNpb24iOiAzCiAgICB9LAogICAgewogICAgICAiaWQiOiA5LAogICAgICAiY2xpZW50X3V1aWQiOiAiYzM4MTRiMjgtZTUzOS00ZDBlLTg0NTUtOTBhYWM2MWUwNjAzIiwKICAgICAgImNvbnRlbnQiOiAiT2ZmbGluZSBTcHJpbnQ0NSA4IiwKICAgICAgInJldmlzaW9uIjogMwogICAgfSwKICAgIHsKICAgICAgImlkIjogMTAsCiAgICAgICJjbGllbnRfdXVpZCI6ICIwZGU4YWZlOC04N2ZiLTRmNTUtOTM1OC1lZjNhNTRiMWEyZjYiLAogICAgICAiY29udGVudCI6ICJPZmZsaW5lIFNwcmludDQ1IDkiLAogICAgICAicmV2aXNpb24iOiAzCiAgICB9LAogICAgewogICAgICAiaWQiOiAxMSwKICAgICAgImNsaWVudF91dWlkIjogImVlMTE2MGQ3LTgyMzktNDMwYi1hOTI2LTEzYzk0ZDhmYTE3NSIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTAiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxMiwKICAgICAgImNsaWVudF91dWlkIjogIjc4OTdkN2ViLWNkYjgtNDc0ZS04ZWQ5LTQzYmQ4OTI3ZmQ1ZCIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTEiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxMywKICAgICAgImNsaWVudF91dWlkIjogIjZlODA2MWJjLWM2ZDgtNGQ1Zi1iMDQzLTcwZDRjNGUwNDNhOCIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTIiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxNCwKICAgICAgImNsaWVudF91dWlkIjogIjdiZmVhZjliLWE5ZjEtNGU0ZS04MDJiLTY1ZDk5ZDYxMTkwZSIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTMiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxNSwKICAgICAgImNsaWVudF91dWlkIjogIjY2NTk0NjYwLTU2NjMtNDE2OC1hOTQxLWFhMmE1YmRiZDkwNSIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTQiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxNiwKICAgICAgImNsaWVudF91dWlkIjogImI1ZmRhMTA2LTgxYjMtNGVmYi05NWIxLTkxZTA3MjM0NjU3ZSIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTUiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxNywKICAgICAgImNsaWVudF91dWlkIjogImNjMDllMTg0LTNhYWQtNGM2YS1iODUwLWMxNDI0YTM2YjEyNSIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTYiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxOCwKICAgICAgImNsaWVudF91dWlkIjogIjIyOGEwZTRmLWU4ZTktNGZjZC04M2I1LWU5ODg5MWYyNDVlZiIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTciLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAxOSwKICAgICAgImNsaWVudF91dWlkIjogIjExMWI4OWNmLWY1ZDktNGE3OS1hMmUyLTk3MjRhNzNjY2YxNSIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTgiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9LAogICAgewogICAgICAiaWQiOiAyMCwKICAgICAgImNsaWVudF91dWlkIjogIjE4MjcyYmFmLTFhYjUtNGY5Yi1hZDk2LTg0YWMyYzFmODMyOCIsCiAgICAgICJjb250ZW50IjogIk9mZmxpbmUgU3ByaW50NDUgMTkiLAogICAgICAicmV2aXNpb24iOiAyCiAgICB9CiAgXSwKICAicGhvdG9zIjogMzAsCiAgIm9yaWdpbmFsUGhvdG9CeXRlcyI6IDg0ODAxODcwLAogICJtYXhUaHVtYm5haWxCeXRlcyI6IDMwNzI1LAogICJkYWlseSI6IDEsCiAgImVsYXBzZWRNcyI6IDc4NTAxLAogICJzaGVsbE9wZW5NcyI6IDg5Ni43MDAwMDAwMDI5ODAyLAogICJvcmlnaW5hbEJ5dGVzUGVyUGhvdG8iOiAyODI2NzI5LAogICJjb21wcmVzc2VkQnl0ZXNQZXJQaG90byI6IDk0NTUwOCwKICAidG90YWxPcmlnaW5hbEJ5dGVzIjogODQ4MDE4NzAsCiAgImR1cGxpY2F0ZVJlcGxheSI6IHRydWUsCiAgInF1ZXVlRW1wdHkiOiB0cnVlLAogICJicm93c2VyUmVzdGFydFN1cnZpdmFsIjogdHJ1ZSwKICAib2ZmbGluZVB3YVN0YXJ0IjogdHJ1ZQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-dd08784d0a5b64ace0e2",
+          "file": "sprint45.real.spec.js",
+          "line": 45,
+          "column": 1
+        },
+        {
+          "title": "invalid entry continues, lost responses retry safely, placeholders appear and new journals do not wait for photo upload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7491,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:21:47.734Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-9bd4222ac254d7209ea4",
+          "file": "sprint45.real.spec.js",
+          "line": 88,
+          "column": 1
+        },
+        {
+          "title": "conflict comparison UI retains both versions and lock/unlock is enforced through direct API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2955,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:21:55.616Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-eec91f6204a27907b3d8",
+          "file": "sprint45.real.spec.js",
+          "line": 105,
+          "column": 1
+        },
+        {
+          "title": "service worker caches only shell, has install icons, and logout retains drafts without syncing as another account",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2678,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:21:58.600Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-8dde8777c38934a91b01",
+          "file": "sprint45.real.spec.js",
+          "line": 120,
+          "column": 1
+        },
+        {
+          "title": "member UI creates a usable invitation, accepts first password, adds existing accounts and preserves last manager",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6409,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:22:01.298Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-09990fc9a3d088f6e608",
+          "file": "sprint45.real.spec.js",
+          "line": 132,
+          "column": 1
+        },
+        {
+          "title": "field UI creates and edits real tasks, creates team, assigns, filters and displays worker reporting on mobile",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9225,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:22:07.732Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-bf4a578df4617ac8e973",
+          "file": "sprint45.real.spec.js",
+          "line": 159,
+          "column": 1
+        },
+        {
+          "title": "quota failure retains the form; cached shell opens quickly and waiting worker requires explicit update without losing drafts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5870,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:22:16.981Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "warm-shell-quota-update",
+                      "contentType": "application/json",
+                      "body": "eyJ3YXJtU2hlbGxNcyI6MjkwLjgwMDAwMDAwNDQ3MDM1LCJxdW90YURyYWZ0UmV0YWluZWQiOnRydWUsImV4cGxpY2l0VXBkYXRlIjp0cnVlLCJxdWV1ZVJldGFpbmVkQWZ0ZXJVcGRhdGUiOnRydWV9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-61bd7dcf32eee65cfc6b",
+          "file": "sprint45.real.spec.js",
+          "line": 180,
+          "column": 1
+        },
+        {
+          "title": "rejecting an incoming conflicting version retains its original photos locally without a stuck upload queue",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3294,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:22:22.878Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-7093030b649a0bc4b316",
+          "file": "sprint45.real.spec.js",
+          "line": 198,
+          "column": 1
+        },
+        {
+          "title": "a conflict resolved by another engineer can be acknowledged locally and its selected photo uploads continue",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3481,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:22:26.191Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "020dec87685267fcc719-c97712b3e00ac0822859",
+          "file": "sprint45.real.spec.js",
+          "line": 211,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-08T17:20:16.672Z",
+    "duration": 134791.364,
+    "expected": 9,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

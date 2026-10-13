@@ -16,13 +16,12 @@ function createWorkItemRoutes({ authorization = { requireAuth }, memberModel, mo
     const projectAccess = createProjectAccess({ memberModel });
     const controller = createWorkItemController({ model });
     router.use(authorization.requireAuth);
-    router.use("/:projectId/items", projectAccess.requireProjectMember(
-        "admin", "manager", "engineer", "member", "project_manager"
-    ));
-    router.get("/:projectId/items", controller.list);
-    router.post("/:projectId/items", controller.create);
-    router.patch("/:projectId/items/:itemId", controller.update);
-    router.delete("/:projectId/items/:itemId", controller.remove);
+    const write=projectAccess.requireProjectMember("admin","manager","engineer","member","project_manager");
+    const read=projectAccess.requireProjectMember("admin","manager","engineer","member","project_manager","viewer");
+    router.get("/:projectId/items",read,controller.list);
+    router.post("/:projectId/items",write,controller.create);
+    router.patch("/:projectId/items/:itemId",write,controller.update);
+    router.delete("/:projectId/items/:itemId",write,controller.remove);
     return router;
 }
 

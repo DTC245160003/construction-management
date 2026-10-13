@@ -125,7 +125,7 @@ describe("Authentication", () => {
         expect(passwordHash).toMatch(/^\$argon2id\$/);
         expect(response.body).toEqual({
             message: "Đăng nhập thành công",
-            user: { id: 1, fullname: "Test Builder", email: EMAIL, role_id: 2, role: "engineer" }
+            user: { id: 1, fullname: "Test Builder", email: EMAIL, role_id: 2, role: "engineer",system_role:"user",is_active:true }
         });
         expect(JSON.stringify(response.body)).not.toContain(passwordHash);
         expect(JSON.stringify(response.body)).not.toContain(PASSWORD);

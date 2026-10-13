@@ -20,6 +20,7 @@ async function mockProject(page) {
         // The shared header has its own feed; keep the existing no-N+1
         // assertions scoped to the work-item/task/dependency data below.
         if (path.endsWith("/notifications")) return route.fulfill({ json: { notifications: [], unread_count: 0 } });
+        if (path.endsWith("/overview")) return route.fulfill({ json:{ project:{ id:1,member_role:"admin" } } });
         calls.push({ path, method, body });
         const json = (data, status = 200) => route.fulfill({ status, json: data });
         if (method === "GET") {
@@ -95,9 +96,9 @@ test("T-12 create/edit from tree, only leaves, immediate integer duration valida
     // StrictMode mounts twice in Vite development. Only collection endpoints
     // are loaded; creating/editing a task causes no per-task fetches.
     expect(new Set(initialReads.map((call) => call.path))).toEqual(new Set([
-        "/projects/1/items", "/projects/1/tasks", "/projects/1/dependencies"
+        "/projects/1/items", "/projects/1/tasks", "/projects/1/dependencies", "/projects/1/work-item-milestones"
     ]));
-    expect(initialReads.length).toBeLessThanOrEqual(6);
+    expect(initialReads.length).toBeLessThanOrEqual(8);
     expect(state.calls.filter((call) => call.method === "GET")).toEqual(initialReads);
 });
 

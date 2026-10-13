@@ -10,6 +10,7 @@ const { createTaskRoutes } = require("./routes/taskRoutes");
 const { createScheduleRoutes } = require("./routes/scheduleRoutes");
 const { createProjectOperationsRoutes } = require("./routes/projectOperationsRoutes");
 const { createSiteManagementRoutes } = require("./routes/siteManagementRoutes");
+const { createSystemAdminRoutes } = require("./routes/systemAdminRoutes");
 const corsMiddleware = require("./middleware/cors");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -30,6 +31,7 @@ function createApp({ authService, sessionStore, sessionSecret, secureCookies, tr
     app.use(session.middleware);
     app.use("/", routes);
     app.use("/auth", createAuthRoutes({ authService, ...session }));
+    app.use("/admin", createSystemAdminRoutes());
     app.use("/projects", createProjectRoutes());
     app.use("/projects", createProjectOperationsRoutes());
     app.use("/projects", createSiteManagementRoutes());

@@ -312,17 +312,19 @@ Dùng email thuần trong JSON, ví dụ `"email": "test@gmail.com"`.
 - `seed:roles` thêm sáu role chuẩn bằng `ON CONFLICT DO NOTHING`, có thể chạy
   lại, không tạo tài khoản admin hay xóa role đã có.
 
-Sáu role chuẩn là `admin`, `project_manager`, `engineer`, `worker`, `accountant`,
-`viewer`. Đăng ký công khai chỉ chấp nhận `engineer`, `worker`, `viewer`.
-`admin`, `project_manager` và `accountant` phải được cấp qua chức năng quản trị
-sau này. Backend tự kiểm tra quy tắc này kể cả khi client sửa request.
+Sáu role dự án là `admin`, `project_manager`, `engineer`, `worker`, `accountant`,
+`viewer`; quyền thực tế được đọc từ `project_members.role_id`. Đăng ký công khai
+mặc định `system_role=user`, không có membership và không chọn role trên UI.
+API giữ tương thích các giá trị cũ `engineer`, `worker`, `viewer` như metadata
+tài khoản; các giá trị này không cấp quyền dự án hay quản trị hệ thống.
 Giá trị cũ `employee` được ánh xạ sang `worker`; `manager` thành
 `project_manager`, nên không được đăng ký công khai.
 
 Mỗi tài khoản đăng ký mới phải có fullname và một role tồn tại trong bảng roles;
 `role_id` do backend tra cứu, không lấy từ client. Các tài khoản legacy chưa có
 fullname/role vẫn giữ giá trị NULL hiện có; migration không tự đoán tên hoặc
-cấp quyền cho các tài khoản này. RBAC từ chối quyền nếu role không phù hợp.
+cấp quyền cho các tài khoản này. Quyền quản trị toàn hệ thống chỉ dựa vào
+`users.system_role=super_admin`, độc lập với `users.role_id` cũ.
 
 Tham khảo `backend/.env.auth.example` và thêm các biến cần thiết vào `.env`
 hiện có, giữ nguyên cấu hình `DB_*`. Sinh secret bằng:
@@ -413,14 +415,15 @@ Supertest. Chưa thêm API quản trị tạo user đặc quyền.
 ### Dùng middleware RBAC cho API tiếp theo
 
 ```javascript
-const { requireAuth, requireRoles } = require("../middleware/auth");
+const { requireAuth, requireSystemAdmin } = require("../middleware/auth");
 
-router.get("/projects", requireAuth, requireRoles("admin", "project_manager"), controller.list);
+router.get("/admin/users", requireAuth, requireSystemAdmin, controller.users);
 ```
 
-`requireAuth` lấy user theo session; `requireRoles` kiểm tra tên role được đọc
-từ database ở mỗi request. Header, query, body và role cũ lưu ở client không
-được dùng để cấp quyền. Chưa đăng nhập trả `401`, sai role trả `403`.
+`requireAuth` đọc user, trạng thái và quyền hệ thống từ database ở mỗi request;
+`requireSystemAdmin` bảo vệ API quản trị, còn `requireProjectMember` kiểm tra
+membership và vai trò dự án hiện tại. Header, query, body và role cũ lưu ở client
+không cấp quyền. Chưa đăng nhập/tài khoản khóa trả `401`, sai quyền trả `403`.
 
 ### Project membership và cây work items (T-06 đến T-10)
 
@@ -498,3 +501,25 @@ Trong thư mục `frontend`, chạy `npm run lint` và `npm run build`.
 Rollback 004 bị chặn khi còn số lần sai/trạng thái khóa; 005 bị chặn khi bảng
 session có dữ liệu; 006 bị chặn khi đã lưu fullname. Seed roles không tự hoàn
 tác/xóa role khi rollback schema để tránh mất dữ liệu hoặc quyền đang sử dụng.
+
+### Super Admin và quyền dự án (migration 018)
+
+Quyền hệ thống `user`/`super_admin` độc lập với sáu vai trò dự án. Tài khoản
+đăng ký mới chưa có quyền dự án; Super Admin chỉ được cấp cho email đã tồn tại
+bằng CLI tại server, có xác nhận chính xác database và hành động:
+
+```powershell
+cd backend
+npm run admin:bootstrap -- --database=construction_sprint45_demo --email=dtc245160003@ictu.edu.vn --dry-run
+npm run admin:bootstrap -- --database=construction_sprint45_demo --email=dtc245160003@ictu.edu.vn
+```
+
+Nhập `GRANT_SUPER_ADMIN:construction_sprint45_demo:dtc245160003@ictu.edu.vn`
+khi CLI yêu cầu. Sau đó refresh/đăng nhập lại và mở **Quản trị hệ thống** để
+phân quyền từng dự án. Không có API hoặc nút nâng Super Admin. Bộ guard bảo vệ
+Super Admin hoạt động cuối cùng; audit và dữ liệu cũ được giữ.
+
+Demo dùng `npm run demo:sprint45` trong backend, preview ở localhost:4174.
+DB gốc đang lệch checksum 014 nên chưa được nâng cấp; không sửa lịch sử để
+vượt guard. Chi tiết triển khai, test, lệnh demo và file thay đổi nằm trong
+[báo cáo Super Admin](docs/super-admin/SUPER_ADMIN_REPORT.md).

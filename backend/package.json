@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "demo:sprint45": "node scripts/start-sprint45-demo.cjs",
+    "admin:bootstrap": "node scripts/admin-bootstrap.cjs",
     "lint": "eslint . --max-warnings=0",
     "test": "jest --runInBand",
     "test:postgres": "node scripts/test-postgres.cjs",

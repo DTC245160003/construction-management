@@ -60,7 +60,11 @@ test("real project creation, persistence, calendar editing and project navigatio
   await dialog.getByRole("button", { name: "Xóa ngày nghỉ" }).click();
   await expect(page.getByText("Chưa có ngày nghỉ riêng.", { exact: false })).toBeVisible();
   await page.screenshot({ path: test.info().outputPath("calendar-desktop.png"), fullPage: true });
-  for (const link of await nav.getByRole("link").all()) expect(await link.getAttribute("href")).toContain(`projectId=${projectId}`);
+  for (const link of await nav.getByRole("link").all()) {
+    const href=await link.getAttribute("href");
+    if (href==="/system-admin") expect(href).toBe("/system-admin");
+    else expect(href).toContain(`projectId=${projectId}`);
+  }
   await nav.getByRole("link", { name: "Giao việc hiện trường", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Chưa có công việc để hiển thị" })).toBeVisible();
   expect(errors).toEqual([]);
@@ -74,8 +78,10 @@ test("real member invitation becomes membership on registration, role changes an
   const email=`codex-member-${Date.now()}@e2e.test`;
   await page.getByRole("button",{ name:"Mời thành viên" }).click();
   let dialog=page.getByRole("dialog"); await dialog.getByLabel("Email thành viên").fill(email); await dialog.getByLabel("Vai trò trong dự án").selectOption("worker"); await dialog.getByRole("button",{ name:"Gửi lời mời" }).click();
+  const invitationUrl=await dialog.getByLabel("Liên kết lời mời").inputValue();
+  await dialog.getByRole("button",{ name:"Đóng",exact:true }).click();
   await page.getByRole("tab",{ name:"Lời mời chờ xử lý" }).click(); await expect(page.getByRole("tabpanel").getByText(email,{ exact:true })).toBeVisible();
-  const registration=await page.request.post("/auth/register",{ data:{ fullname:"Thành viên E2E",email,password:"Operations-only-E2E-123!",role:"viewer" } }); expect(registration.status()).toBe(201);
+  const registration=await page.request.post("/auth/register",{ data:{ fullname:"Thành viên E2E",email,password:"Operations-only-E2E-123!",role:"viewer",invitation_token:new URL(invitationUrl).searchParams.get("token") } }); expect(registration.status()).toBe(201);
   await page.reload(); await expect(page.getByText("Thành viên E2E",{ exact:true })).toBeVisible(); await expect(page.getByRole("row").filter({ hasText:email })).toContainText("Đội trưởng");
   await page.getByRole("button",{ name:"Thao tác với Thành viên E2E" }).click(); await page.getByRole("button",{ name:"Đổi vai trò Thành viên E2E" }).click(); dialog=page.getByRole("dialog"); await dialog.getByLabel("Vai trò trong dự án").selectOption("engineer"); await dialog.getByRole("button",{ name:"Lưu vai trò" }).click();
   await expect(page.getByRole("row").filter({ hasText:email })).toContainText("Kỹ sư giám sát");
@@ -108,7 +114,7 @@ test("real manager assignment, worker reporting, issue notification and manager 
   await expect(dialog.getByText("Giao việc → Đội móng kiểm thử")).toBeVisible();
   await dialog.getByRole("button", { name: "Đóng", exact: true }).click();
   await page.screenshot({ path: test.info().outputPath("assignments-desktop.png"), fullPage: true });
-  const workerContext = await browser.newContext({ baseURL: "http://127.0.0.1:5175", viewport: { width: 390, height: 844 } });
+  const workerContext = await browser.newContext({ baseURL: new URL(page.url()).origin, viewport: { width: 390, height: 844 } });
   try {
     const worker = await workerContext.newPage(); await login(worker, "worker");
     await worker.goto(`/field-assignments?projectId=${projectId}`);
@@ -150,11 +156,13 @@ test("all sidebar routes render and selected project survives navigation; mobile
   const errors = []; page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`/projects?projectId=${projectId}`);
   const links = await page.getByRole("navigation").getByRole("link").evaluateAll((elements) => elements.map((element) => ({ href: element.getAttribute("href"), name: element.textContent })));
-  expect(links).toHaveLength(16);
+  expect(links).toHaveLength(17);
+  expect(links.some(link=>link.href==="/system-admin")).toBe(true);
   for (const link of links) {
     await page.goto(link.href);
     await expect(page.locator("#root")).not.toBeEmpty();
-    expect(new URL(page.url()).searchParams.get("projectId")).toBe(String(projectId));
+    if (link.href==="/system-admin") await expect(page.getByRole("heading",{name:"Quản trị hệ thống",exact:true})).toBeVisible();
+    else expect(new URL(page.url()).searchParams.get("projectId")).toBe(String(projectId));
   }
   await page.goto(`/projects?projectId=${projectId}`);
   await expect(page.locator(".ops-project-card").first()).toBeVisible();

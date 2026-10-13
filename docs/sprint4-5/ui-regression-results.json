@@ -1,0 +1,1288 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.ui-regression.config.js"
+    ],
+    "configFile": "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\playwright.ui-regression.config.js",
+    "rootDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/test-results/ui-regression",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/tests",
+        "testIgnore": [
+          "**/*.real.spec.js",
+          "**/projects.visual.spec.js",
+          "**/gantt-t31.spec.js"
+        ],
+        "testMatch": [
+          "**/*.spec.js"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../docs/sprint4-5/ui-regression-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5175 --strictPort",
+      "url": "http://127.0.0.1:5175",
+      "env": {
+        "VITE_ENABLE_JOURNAL_SW": ""
+      },
+      "reuseExistingServer": true
+    }
+  },
+  "suites": [
+    {
+      "title": "gantt-t32.spec.js",
+      "file": "gantt-t32.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-32 short bars and milestones retain a non-color critical marker",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1300,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:17:46.852Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78cab990300a29c37944-c8fa93eccf2c416f50ac",
+          "file": "gantt-t32.spec.js",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "T-32 forced colors and no-background print keep critical tasks distinguishable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1344,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:17:48.627Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78cab990300a29c37944-319eae51aadce6249b10",
+          "file": "gantt-t32.spec.js",
+          "line": 29,
+          "column": 1
+        },
+        {
+          "title": "T-32 printing a windowed schedule includes every task and restores the viewport afterward",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1586,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:17:50.006Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "78cab990300a29c37944-87a90b8fb5ae3e354241",
+          "file": "gantt-t32.spec.js",
+          "line": 40,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "gantt.spec.js",
+      "file": "gantt.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-31 gridlines share tick coordinates and T-32 critical bars have a non-color marker",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2336,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:17:51.672Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c05b218695505a20af81-c1d8137bf20a1efa6b32",
+          "file": "gantt.spec.js",
+          "line": 41,
+          "column": 1
+        },
+        {
+          "title": "T-30 switches the schedule axis between days and weeks without moving bars",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2658,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:17:54.037Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c05b218695505a20af81-9e67d0bc9cc6d80bb433",
+          "file": "gantt.spec.js",
+          "line": 53,
+          "column": 1
+        },
+        {
+          "title": "T-30 keeps long-range axis labels from overlapping",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2464,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:17:56.717Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c05b218695505a20af81-6da2058e43dadb3d18e1",
+          "file": "gantt.spec.js",
+          "line": 71,
+          "column": 1
+        },
+        {
+          "title": "T-31 renders a 500-task list without changing the shared scale",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4389,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:17:59.204Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c05b218695505a20af81-c10006791ff6e93dcd9f",
+          "file": "gantt.spec.js",
+          "line": 81,
+          "column": 1
+        },
+        {
+          "title": "T-33 keyboard tooltip has finite coordinates and closes with Escape",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3373,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:03.613Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c05b218695505a20af81-5f10a6c3c96ce6048771",
+          "file": "gantt.spec.js",
+          "line": 101,
+          "column": 1
+        },
+        {
+          "title": "T-35 validates the form and updates only after the server confirms",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3327,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:07.008Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c05b218695505a20af81-1ef50cf74b59e6e2fa58",
+          "file": "gantt.spec.js",
+          "line": 118,
+          "column": 1
+        },
+        {
+          "title": "T-35 asks before reducing a completed task",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3234,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:10.362Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c05b218695505a20af81-229cc74adab3969d2d06",
+          "file": "gantt.spec.js",
+          "line": 143,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "members.spec.js",
+      "file": "members.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Members renders real project data, filters, paginates and exports selected rows",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2424,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:13.662Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "29cd503141fdfb524b01-caa02099036e6ed8707e",
+          "file": "members.spec.js",
+          "line": 32,
+          "column": 1
+        },
+        {
+          "title": "member invite, role update, removal and invitation cancellation call real API contracts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3363,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:16.109Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "29cd503141fdfb524b01-3589a3ee9ba472f6ab00",
+          "file": "members.spec.js",
+          "line": 51,
+          "column": 1
+        },
+        {
+          "title": "missing project, forbidden state and responsive layout remain usable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4595,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:19.492Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "29cd503141fdfb524b01-56d8ea126885aa343356",
+          "file": "members.spec.js",
+          "line": 66,
+          "column": 1
+        },
+        {
+          "title": "Home, Login and Register public routes still render",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4561,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:24.114Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "29cd503141fdfb524b01-7f50c6791a1fc656b300",
+          "file": "members.spec.js",
+          "line": 74,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "pwa-regression.spec.js",
+      "file": "pwa-regression.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "public routes render and Vite dependencies load without service-worker failures",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3416,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:28.721Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "32f9f7fc509d132344f3-0e5409a5dc72866887f9",
+          "file": "pwa-regression.spec.js",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "title": "Vite development unregisters a previously installed journal worker",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3351,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:32.155Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "32f9f7fc509d132344f3-ff19d1d4633bffb6d373",
+          "file": "pwa-regression.spec.js",
+          "line": 19,
+          "column": 1
+        },
+        {
+          "title": "enabled journal worker leaves Vite module requests to the network",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [
+                {
+                  "type": "skip",
+                  "description": "Requires the explicit safe-worker development server.",
+                  "location": {
+                    "file": "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\tests\\pwa-regression.spec.js",
+                    "line": 35,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "skipped",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "skipped",
+                  "duration": 351,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:35.526Z",
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Requires the explicit safe-worker development server.",
+                      "location": {
+                        "file": "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\tests\\pwa-regression.spec.js",
+                        "line": 35,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "32f9f7fc509d132344f3-b8fc34a5bdf74451fbcd",
+          "file": "pwa-regression.spec.js",
+          "line": 34,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "schedule-ux.spec.js",
+      "file": "schedule-ux.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "schedule visual hierarchy, real KPIs, calendar, weekends, critical flags and all dependency types",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3488,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:35.927Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "42f7f7774fb225b4326b-c4b0ed10e8cdb5b7d74f",
+          "file": "schedule-ux.spec.js",
+          "line": 65,
+          "column": 1
+        },
+        {
+          "title": "search, status, assignee and critical filters keep project scale and KPI totals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3721,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:39.442Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "42f7f7774fb225b4326b-d37b2cc2daf55686e770",
+          "file": "schedule-ux.spec.js",
+          "line": 94,
+          "column": 1
+        },
+        {
+          "title": "drawer replaces the fixed form, displays relations, saves via the same endpoint and updates bars",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4070,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:43.196Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "42f7f7774fb225b4326b-047154c693aa3b780536",
+          "file": "schedule-ux.spec.js",
+          "line": 118,
+          "column": 1
+        },
+        {
+          "title": "day/week/month, today and navigation preserve bars; task column stays fixed on scroll",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2912,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:47.285Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "42f7f7774fb225b4326b-e3ca169899d974bafe35",
+          "file": "schedule-ux.spec.js",
+          "line": 139,
+          "column": 1
+        },
+        {
+          "title": "mobile keeps task list and horizontal timeline, shows full-width drawer, and has no console errors",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3445,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:50.228Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "42f7f7774fb225b4326b-635aec399ad1ada1ba54",
+          "file": "schedule-ux.spec.js",
+          "line": 155,
+          "column": 1
+        },
+        {
+          "title": "create and edit reuse the existing task form and task endpoints",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5107,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:53.703Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "42f7f7774fb225b4326b-cee0dfa37fcb75c3ed7c",
+          "file": "schedule-ux.spec.js",
+          "line": 178,
+          "column": 1
+        },
+        {
+          "title": "missing supporting data keeps the schedule usable and does not fabricate dates or assignees",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2348,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:18:58.840Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "42f7f7774fb225b4326b-16d0fd1eef0bd1de82d2",
+          "file": "schedule-ux.spec.js",
+          "line": 198,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "schedule.spec.js",
+      "file": "schedule.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-28 renders all CPM fields, relative Vietnamese days and critical-only filter",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3061,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:01.266Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2e1a6de807278378c8f-df301d213809a942b546",
+          "file": "schedule.spec.js",
+          "line": 9,
+          "column": 1
+        },
+        {
+          "title": "T-28 loading transitions to empty state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1963,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:04.361Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2e1a6de807278378c8f-2ff9a54d9bd9179919a9",
+          "file": "schedule.spec.js",
+          "line": 42,
+          "column": 1
+        },
+        {
+          "title": "T-28 shows a named cycle alert instead of an empty table",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1828,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:06.350Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2e1a6de807278378c8f-665f98052a28551afe7a",
+          "file": "schedule.spec.js",
+          "line": 58,
+          "column": 1
+        },
+        {
+          "title": "T-28 API error can be retried, project switch discards previous data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3583,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:08.205Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2e1a6de807278378c8f-58dd5c50bb6cb2ba0d7a",
+          "file": "schedule.spec.js",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "T-28 missing or invalid project does not send API requests",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3393,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:11.809Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c2e1a6de807278378c8f-3a2c7afc1bea5756afec",
+          "file": "schedule.spec.js",
+          "line": 85,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "tasks.spec.js",
+      "file": "tasks.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-12 create/edit from tree, only leaves, immediate integer duration validation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5086,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:15.241Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "40021642a52d97e48aeb-83384a8f35053143a16e",
+          "file": "tasks.spec.js",
+          "line": 67,
+          "column": 1
+        },
+        {
+          "title": "T-14 searchable predecessor, four types, signed lag, current list, duplicate and self blocked",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9157,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:20.343Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "40021642a52d97e48aeb-d997b24869d4eeb0e573",
+          "file": "tasks.spec.js",
+          "line": 105,
+          "column": 1
+        },
+        {
+          "title": "T-14 displays duplicate error returned by the API",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3370,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:29.518Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "40021642a52d97e48aeb-09710aa85cd956db6033",
+          "file": "tasks.spec.js",
+          "line": 134,
+          "column": 1
+        },
+        {
+          "title": "T-25 TaskForm shows the backend's named cycle and keeps the dependency list unchanged",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3598,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:19:32.901Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "40021642a52d97e48aeb-9599c7142dcf7d2dc13e",
+          "file": "tasks.spec.js",
+          "line": 143,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-08T17:17:45.019Z",
+    "duration": 112892.188,
+    "expected": 32,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

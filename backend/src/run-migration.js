@@ -4,6 +4,10 @@ const { createHash } = require("crypto");
 
 const LEGACY_MIGRATION = "001_create_users.sql";
 const COMMANDS = ["up", "down", "status", "baseline"];
+// These independent migrations shipped on separate branches with version 017.
+// Keep their names and SQL intact so existing history/checksums remain valid.
+const JOURNAL_LOCK_MIGRATION = "017_add_lock_fields_to_daily_logs.sql";
+const SPRINT45_MIGRATION = "017_sprint4_5.sql";
 
 function readMigrations(directory) {
     const names = fs.readdirSync(directory)
@@ -14,9 +18,13 @@ function readMigrations(directory) {
         throw new Error("No migrations found.");
     }
 
-    const versions = names.map(name => name.slice(0, 3));
-    if (new Set(versions).size !== versions.length) {
-        throw new Error("Migration version numbers must be unique.");
+    for (const name of names) {
+        const sameVersion = names.filter(candidate => candidate.slice(0, 3) === name.slice(0, 3));
+        if (sameVersion.length > 1 && !(sameVersion.length === 2
+            && sameVersion.includes(JOURNAL_LOCK_MIGRATION)
+            && sameVersion.includes(SPRINT45_MIGRATION))) {
+            throw new Error("Migration version numbers must be unique.");
+        }
     }
 
     return names.map(name => {
@@ -151,7 +159,14 @@ async function runMigrations({
         }
         const actualsMissing = !applied.some(entry => entry.name === "015_add_task_actuals.sql")
             && applied.some(entry => entry.name === "016_create_baselines_and_milestones.sql");
-        validateHistory(actualsMissing ? migrations.filter(entry => entry.name !== "015_add_task_actuals.sql") : migrations, applied);
+        // A deployed Sprint 4–5 database may already include 018 without main's
+        // independent lock columns. Permit only this known missing migration;
+        // every other entry must still match the ordered files and checksum.
+        const journalLockMissing = !applied.some(entry => entry.name === JOURNAL_LOCK_MIGRATION)
+            && applied.some(entry => entry.name === SPRINT45_MIGRATION)
+            && applied.every(entry => entry.name <= "018_system_administration.sql");
+        validateHistory(migrations.filter(entry => !(actualsMissing && entry.name === "015_add_task_actuals.sql")
+            && !(journalLockMissing && entry.name === JOURNAL_LOCK_MIGRATION)), applied);
         const appliedNames = new Set(applied.map(entry => entry.name));
 
         if (command === "status") {

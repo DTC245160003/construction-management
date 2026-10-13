@@ -9,6 +9,7 @@ const { createSiteManagementController } = require("../controllers/siteManagemen
 const MANAGE=["admin","project_manager","manager"];
 const READ=[...MANAGE,"engineer","viewer","accountant"];
 const FIELD=[...MANAGE,"engineer"];
+const JOURNAL_READ=[...MANAGE,"engineer","viewer"];
 const FINANCE=[...MANAGE,"accountant","viewer"];
 const EDIT_COST=[...MANAGE,"accountant"];
 function createSiteManagementRoutes({ pool,authorization={ requireAuth } } = {}) {
@@ -17,6 +18,7 @@ function createSiteManagementRoutes({ pool,authorization={ requireAuth } } = {})
     const controller=createSiteManagementController({ service:createSiteManagementService({ model }),pdfService:createReportPdfService({ model }) });
     const access=createProjectAccess({ memberModel:createProjectMemberModel(pool) });
     const router=express.Router(); router.use(authorization.requireAuth);
+    router.use((req,res,next) => { if (req.body?.expected_user_id!==undefined && req.body.expected_user_id!==req.user.id) return res.status(403).json({ message:"Đăng nhập đúng tài khoản đã tạo hàng đợi để đồng bộ" }); next(); });
     const route=(method,path,roles,handler) => router[method](path,access.requireProjectMember(...roles),handler);
     route("get","/:projectId/lookup",[...READ,"worker"],controller.lookup);
     route("get","/:projectId/settings",[...READ,"worker"],controller.settings);
@@ -27,8 +29,13 @@ function createSiteManagementRoutes({ pool,authorization={ requireAuth } } = {})
     route("post","/:projectId/photos",[...FIELD,"worker"],controller.uploadPhoto);
     route("get","/:projectId/photos/:recordId/:variant",[...READ,"worker"],controller.photoFile);
     route("post","/:projectId/issues/:recordId/photos",["worker"],controller.issuePhotos);
-    route("get","/:projectId/journals",READ,controller.journals);
-    route("get","/:projectId/journals/daily",READ,controller.journalDaily);
+    route("get","/:projectId/journals",JOURNAL_READ,controller.journals);
+    route("get","/:projectId/journals/daily",JOURNAL_READ,controller.journalDaily);
+    route("get","/:projectId/journals/days",JOURNAL_READ,controller.journalDailyRange);
+    route("put","/:projectId/journals/daily",FIELD,controller.saveJournalDaily);
+    route("put","/:projectId/journals/catalog",MANAGE,controller.saveJournalCatalog);
+    route("get","/:projectId/journals/:recordId/history",JOURNAL_READ,controller.journalHistory);
+    route("post","/:projectId/journals/conflicts/:recordId/resolve",FIELD,controller.resolveJournalConflict);
     route("post","/:projectId/journals",FIELD,controller.saveJournal);
     route("post","/:projectId/journals/sync",FIELD,controller.syncJournals);
     route("put","/:projectId/journals/lock",FIELD,controller.lockJournal);

@@ -17,6 +17,28 @@ function createSiteManagementModel(pool) {
         calendar: operations.calendar,
         holidays: operations.holidays,
         participants: operations.participants,
+        catalog: (projectId) => query("SELECT * FROM journal_catalog WHERE project_id=$1 ORDER BY kind,code",[projectId]),
+        saveCatalog: (projectId,c) => one(`INSERT INTO journal_catalog(project_id,kind,code,label,all_day_rain,active) VALUES($1,$2,$3,$4,$5,$6)
+            ON CONFLICT(project_id,kind,code) DO UPDATE SET label=$4,all_day_rain=$5,active=$6 RETURNING *`,[projectId,c.kind,c.code,c.label,c.all_day_rain,c.active]),
+        dailyRange: (projectId,from,to) => query(`SELECT d.*,d.day::text AS day,(d.is_locked OR EXISTS(SELECT 1 FROM journal_day_locks l WHERE l.project_id=d.project_id AND l.day=d.day AND l.locked)
+            OR EXISTS(SELECT 1 FROM site_journals j WHERE j.project_id=d.project_id AND j.day=d.day AND j.is_locked AND j.deleted_at IS NULL)) AS is_locked
+            FROM journal_daily_info d WHERE d.project_id=$1 AND d.day BETWEEN $2 AND $3 ORDER BY d.day`,[projectId,from,to]),
+        journalPhotoIds: async (id) => (await query("SELECT photo_id FROM journal_photos WHERE journal_id=$1 ORDER BY photo_id",[id])).map((p) => p.photo_id),
+        version: (id,revision) => one("SELECT * FROM journal_versions WHERE journal_id=$1 AND revision=$2",[id,revision]),
+        versions: (id) => query("SELECT * FROM journal_versions WHERE journal_id=$1 ORDER BY revision DESC",[id]),
+        saveVersion: (j,actorId) => query("INSERT INTO journal_versions(journal_id,revision,snapshot,actor_id) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",[j.id,j.revision,j,actorId]),
+        journalWrite: (uuid) => one("SELECT * FROM journal_writes WHERE operation_uuid=$1",[uuid]),
+        saveJournalWrite: (uuid,projectId,actorId,hash,result) => query("INSERT INTO journal_writes(operation_uuid,project_id,actor_id,input_hash,result) VALUES($1,$2,$3,$4,$5)",[uuid,projectId,actorId,hash,result]),
+        conflicts: (journalId) => query("SELECT * FROM journal_conflicts WHERE journal_id=$1 ORDER BY id DESC",[journalId]),
+        conflict: (projectId,id) => one("SELECT c.* FROM journal_conflicts c JOIN site_journals j ON j.id=c.journal_id WHERE j.project_id=$1 AND c.id=$2",[projectId,id]),
+        createConflict: (j,actorId,base,server,incoming,uuid) => one(`INSERT INTO journal_conflicts(journal_id,operation_uuid,actor_id,base_revision,base_snapshot,server_snapshot,incoming_snapshot)
+            VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`,[j.id,uuid,actorId,base.revision,base,server,incoming]),
+        resolveConflict: (id,actorId,chosen) => query("UPDATE journal_conflicts SET resolved_by=$2,resolved_at=CURRENT_TIMESTAMP,chosen=$3 WHERE id=$1 AND resolved_at IS NULL",[id,actorId,chosen]),
+        photoUpload: (uuid) => one(`SELECT p.*,j.project_id,j.work_item_id,j.day::text AS day FROM journal_photo_uploads p JOIN site_journals j ON j.id=p.journal_id WHERE p.client_uuid=$1`,[uuid]),
+        photoUploads: (id) => query("SELECT client_uuid,filename,photo_id FROM journal_photo_uploads WHERE journal_id=$1 ORDER BY created_at,client_uuid",[id]),
+        createPhotoUpload: (id,actorId,p) => query("INSERT INTO journal_photo_uploads(client_uuid,journal_id,uploaded_by,filename) VALUES($1,$2,$3,$4)",[p.client_uuid,id,actorId,p.filename]),
+        completePhotoUpload: (uuid,photoId) => query("UPDATE journal_photo_uploads SET photo_id=$2 WHERE client_uuid=$1 AND photo_id IS NULL",[uuid,photoId]),
+        attachJournalPhoto: (id,photoId) => query("INSERT INTO journal_photos(journal_id,photo_id) VALUES($1,$2) ON CONFLICT DO NOTHING",[id,photoId]),
         items: (projectId) => query(`SELECT w.id,w.title,w.parent_id,NOT EXISTS(SELECT 1 FROM work_items c WHERE c.parent_id=w.id) AS is_leaf
             FROM work_items w WHERE project_id=$1 ORDER BY w.id`, [projectId]),
         item: (projectId, itemId) => one(`SELECT w.*,NOT EXISTS(SELECT 1 FROM work_items c WHERE c.parent_id=w.id) AS is_leaf
@@ -28,7 +50,7 @@ function createSiteManagementModel(pool) {
         savePreference: (userId, type, enabled) => one(`INSERT INTO notification_preferences(user_id,type,email_enabled) VALUES($1,$2,$3)
             ON CONFLICT(user_id,type) DO UPDATE SET email_enabled=$3 RETURNING type,email_enabled`, [userId, type, enabled]),
         updateProfile: (userId, fullname) => one("UPDATE users SET fullname=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING id,fullname,email", [userId, fullname]),
-        photoByUuid: (uuid) => one("SELECT id,project_id,uploaded_by,content_hash,work_item_id FROM site_photos WHERE client_uuid=$1", [uuid]),
+        photoByUuid: (uuid) => one("SELECT id,project_id,uploaded_by,content_hash,work_item_id,filename,suspicious,distance_m,metadata,taken_at,latitude,longitude FROM site_photos WHERE client_uuid=$1", [uuid]),
         photos: (projectId, userId = null) => query(`SELECT ${photoColumns},w.title AS item_name,u.fullname AS uploader,
             coalesce((SELECT json_agg(journal_id) FROM journal_photos WHERE photo_id=p.id),'[]'::json) AS journal_ids,
             coalesce((SELECT json_agg(acceptance_id) FROM acceptance_photos WHERE photo_id=p.id),'[]'::json) AS acceptance_ids
@@ -42,33 +64,42 @@ function createSiteManagementModel(pool) {
         workerCanUseItem: (projectId, itemId, userId) => one(`SELECT t.id FROM tasks t JOIN task_assignments a ON a.task_id=t.id
             JOIN team_members m ON m.team_id=a.team_id WHERE a.project_id=$1 AND t.work_item_id=$2 AND m.user_id=$3 LIMIT 1`, [projectId,itemId,userId]),
         linkIssuePhotos: async (issueId, ids) => { await query("INSERT INTO issue_photos(issue_id,photo_id) SELECT $1,unnest($2::integer[]) ON CONFLICT DO NOTHING", [issueId,ids]); },
-        daily: (projectId, day) => one("SELECT *,day::text AS day FROM journal_daily_info WHERE project_id=$1 AND day=$2", [projectId,day]),
+        daily: (projectId, day) => one(`SELECT d.*,d.day::text AS day,(d.is_locked OR EXISTS(SELECT 1 FROM journal_day_locks l WHERE l.project_id=d.project_id AND l.day=d.day AND l.locked)
+            OR EXISTS(SELECT 1 FROM site_journals j WHERE j.project_id=d.project_id AND j.day=d.day AND j.is_locked AND j.deleted_at IS NULL)) AS is_locked
+            FROM journal_daily_info d WHERE d.project_id=$1 AND d.day=$2`, [projectId,day]),
         dayLock: (projectId, day) => one("SELECT *,day::text AS day FROM journal_day_locks WHERE project_id=$1 AND day=$2", [projectId,day]),
-        saveDaily: (projectId, day, values) => one(`INSERT INTO journal_daily_info(project_id,day,manpower,equipment,weather) VALUES($1,$2,$3,$4,$5)
-            ON CONFLICT(project_id,day) DO UPDATE SET manpower=$3,equipment=$4,weather=$5,revision=journal_daily_info.revision+1 RETURNING *`, [projectId,day,values.manpower,values.equipment,values.weather]),
+        saveDaily: (projectId, day, values) => one(`INSERT INTO journal_daily_info(project_id,day,manpower,equipment,weather,weather_code,equipment_codes,all_day_rain) VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+            ON CONFLICT(project_id,day) DO UPDATE SET manpower=$3,equipment=$4,weather=$5,weather_code=$6,equipment_codes=$7,all_day_rain=$8,revision=journal_daily_info.revision+1 RETURNING *`, [projectId,day,values.manpower,values.equipment,values.weather,values.weather_code || null,JSON.stringify(values.equipment_codes || []),values.all_day_rain || false]),
         setDayLock: async (projectId, day, userId, locked, reason) => {
-            const previous = await one("SELECT locked FROM journal_day_locks WHERE project_id=$1 AND day=$2", [projectId, day]);
-            if (!previous || previous.locked !== locked) {
-                if (locked) {
-                    await query(`UPDATE site_journals SET is_locked=$3, locked_at=CASE WHEN $3 THEN CURRENT_TIMESTAMP ELSE NULL END, locked_by=CASE WHEN $3 THEN $4::integer ELSE NULL END WHERE project_id=$1 AND day=$2`, [projectId,day,locked,userId]);
-                    await query(`UPDATE journal_daily_info SET is_locked=$3, locked_at=CASE WHEN $3 THEN CURRENT_TIMESTAMP ELSE NULL END, locked_by=CASE WHEN $3 THEN $4::integer ELSE NULL END WHERE project_id=$1 AND day=$2`, [projectId,day,locked,userId]);
-                }
+            const previous = await one("SELECT *,day::text AS day,updated_at::text AS lock_timestamp FROM journal_day_locks WHERE project_id=$1 AND day=$2", [projectId, day]);
+            // PostgreSQL timestamps have finer precision than JavaScript Date.
+            const previousTimestamp=previous?.lock_timestamp;
+            if (previous) delete previous.lock_timestamp;
+            if (previous?.locked===locked) return { ...previous,is_locked:locked,locked_at:locked ? previous.updated_at : null,locked_by:locked ? previous.changed_by : null };
+            if (locked) {
+                // Preserve existing individual record locks when locking their day.
+                await query(`UPDATE site_journals SET is_locked=TRUE,locked_at=CURRENT_TIMESTAMP,locked_by=$3 WHERE project_id=$1 AND day=$2 AND NOT is_locked`, [projectId,day,userId]);
+                await query(`UPDATE journal_daily_info SET is_locked=TRUE,locked_at=CURRENT_TIMESTAMP,locked_by=$3 WHERE project_id=$1 AND day=$2 AND NOT is_locked`, [projectId,day,userId]);
             }
             const lock = await one(`INSERT INTO journal_day_locks(project_id,day,changed_by,locked,reason) VALUES($1,$2,$3,$4,$5)
                 ON CONFLICT(project_id,day) DO UPDATE SET changed_by=$3,locked=$4,reason=$5,updated_at=CURRENT_TIMESTAMP RETURNING *,day::text AS day`, [projectId,day,userId,locked,reason]);
-            if (!locked) {
-                await query(`UPDATE site_journals SET is_locked=$3, locked_at=CASE WHEN $3 THEN CURRENT_TIMESTAMP ELSE NULL END, locked_by=CASE WHEN $3 THEN $4::integer ELSE NULL END WHERE project_id=$1 AND day=$2`, [projectId,day,locked,userId]);
-                await query(`UPDATE journal_daily_info SET is_locked=$3, locked_at=CASE WHEN $3 THEN CURRENT_TIMESTAMP ELSE NULL END, locked_by=CASE WHEN $3 THEN $4::integer ELSE NULL END WHERE project_id=$1 AND day=$2`, [projectId,day,locked,userId]);
+            if (!locked && previous?.locked) {
+                // Only clear flags belonging to the preceding day lock event.
+                await query(`UPDATE site_journals SET is_locked=FALSE,locked_at=NULL,locked_by=NULL WHERE project_id=$1 AND day=$2 AND locked_at=$3 AND locked_by=$4`, [projectId,day,previousTimestamp,previous.changed_by]);
+                await query(`UPDATE journal_daily_info SET is_locked=FALSE,locked_at=NULL,locked_by=NULL WHERE project_id=$1 AND day=$2 AND locked_at=$3 AND locked_by=$4`, [projectId,day,previousTimestamp,previous.changed_by]);
             }
-            return { ...lock, is_locked: lock.locked, locked_at: lock.updated_at, locked_by: lock.changed_by };
+            return { ...lock, is_locked: lock.locked, locked_at: locked ? lock.updated_at : null, locked_by: locked ? lock.changed_by : null };
         },
         lockJournalRecord: (projectId, id, userId, locked) => one(`UPDATE site_journals SET is_locked=$3, locked_at=CASE WHEN $3 THEN CURRENT_TIMESTAMP ELSE NULL END, locked_by=CASE WHEN $3 THEN $4::integer ELSE NULL END WHERE project_id=$1 AND id=$2 AND deleted_at IS NULL RETURNING *,day::text AS day`, [projectId,id,locked,userId]),
         journals: (projectId) => query(`SELECT j.*,j.day::text AS day,j.time::text AS time,u.fullname AS author,w.title AS item_name,
+            coalesce(l.locked,FALSE) AS day_locked,
             (coalesce(j.is_locked,FALSE) OR coalesce(l.locked,FALSE)) AS is_locked,
             (coalesce(j.is_locked,FALSE) OR coalesce(l.locked,FALSE)) AS locked,
-            coalesce(j.locked_at, l.updated_at) AS locked_at,
-            coalesce(j.locked_by, l.changed_by) AS locked_by,
-            d.manpower,d.equipment,d.weather,d.revision AS daily_revision,
+            CASE WHEN j.is_locked THEN j.locked_at WHEN l.locked THEN l.updated_at ELSE NULL END AS locked_at,
+            CASE WHEN j.is_locked THEN j.locked_by WHEN l.locked THEN l.changed_by ELSE NULL END AS locked_by,
+            d.manpower,d.equipment,d.weather,d.weather_code,d.equipment_codes,d.all_day_rain,d.revision AS daily_revision,
+            coalesce((SELECT json_agg(json_build_object('client_uuid',p.client_uuid,'filename',p.filename,'photo_id',p.photo_id) ORDER BY p.created_at) FROM journal_photo_uploads p WHERE p.journal_id=j.id),'[]'::json) AS photo_uploads,
+            (SELECT count(*)::int FROM journal_conflicts c WHERE c.journal_id=j.id AND c.resolved_at IS NULL) AS conflict_count,
             coalesce((SELECT json_agg(photo_id ORDER BY photo_id) FROM journal_photos WHERE journal_id=j.id),'[]'::json) AS photo_ids
             FROM site_journals j JOIN users u ON u.id=j.author_id JOIN work_items w ON w.id=j.work_item_id
             LEFT JOIN journal_day_locks l ON l.project_id=j.project_id AND l.day=j.day LEFT JOIN journal_daily_info d ON d.project_id=j.project_id AND d.day=j.day

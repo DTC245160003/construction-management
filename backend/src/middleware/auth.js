@@ -10,6 +10,11 @@ function requireRoles(...allowedRoles) {
     };
 }
 
+function requireSystemAdmin(req,res,next) {
+    if (req.user?.system_role!=="super_admin") return res.status(403).json({ message:"Chỉ Super Admin được quản trị hệ thống" });
+    return next();
+}
+
 function createAuthorization({ userModel }) {
     return {
         async requireAuth(req, res, next) {
@@ -19,7 +24,7 @@ function createAuthorization({ userModel }) {
             }
             // Read the current role from PostgreSQL, never from the request or a stale session role.
             const user = await userModel.findByIdWithRole(userId);
-            if (!user) {
+            if (!user || user.is_active===false) {
                 return res.status(401).json({ message: "Phiên đăng nhập không còn hợp lệ" });
             }
             req.user = user;
@@ -40,4 +45,4 @@ function requireAuth(req, res, next) {
     return defaultAuthorization.requireAuth(req, res, next);
 }
 
-module.exports = { createAuthorization, requireAuth, requireRoles };
+module.exports = { createAuthorization, requireAuth, requireRoles, requireSystemAdmin };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { setOfflineIdentity } from "../services/journalOffline";
 
 import { Link, useNavigate } from "react-router-dom";
 
@@ -333,6 +334,7 @@ export default function Login() {
 
 
       localStorage.setItem("user", JSON.stringify(data.user));
+      await setOfflineIdentity(data.user.id);
 
 
 

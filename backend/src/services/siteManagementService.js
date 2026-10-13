@@ -98,13 +98,27 @@ function createSiteManagementService({ model }) {
             const prepared = await preparePhoto(body);
             return tx(projectId,async (t) => {
                 await item(t,projectId,prepared.work_item_id);
+                const upload=await t.photoUpload(prepared.client_uuid);
+                const journalId=body.journal_id ? v.id(body.journal_id) : upload?.journal_id;
+                let journal;
+                if (journalId) {
+                    journal=await t.journal(projectId,journalId);
+                    if (!journal || journal.work_item_id!==prepared.work_item_id || !upload || upload.journal_id!==journalId || upload.uploaded_by!==actor.id) throw v.problem(403,"Ảnh không thuộc nhật ký hoặc tài khoản này");
+                }
                 if (actor.role==="worker" && !await t.workerCanUseItem(projectId,prepared.work_item_id,actor.id)) throw v.problem(403,"Chỉ được tải ảnh cho hạng mục của đội mình");
                 const existing=await t.photoByUuid(prepared.client_uuid);
-                if (existing) { if (existing.project_id!==projectId || existing.uploaded_by!==actor.id || existing.content_hash!==prepared.content_hash || existing.work_item_id!==prepared.work_item_id) throw v.problem(409,"Mã tải ảnh đã được sử dụng"); return existing; }
+                if (existing) { if (existing.project_id!==projectId || existing.uploaded_by!==actor.id || existing.content_hash!==prepared.content_hash || existing.work_item_id!==prepared.work_item_id || (upload && upload.photo_id!==existing.id)) throw v.problem(409,"Mã tải ảnh đã được sử dụng"); return existing; }
+                if (journal) await unlocked(t,projectId,journal.day,journal.id);
                 const site=await t.settings(projectId);
                 prepared.distance_m=site?.latitude!=null && prepared.latitude!=null ? Math.round(distance(site.latitude,site.longitude,prepared.latitude,prepared.longitude)) : null;
                 prepared.suspicious=prepared.distance_m!==null && prepared.distance_m>site.radius_m;
                 const photo=await t.createPhoto(projectId,actor.id,prepared);
+                if (upload) {
+                    await t.completePhotoUpload(upload.client_uuid,photo.id); await t.attachJournalPhoto(upload.journal_id,photo.id);
+                    const previous=await t.journal(projectId,upload.journal_id);
+                    const journal=await t.updateJournal(projectId,previous.id,previous);
+                    await t.saveVersion({ ...journal,time:journal.time.slice(0,5),photo_ids:await t.journalPhotoIds(journal.id) },actor.id);
+                }
                 await t.audit(projectId,actor.id,"photos","upload",photo.id,null,{ filename:prepared.filename,work_item_id:prepared.work_item_id,suspicious:prepared.suspicious });
                 return photo;
             });
@@ -120,64 +134,8 @@ function createSiteManagementService({ model }) {
                 await photos(t,projectId,ids,actor,task.work_item_id); await t.linkIssuePhotos(issue.id,ids); return { photo_ids:ids };
             });
         },
-        async journals(projectId,actor) { return { journals:await model.journals(projectId),items:await model.items(projectId),member_role:actor.role }; },
-        async daily(projectId,day) { v.date(day); return { daily:await model.daily(projectId,day),lock:await model.dayLock(projectId,day) }; },
-        async saveJournal(projectId,actor,journalId,body) {
-            const j = { work_item_id:v.id(body.work_item_id),day:v.date(body.day),time:body.time,content:v.text(body.content,"Nội dung nhật ký",20000),photo_ids:v.ids(body.photo_ids),revision:body.revision };
-            if (typeof j.time!=="string" || !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(j.time)) throw v.problem(400,"Giờ nhật ký không hợp lệ");
-            j.time=j.time.slice(0,5);
-            const daily={ manpower:body.manpower,equipment:v.text(body.equipment,"Thiết bị",5000,true),weather:v.text(body.weather,"Thời tiết",255) };
-            if (!Number.isInteger(daily.manpower) || daily.manpower<0 || daily.manpower>1000000) throw v.problem(400,"Nhân lực phải là số nguyên không âm");
-            if (!journalId) { j.client_uuid=v.uuid(body.client_uuid); j.input_hash=v.hash({ work_item_id:j.work_item_id,day:j.day,time:j.time,content:j.content,photo_ids:j.photo_ids,...daily }); }
-            return tx(projectId,async (t) => {
-                if (!journalId) { const existing=await t.journalByUuid(j.client_uuid); if (existing) { if (existing.project_id!==projectId || existing.author_id!==actor.id || existing.input_hash!==j.input_hash) throw v.problem(409,"Mã nhật ký đã được sử dụng cho nội dung khác"); return { journal:existing,replayed:true }; } }
-                await item(t,projectId,j.work_item_id); await unlocked(t,projectId,j.day,journalId); await photos(t,projectId,j.photo_ids,actor,j.work_item_id);
-                const previous=journalId ? await t.journal(projectId,v.id(journalId)) : null;
-                if (journalId && !previous) throw v.problem(404,"Không tìm thấy nhật ký");
-                if (previous) { if (previous.author_id!==actor.id && !MANAGE.includes(actor.role)) throw v.problem(403,"Chỉ được sửa nhật ký do mình ghi"); await unlocked(t,projectId,previous.day,previous.id); v.revision(previous.revision,j.revision); }
-                const previousDaily=await t.daily(projectId,j.day);
-                const changedDaily=!previousDaily || ["manpower","equipment","weather"].some((key) => previousDaily[key]!==daily[key]);
-                if (changedDaily) { v.revision(previousDaily?.revision || 0,body.daily_revision ?? 0); await t.saveDaily(projectId,j.day,daily); }
-                const journal=journalId ? await t.updateJournal(projectId,journalId,j) : await t.createJournal(projectId,actor.id,j);
-                await t.linkJournalPhotos(journal.id,j.photo_ids);
-                await t.audit(projectId,actor.id,"journal",journalId ? "update" : "create",journal.id,previous,{ ...journal,photo_ids:j.photo_ids });
-                return { journal,replayed:false };
-            });
-        },
-        async syncJournals(projectId,actor,body) {
-            if (!Array.isArray(body.entries) || body.entries.length>20) throw v.problem(400,"Mỗi lần đồng bộ tối đa 20 nhật ký");
-            const results=[];
-            for (const entry of body.entries) {
-                try { results.push({ client_uuid:entry.client_uuid,ok:true,...await this.saveJournal(projectId,actor,entry.id || null,entry) }); }
-                catch (error) { if (!error.expose) throw error; results.push({ client_uuid:entry.client_uuid,ok:false,status:error.status,message:error.message }); }
-            }
-            return { results };
-        },
-        async deleteJournal(projectId,actor,id,body) { return tx(projectId,async (t) => { const previous=await t.journal(projectId,v.id(id)); if (!previous) throw v.problem(404,"Không tìm thấy nhật ký"); if (previous.author_id!==actor.id && !MANAGE.includes(actor.role)) throw v.problem(403,"Chỉ được xóa nhật ký do mình ghi"); await unlocked(t,projectId,previous.day,v.id(id)); v.revision(previous.revision,body.revision); await t.deleteJournal(projectId,id,body.revision); await t.audit(projectId,actor.id,"journal","delete",id,previous,null); return { id }; }); },
-        async lockJournal(projectId,actor,body) {
-            const isLocked = body.is_locked !== undefined ? Boolean(body.is_locked) : body.locked !== undefined ? Boolean(body.locked) : true;
-            if (!isLocked) requireRole(actor,["admin"]);
-            const day = body.day ? v.date(body.day) : null;
-            const recordId = body.recordId || body.id ? v.id(body.recordId || body.id) : null;
-            if (!day && !recordId) throw v.problem(400,"Cần ngày hoặc id nhật ký để khóa sổ");
-            const reason = v.text(body.reason,"Lý do mở khóa",2000,isLocked);
-            return tx(projectId,async (t) => {
-                let result = {};
-                if (day) {
-                    const previous = await t.dayLock(projectId,day);
-                    result = await t.setDayLock(projectId,day,actor.id,isLocked,reason);
-                    await t.audit(projectId,actor.id,"journal",isLocked ? "lock_day" : "unlock_day",day,previous,result);
-                }
-                if (recordId) {
-                    const previous = await t.journal(projectId,recordId);
-                    if (!previous) throw v.problem(404,"Không tìm thấy nhật ký");
-                    const updated = await t.lockJournalRecord(projectId,recordId,actor.id,isLocked);
-                    result = { ...result,...updated,is_locked:isLocked,locked:isLocked,locked_at:updated?.locked_at,locked_by:updated?.locked_by };
-                    await t.audit(projectId,actor.id,"journal",isLocked ? "lock_record" : "unlock_record",recordId,previous,updated);
-                }
-                return { is_locked:isLocked,locked:isLocked,locked_at:result.locked_at || new Date().toISOString(),locked_by:actor.id,...result };
-            });
-        },
+        ...require("./journalService").createJournalService({ model }),
+
         async acceptanceData(projectId,actor) { return { forms:await model.acceptances(projectId),contracts:await model.contracts(projectId),items:await model.items(projectId),member_role:actor.role,can_edit:[...MANAGE,"engineer"].includes(actor.role),can_approve:ACCEPT_APPROVE.includes(actor.role) }; },
         async saveContract(projectId,actor,itemId,body) {
             const values={ quantity:v.decimal(body.quantity,4),unit:v.text(body.unit,"Đơn vị",30),unit_price:v.decimal(body.unit_price,2,true) };

@@ -53,12 +53,12 @@ test("Gantt actual progress recalculates CPM and preserves baseline, milestone a
     const data = await (await page.request.get(base + "/schedule")).json();
     expect(data.schedule.find(task => task.id === first.id)).toMatchObject({ es: 0, ef: 6, baseline_es: 0 });
     expect(data.schedule.find(task => task.id === last.id)).toMatchObject({ ef: 8, baseline_ef: 5 });
-    await mkdir("../docs/sprint3/integration", { recursive: true });
+    await mkdir("../docs/sprint4-5/evidence", { recursive: true });
     for (const width of [1600, 1366, 768, 375]) {
         await page.setViewportSize({ width, height: 1050 });
         await page.evaluate(() => scrollTo(0,0));
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        await page.screenshot({ path: `../docs/sprint3/integration/schedule-${width}.png`, fullPage: true });
+        await page.screenshot({ path: `../docs/sprint4-5/evidence/schedule-${width}.png`, fullPage: true });
     }
     expect(errors).toEqual([]);
 });

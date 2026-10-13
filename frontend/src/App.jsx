@@ -8,6 +8,7 @@ import { Suspense } from "react";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AcceptInvitation from "./pages/AcceptInvitation";
 import Home from "./pages/Home";
 import WorkItems from "./pages/WorkItemTreePage";
 import Schedule from "./pages/Schedule";
@@ -24,6 +25,7 @@ import CostsMaterials from "./pages/CostsMaterials";
 import SitePhotos from "./pages/SitePhotos";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import SystemAdmin from "./pages/SystemAdmin";
 
 
 function App() {
@@ -58,6 +60,7 @@ function App() {
                 />
 
                 <Route path="/schedule" element={<Schedule />} />
+                <Route path="/accept-invitation" element={<AcceptInvitation />} />
                 <Route path="/members" element={<Members />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/calendar" element={<Calendar />} />
@@ -70,6 +73,7 @@ function App() {
                 <Route path="/site-photos" element={<SitePhotos />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/system-admin" element={<SystemAdmin />} />
                 <Route path="/" element={<Navigate to="/projects" replace />} />
                 <Route path="*" element={<PendingModule />} />
 

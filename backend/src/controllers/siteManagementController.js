@@ -13,6 +13,7 @@ function createSiteManagementController({ service, pdfService }) {
         uploadPhoto:async (req,res) => res.status(201).json({ photo:await service.uploadPhoto(project(req),actor(req),body(req)) }),
         photoFile:async (req,res) => {
             const photo=await service.photo(project(req),actor(req),record(req));
+            if (!["original","thumbnail"].includes(req.params.variant)) return res.status(404).json({ message:"Không tìm thấy phiên bản ảnh" });
             res.set("Cache-Control","private, no-store"); res.set("X-Content-Type-Options","nosniff");
             const thumb=req.params.variant==="thumbnail";
             res.type(thumb ? "image/jpeg" : photo.mime_type).send(thumb ? photo.thumbnail : photo.original);
@@ -20,10 +21,15 @@ function createSiteManagementController({ service, pdfService }) {
         issuePhotos:async (req,res) => res.json(await service.attachIssuePhotos(project(req),actor(req),record(req),body(req))),
         journals:async (req,res) => res.json(await service.journals(project(req),actor(req))),
         journalDaily:async (req,res) => res.json(await service.daily(project(req),req.query.day)),
-        saveJournal:async (req,res) => res.status(record(req) ? 200 : 201).json(await service.saveJournal(project(req),actor(req),record(req),body(req))),
+        journalDailyRange:async (req,res) => res.json(await service.dailyRange(project(req),actor(req),req.query.from,req.query.to)),
+        saveJournalDaily:async (req,res) => res.json({ daily:await service.saveDaily(project(req),actor(req),body(req)) }),
+        saveJournalCatalog:async (req,res) => res.json({ option:await service.saveCatalog(project(req),actor(req),body(req)) }),
+        journalHistory:async (req,res) => res.json(await service.history(project(req),actor(req),record(req))),
+        resolveJournalConflict:async (req,res) => res.json(await service.resolve(project(req),actor(req),record(req),body(req))),
+        saveJournal:async (req,res) => { const result=await service.saveJournal(project(req),actor(req),record(req),body(req)); return res.status(result.conflicted ? 409 : record(req) ? 200 : 201).json({ ...(result.conflicted ? { message:"Xung đột phiên bản. Cả hai bản đã được giữ lại." } : {}),...result }); },
         deleteJournal:async (req,res) => res.json(await service.deleteJournal(project(req),actor(req),record(req),body(req))),
         syncJournals:async (req,res) => res.json(await service.syncJournals(project(req),actor(req),body(req))),
-        lockJournal:async (req,res) => res.json({ lock:await service.lockJournal(project(req),actor(req),{ ...body(req),...(req.params.recordId ? { recordId:req.params.recordId } : {}) }) }),
+        lockJournal:async (req,res) => res.json({ lock:await service.lockJournal(project(req),actor(req),{ ...body(req),...(req.params.recordId ? { recordId:record(req) } : {}) }) }),
         acceptance:async (req,res) => res.json(await service.acceptanceData(project(req),actor(req))),
         contract:async (req,res) => res.json({ contract:await service.saveContract(project(req),actor(req),record(req),body(req)) }),
         saveAcceptance:async (req,res) => res.status(record(req) ? 200 : 201).json({ form:await service.saveAcceptance(project(req),actor(req),record(req),body(req)) }),

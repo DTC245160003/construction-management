@@ -5,6 +5,7 @@ const { createAuthService } = require("../../src/services/authService");
 const { createUserModel } = require("../../src/models/userModel");
 const { createProjectMemberModel } = require("../../src/models/projectMemberModel");
 const { createAuthRoutes } = require("../../src/routes/authRoutes");
+const { createSystemAdminRoutes } = require("../../src/routes/systemAdminRoutes");
 const { createProjectOperationsRoutes } = require("../../src/routes/projectOperationsRoutes");
 const { createSiteManagementRoutes } = require("../../src/routes/siteManagementRoutes");
 const { createWorkItemRoutes } = require("../../src/routes/workItemRoutes");
@@ -31,6 +32,7 @@ function operationsApp(pool) {
     app.use(express.json());
     app.use(session.middleware);
     app.use("/auth", createAuthRoutes({ authService: createAuthService({ userModel }), authorization, ...session }));
+    app.use("/admin",createSystemAdminRoutes({ pool,authorization }));
     app.use("/projects", createProjectOperationsRoutes({ pool, authorization }));
     app.use("/projects", createSiteManagementRoutes({ pool, authorization }));
     app.use("/api/v1/projects", createSiteManagementRoutes({ pool, authorization }));
