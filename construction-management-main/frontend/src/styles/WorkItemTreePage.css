@@ -1,0 +1,308 @@
+.work-items-page {
+    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 48px clamp(16px, 5vw, 72px);
+    background: #eef3f5;
+}
+
+.work-items-panel {
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.work-items-meta {
+    color: #607078;
+    margin: 0 0 16px;
+}
+
+.work-item-tree {
+    margin-top: 28px;
+    border-top: 1px solid #d9e2e5;
+}
+
+.work-item-row {
+    min-height: 48px;
+    padding: 8px 12px 8px calc(12px + var(--depth) * 28px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #e5ebed;
+}
+
+.tree-toggle {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #a8babf;
+    background: #fff;
+    color: #1b4d58;
+    cursor: pointer;
+}
+
+.work-item-title {
+    min-width: 180px;
+    flex: 1;
+    font-weight: 600;
+}
+
+.work-item-status {
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #e7eff1;
+    color: #31545e;
+    font-size: 12px;
+}
+
+.status-done { background: #d9f0df; color: #216037; }
+.status-doing { background: #fff0c7; color: #765900; }
+
+.work-item-editor {
+    flex: 1;
+}
+
+.task-tree-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 12px 8px calc(44px + var(--depth) * 28px);
+    border-bottom: 1px solid #e5ebed;
+}
+
+.task-tree-row > span:first-child { flex: 1; }
+.task-form-error { margin-bottom: 16px; }
+.task-form-modal .ant-form-item-label > label { color: #1f2937 !important; }
+.task-number-input { width: 100%; }
+.task-type-select { min-width: 100px; }
+.task-dependencies { padding-left: 0; list-style: none; }
+.task-dependencies li { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+
+@media (max-width: 700px) {
+    .work-item-row { flex-wrap: wrap; }
+    .work-item-title { min-width: 120px; }
+}
+
+.ops-shell .work-items-page { height: auto; min-height: 0; padding: 0; background: transparent; }
+.ops-shell .work-items-panel { max-width: none; }
+.wbs-overview { display:grid;grid-template-columns:1.3fr 1fr;gap:20px; }
+.wbs-summary-counts { display:flex;gap:35px;margin:25px 0 20px; }
+.wbs-summary-counts strong { display:block;font-size:29px;color:#17233d;line-height:1.3; }
+.wbs-summary-counts span { color:#667085;font-size:12px; }
+.wbs-schedule-link { display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:#1677ff; }
+.wbs-create { display:flex;align-items:center;gap:18px;padding:15px;background:#f7f9fc;border:1px solid #e8edf5;border-radius:9px;margin:20px 0; }
+.wbs-create>span { font-size:12px;color:#667085;max-width:180px; }
+.wbs-create .ant-form { display:flex;flex:1;gap:8px; }.wbs-create .ant-form-item{flex:1;margin:0; }
+.wbs-tree-scroll{overflow:auto;max-height:650px;}.wbs-tree-scroll .work-item-tree{min-width:750px;margin-top:0;border-top:0;}
+.work-item-row{min-height:65px;border-bottom-color:#eaf0f6;padding-top:10px;padding-bottom:10px;position:relative;background:#fafcff;}
+.work-item-row:hover{background:#f2f7fd}.work-item-row.is-selected{background:#edf5ff;box-shadow:inset 3px 0 #1677ff;}
+.work-item-title{min-width:150px;border:0;background:none;color:#243858;text-align:left;cursor:pointer;font-size:13px;padding:0;line-height:1.5;}
+.work-item-title small{display:block;font-size:10px;font-weight:400;color:#8997aa;margin-top:3px;}
+.tree-toggle{display:grid;place-items:center;width:20px;height:20px;border:0;border-radius:5px;color:#6c85a6;background:none;flex-shrink:0;}.tree-toggle:disabled{cursor:default}.tree-toggle.is-expanded svg{transform:rotate(90deg)}
+.wbs-node-icon{width:31px;height:31px;display:grid;place-items:center;border-radius:7px;background:#eaf2ff;color:#3c83d7;flex-shrink:0}.wbs-node-icon.is-parent{background:#fff2de;color:#d99027}
+.work-item-status{font-size:10px;white-space:nowrap;background:#edf1f6;color:#78869c;border-radius:5px;padding:4px 8px}.work-item-status.status-doing{color:#1a6bc8;background:#e6f1ff}.work-item-status.status-done{color:#159661;background:#e4f7ee}
+.wbs-row-actions{display:flex;gap:5px;margin-left:10px}.wbs-row-actions .ant-btn{font-size:10px;height:27px;padding:0 7px;}
+.task-tree-row{min-height:49px;padding-left:calc(65px + var(--depth) * 28px);position:relative;font-size:12px;color:#7989a1;background:#fff;border-bottom-color:#eef2f7;flex-wrap:nowrap;}
+.task-tree-row::before{content:"";position:absolute;left:calc(30px + var(--depth) * 28px);top:0;bottom:0;width:22px;border-left:1px solid #dbe5f2;border-bottom:1px solid #dbe5f2;transform:translateY(-50%);}
+.wbs-task-name{flex:1;color:#344563;font-weight:500}.wbs-duration{display:flex;align-items:center;gap:5px;font-size:11px;white-space:nowrap}.wbs-critical{display:block;color:#ef4444;font-size:10px}.wbs-task-quantity{font-size:11px;}.task-tree-row .ant-btn{height:27px;border-color:#e4eaf2;}
+.wbs-tree-footer{display:flex;gap:18px;padding-top:18px;margin-top:12px;border-top:1px solid #edf1f6;color:#8997ac;font-size:11px}.wbs-tree-footer>span{display:flex;align-items:center;gap:6px}.wbs-tree-footer>span:last-child{margin-left:auto}
+.wbs-detail-tasks{display:grid;gap:10px}.wbs-detail-tasks button{display:flex;align-items:center;gap:12px;padding:15px;border:1px solid #e4eaf2;border-radius:9px;background:#fff;color:#1677ff;cursor:pointer;text-align:left}.wbs-detail-tasks button>span{flex:1}.wbs-detail-tasks strong{display:block;color:#253858;font-size:13px}.wbs-detail-tasks small{display:block;color:#8995a7;font-size:11px;margin-top:5px}
+@media(max-width:1100px){.wbs-overview{grid-template-columns:1fr 1fr;gap:14px}.wbs-summary-counts{gap:20px}.wbs-overview .visual-distribution-body{gap:10px}.wbs-overview .visual-ring{flex-basis:100px;width:100px}}
+@media(max-width:700px){.wbs-overview{grid-template-columns:1fr;gap:0}.wbs-create{align-items:stretch;flex-direction:column;gap:8px}.wbs-create>span{max-width:none}.work-item-row{flex-wrap:nowrap}.wbs-tree-footer{flex-wrap:wrap}.wbs-tree-footer>span:last-child{margin-left:0}.work-items-panel .visual-section-heading{flex-wrap:wrap}.work-items-panel .visual-heading-action{margin-left:52px}.wbs-summary-counts{justify-content:space-between}}
+.wbs-tree-scroll:focus-visible{outline:2px solid #1677ff;outline-offset:3px}
+@media(max-width:700px){.work-items-panel .visual-section-heading>div:not(.visual-heading-action){flex:1;min-width:180px}.work-items-panel .visual-heading-action{flex-basis:100%;margin-left:0}.work-items-panel .visual-heading-action .ant-btn{width:100%}.wbs-tree-footer::after{content:"Vuốt ngang trong cây để xem trạng thái và thao tác";width:100%;font-size:10px;color:#8997ac}}
+
+/* S-35: Khối lượng, đơn vị tính và đơn giá hợp đồng */
+.wbs-contract-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+    margin-right: 4px;
+}
+.wbs-contract-tag.is-leaf {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+.wbs-contract-tag.is-parent {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+.wbs-contract-tag.is-empty {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 10px;
+}
+.wbs-multiply, .wbs-equal {
+    color: #94a3b8;
+    font-weight: 400;
+}
+.wbs-contract-tag .wbs-amount {
+    color: #0f172a;
+    font-weight: 600;
+}
+.wbs-contract-tag.is-leaf .wbs-amount {
+    color: #15803d;
+}
+.wbs-contract-tag.is-parent .wbs-amount {
+    color: #1d4ed8;
+}
+
+/* WBS Inline Editor */
+.work-item-editor-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #93c5fd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    margin: 4px 0;
+}
+.wbs-editor-main {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.wbs-editor-contract {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 8px;
+    border-top: 1px dashed #e2e8f0;
+    font-size: 12px;
+}
+.wbs-editor-label {
+    font-weight: 600;
+    color: #475569;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.wbs-editor-preview {
+    color: #16a34a;
+    font-size: 12px;
+    margin-left: 4px;
+    white-space: nowrap;
+}
+.wbs-editor-parent-notice {
+    padding: 4px 0;
+    color: #64748b;
+    font-size: 11px;
+    font-style: italic;
+}
+.wbs-editor-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* Contract Detail Card in Drawer Modal */
+.wbs-contract-detail-card {
+    margin: 16px 0;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.wbs-contract-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.wbs-contract-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.wbs-contract-header h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+}
+.wbs-type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.wbs-type-badge.is-leaf {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+.wbs-type-badge.is-parent {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+.wbs-contract-list dt {
+    color: #64748b;
+    font-size: 12px;
+}
+.wbs-contract-list dd {
+    font-size: 13px;
+    color: #1e293b;
+}
+.wbs-highlight-amount {
+    font-size: 15px !important;
+    font-weight: 700;
+    color: #0284c7;
+}
+.wbs-contract-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+.wbs-parent-contract-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.wbs-parent-notice {
+    margin: 0;
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.5;
+}
+.wbs-parent-total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #eff6ff;
+    border-radius: 6px;
+    border: 1px solid #bfdbfe;
+}
+.wbs-parent-total-box span {
+    font-size: 12px;
+    color: #1e40af;
+    font-weight: 500;
+}
+.wbs-parent-total-box strong {
+    font-size: 16px;
+    color: #1e3a8a;
+}
+.text-muted {
+    color: #94a3b8;
+    font-style: italic;
+}
+

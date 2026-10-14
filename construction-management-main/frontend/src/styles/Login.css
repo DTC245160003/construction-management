@@ -1,0 +1,1955 @@
+/* =========================================================
+
+   XÂY DỰNG SỐ — Login page (isolated styles, prefix .xds-login)
+
+   ========================================================= */
+
+
+
+.xds-login {
+
+  --navy: #062c5c;
+
+  --navy-deep: #041f46;
+
+  --blue: #1368ce;
+
+  --orange: #ff7a00;
+
+  --green: #13a66b;
+
+  --purple: #7c5cff;
+
+  --text: #17233c;
+
+  --muted: #637083;
+
+  --bg: #f5f9ff;
+
+
+
+  position: relative;
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 100vh;
+
+  overflow-x: hidden;
+
+  background: var(--bg);
+
+  color: var(--text);
+
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+
+}
+
+
+
+.xds-login *,
+
+.xds-login *::before,
+
+.xds-login *::after {
+
+  box-sizing: border-box;
+
+}
+
+
+
+/* ---------- background ---------- */
+
+.xds-login-bg {
+
+  position: absolute;
+
+  inset: 0;
+
+  background-image: url("https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=2400&q=80");
+
+  background-size: cover;
+
+  background-position: center 30%;
+
+}
+
+.xds-login-veil {
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+
+    linear-gradient(180deg, rgba(240, 247, 255, 0.55) 0%, rgba(240, 247, 255, 0.2) 45%, rgba(6, 44, 92, 0.18) 100%),
+
+    radial-gradient(1100px 600px at 12% 18%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%);
+
+}
+
+
+
+/* ---------- shell ---------- */
+
+.xds-login-shell {
+
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns: minmax(0, 61%) minmax(0, 39%);
+
+  gap: 28px;
+
+  min-height: 100vh;
+
+  padding: 26px 34px 34px;
+
+}
+
+
+
+/* =========================================================
+
+   LEFT
+
+   ========================================================= */
+
+.xds-login-left {
+
+  display: flex;
+
+  flex-direction: column;
+
+  min-width: 0;
+
+}
+
+
+
+.xds-login-top {
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 18px;
+
+  flex-wrap: wrap;
+
+}
+
+
+
+.xds-login-brand {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  text-decoration: none;
+
+  color: var(--navy);
+
+}
+
+.xds-login-brand-name {
+
+  font-size: 23px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.4px;
+
+  color: var(--navy);
+
+}
+
+.xds-login-brand-sep {
+
+  width: 1px;
+
+  height: 34px;
+
+  background: rgba(6, 44, 92, 0.22);
+
+}
+
+.xds-login-brand-sub {
+
+  font-size: 11.5px;
+
+  font-weight: 700;
+
+  line-height: 1.5;
+
+  letter-spacing: 1.1px;
+
+  color: #3c5578;
+
+  text-transform: uppercase;
+
+}
+
+
+
+.xds-login-tagline {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.4px;
+
+  color: var(--navy);
+
+  text-transform: uppercase;
+
+}
+
+.xds-login-tagline i {
+
+  color: rgba(6, 44, 92, 0.45);
+
+  font-style: normal;
+
+}
+
+.xds-login-tagline .is-active {
+
+  position: relative;
+
+  padding-bottom: 7px;
+
+}
+
+.xds-login-tagline .is-active::after {
+
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+
+  bottom: 0;
+
+  width: 34px;
+
+  height: 3px;
+
+  border-radius: 3px;
+
+  background: var(--orange);
+
+}
+
+
+
+/* ---------- hero ---------- */
+
+.xds-login-hero {
+
+  margin-top: 52px;
+
+  max-width: 720px;
+
+}
+
+.xds-login-headline {
+
+  margin: 0;
+
+  font-size: clamp(32px, 3.6vw, 54px);
+
+  font-weight: 800;
+
+  line-height: 1.12;
+
+  letter-spacing: -0.5px;
+
+}
+
+.xds-login-headline span {
+
+  display: block;
+
+}
+
+.xds-login-headline .navy {
+
+  color: var(--navy);
+
+}
+
+.xds-login-headline .orange {
+
+  color: var(--orange);
+
+}
+
+.xds-login-desc {
+
+  margin: 20px 0 0;
+
+  max-width: 640px;
+
+  font-size: 16.5px;
+
+  line-height: 1.65;
+
+  color: #2f4566;
+
+}
+
+
+
+/* ---------- feature cards ---------- */
+
+.xds-login-features {
+
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+
+  margin-top: 26px;
+
+  max-width: 620px;
+
+}
+
+.xds-login-feature {
+
+  display: flex;
+
+  gap: 13px;
+
+  padding: 15px 16px;
+
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.82);
+
+  border: 1px solid rgba(255, 255, 255, 0.85);
+
+  backdrop-filter: blur(8px);
+
+  box-shadow: 0 10px 26px rgba(6, 44, 92, 0.1);
+
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+
+}
+
+.xds-login-feature:hover {
+
+  transform: translateY(-3px);
+
+  box-shadow: 0 16px 34px rgba(6, 44, 92, 0.16);
+
+}
+
+.xds-login-feature h3 {
+
+  margin: 0 0 4px;
+
+  font-size: 14.5px;
+
+  font-weight: 700;
+
+  color: var(--navy);
+
+}
+
+.xds-login-feature p {
+
+  margin: 0;
+
+  font-size: 12.8px;
+
+  line-height: 1.5;
+
+  color: var(--muted);
+
+}
+
+.xds-login-fic {
+
+  flex: 0 0 auto;
+
+  display: grid;
+
+  place-items: center;
+
+  width: 40px;
+
+  height: 40px;
+
+  border-radius: 12px;
+
+}
+
+.xds-login .tone-blue {
+
+  background: rgba(19, 104, 206, 0.12);
+
+  color: var(--blue);
+
+}
+
+.xds-login .tone-orange {
+
+  background: rgba(255, 122, 0, 0.14);
+
+  color: #ef6c00;
+
+}
+
+.xds-login .tone-green {
+
+  background: rgba(19, 166, 107, 0.13);
+
+  color: var(--green);
+
+}
+
+.xds-login .tone-purple {
+
+  background: rgba(124, 92, 255, 0.13);
+
+  color: var(--purple);
+
+}
+
+
+
+/* ---------- dashboard mockup ---------- */
+
+.xds-login-mock-wrap {
+
+  position: relative;
+
+  margin-top: auto;
+
+  padding-top: 34px;
+
+}
+
+.xds-login-mock {
+
+  display: grid;
+
+  grid-template-columns: 172px minmax(0, 1fr);
+
+  height: 290px;
+
+  overflow: hidden;
+
+  border-radius: 18px 18px 0 0;
+
+  background: #fff;
+
+  border: 1px solid rgba(6, 44, 92, 0.1);
+
+  box-shadow: 0 -8px 44px rgba(6, 44, 92, 0.2);
+
+  transform: perspective(1600px) rotateX(2.4deg);
+
+  transform-origin: bottom center;
+
+}
+
+
+
+.xds-mock-side {
+
+  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+
+  padding: 14px 12px;
+
+  color: #e6eefb;
+
+}
+
+.xds-mock-side-brand {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  font-size: 11.5px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.6px;
+
+  color: #fff;
+
+}
+
+.xds-mock-side-brand svg {
+
+  width: 22px;
+
+  height: 22px;
+
+}
+
+.xds-mock-side ul {
+
+  list-style: none;
+
+  margin: 16px 0 0;
+
+  padding: 0;
+
+}
+
+.xds-mock-side li {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 8px 10px;
+
+  border-radius: 9px;
+
+  font-size: 12px;
+
+  color: rgba(230, 238, 251, 0.78);
+
+}
+
+.xds-mock-side li.is-active {
+
+  background: rgba(255, 255, 255, 0.14);
+
+  color: #fff;
+
+  font-weight: 600;
+
+}
+
+.xds-mock-side li .dot {
+
+  width: 6px;
+
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: currentColor;
+
+  opacity: 0.8;
+
+}
+
+
+
+.xds-mock-main {
+
+  padding: 14px 16px;
+
+  background: #fbfdff;
+
+  min-width: 0;
+
+}
+
+.xds-mock-head {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+}
+
+.xds-mock-head h4 {
+
+  margin: 0;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  color: var(--navy);
+
+}
+
+.xds-mock-pill {
+
+  padding: 4px 10px;
+
+  border-radius: 999px;
+
+  background: rgba(19, 104, 206, 0.1);
+
+  color: var(--blue);
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+}
+
+
+
+.xds-mock-kpis {
+
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 9px;
+
+  margin-top: 11px;
+
+}
+
+.xds-mock-kpi {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+  padding: 9px 10px;
+
+  border-radius: 12px;
+
+  background: #fff;
+
+  border: 1px solid rgba(6, 44, 92, 0.08);
+
+  box-shadow: 0 4px 12px rgba(6, 44, 92, 0.05);
+
+}
+
+.xds-mock-kpi strong {
+
+  font-size: 17px;
+
+  color: var(--navy);
+
+}
+
+.xds-mock-kpi .lbl {
+
+  font-size: 10.5px;
+
+  color: var(--muted);
+
+}
+
+.xds-mock-kpi .delta {
+
+  font-size: 9.5px;
+
+  font-weight: 600;
+
+  color: var(--green);
+
+}
+
+
+
+.xds-mock-grid {
+
+  display: grid;
+
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+
+  gap: 10px;
+
+  margin-top: 10px;
+
+}
+
+.xds-mock-card {
+
+  padding: 10px 12px;
+
+  border-radius: 12px;
+
+  background: #fff;
+
+  border: 1px solid rgba(6, 44, 92, 0.08);
+
+}
+
+.xds-mock-card-head {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  font-size: 11.5px;
+
+  font-weight: 700;
+
+  color: var(--navy);
+
+}
+
+.xds-mock-card-head .legend {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  font-size: 9.5px;
+
+  font-weight: 500;
+
+  color: var(--muted);
+
+}
+
+.xds-mock-card-head .legend i {
+
+  width: 8px;
+
+  height: 8px;
+
+  border-radius: 2px;
+
+}
+
+.xds-mock-card-head .legend .l1 {
+
+  background: var(--blue);
+
+}
+
+.xds-mock-card-head .legend .l2 {
+
+  background: var(--orange);
+
+}
+
+
+
+.xds-mock-bars {
+
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 6px;
+
+  height: 86px;
+
+  margin-top: 10px;
+
+}
+
+.xds-mock-bar {
+
+  position: relative;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 2px;
+
+  flex: 1;
+
+  height: 100%;
+
+}
+
+.xds-mock-bar span {
+
+  flex: 1;
+
+  border-radius: 3px 3px 0 0;
+
+}
+
+.xds-mock-bar .plan {
+
+  background: rgba(19, 104, 206, 0.28);
+
+}
+
+.xds-mock-bar .real {
+
+  background: linear-gradient(180deg, #ff9a20, #ff6200);
+
+}
+
+
+
+.xds-mock-projects {
+
+  list-style: none;
+
+  margin: 10px 0 0;
+
+  padding: 0;
+
+  display: grid;
+
+  gap: 9px;
+
+}
+
+.xds-mock-projects li {
+
+  display: grid;
+
+  grid-template-columns: minmax(0, 1fr) 62px 30px;
+
+  align-items: center;
+
+  gap: 7px;
+
+  font-size: 11px;
+
+  color: var(--text);
+
+}
+
+.xds-mock-projects .nm {
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+
+}
+
+.xds-mock-projects .bar {
+
+  height: 6px;
+
+  border-radius: 999px;
+
+  background: rgba(6, 44, 92, 0.1);
+
+  overflow: hidden;
+
+}
+
+.xds-mock-projects .bar i {
+
+  display: block;
+
+  height: 100%;
+
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #1e7ae8, #0d4fa3);
+
+}
+
+.xds-mock-projects .pc {
+
+  text-align: right;
+
+  font-weight: 700;
+
+  color: var(--navy);
+
+}
+
+
+
+/* ---------- floating mini card ---------- */
+
+.xds-login-float {
+
+  position: absolute;
+
+  left: -14px;
+
+  bottom: 42px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px 18px 12px 13px;
+
+  border-radius: 16px;
+
+  background: #fff;
+
+  box-shadow: 0 16px 38px rgba(6, 44, 92, 0.22);
+
+}
+
+.xds-login-float-ic {
+
+  display: grid;
+
+  place-items: center;
+
+  width: 38px;
+
+  height: 38px;
+
+  border-radius: 12px;
+
+  color: #fff;
+
+  background: linear-gradient(135deg, #ff9a20, #ff6200);
+
+}
+
+.xds-login-float strong {
+
+  display: block;
+
+  font-size: 14px;
+
+  color: var(--navy);
+
+}
+
+.xds-login-float p {
+
+  margin: 2px 0 0;
+
+  font-size: 12px;
+
+  color: var(--muted);
+
+}
+
+
+
+/* =========================================================
+
+   RIGHT — LOGIN CARD
+
+   ========================================================= */
+
+.xds-login-right {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  min-width: 0;
+
+}
+
+
+
+.xds-login-card {
+
+  width: 100%;
+
+  max-width: 560px;
+
+  padding: 26px 30px 22px;
+
+  border-radius: 24px;
+
+  background: #fff;
+
+  box-shadow: 0 26px 70px rgba(6, 44, 92, 0.22);
+
+}
+
+
+
+.xds-login-lang {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  float: right;
+
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  border: 1px solid rgba(6, 44, 92, 0.12);
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  color: var(--text);
+
+}
+
+.xds-login-lang .flag {
+
+  display: grid;
+
+  place-items: center;
+
+  width: 17px;
+
+  height: 17px;
+
+  border-radius: 50%;
+
+  background: #da251d;
+
+  color: #ffcd00;
+
+  font-size: 10px;
+
+  line-height: 1;
+
+}
+
+.xds-login-lang .chev {
+
+  color: var(--muted);
+
+}
+
+
+
+.xds-login-title {
+
+  clear: both;
+
+  margin: 18px 0 0;
+
+  font-size: 31px;
+
+  font-weight: 800;
+
+  color: var(--navy);
+
+}
+
+.xds-login-subtitle {
+
+  margin: 9px 0 0;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+
+  color: var(--muted);
+
+}
+
+
+
+/* ---------- form ---------- */
+
+.xds-login-form {
+
+  margin-top: 20px;
+
+}
+
+.xds-login-label {
+
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 13.5px;
+
+  font-weight: 700;
+
+  color: var(--text);
+
+}
+
+.xds-login-field {
+
+  position: relative;
+
+  margin-bottom: 15px;
+
+}
+
+.xds-login-field-ic {
+
+  position: absolute;
+
+  left: 14px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: var(--muted);
+
+  pointer-events: none;
+
+}
+
+.xds-login .xds-login-field input {
+
+  width: 100%;
+
+  height: 50px;
+
+  padding: 0 46px;
+
+  border-radius: 12px;
+
+  border: 1.5px solid #dfe6f2;
+
+  background: #fff;
+
+  font-size: 14.5px;
+
+  font-family: inherit;
+
+  color: var(--text);
+
+  outline: none;
+
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+}
+
+.xds-login .xds-login-field input::placeholder {
+
+  color: #9aa7ba;
+
+}
+
+.xds-login .xds-login-field input:focus {
+
+  border-color: var(--blue);
+
+  box-shadow: 0 0 0 4px rgba(19, 104, 206, 0.13);
+
+}
+
+.xds-login .xds-login-field input:disabled {
+
+  background: #f6f8fc;
+
+  cursor: not-allowed;
+
+}
+
+.xds-login .xds-login-eye {
+
+  position: absolute;
+
+  right: 10px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  display: grid;
+
+  place-items: center;
+
+  width: 34px;
+
+  height: 34px;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  cursor: pointer;
+
+  transition: background 0.18s ease, color 0.18s ease;
+
+}
+
+.xds-login .xds-login-eye:hover {
+
+  background: rgba(19, 104, 206, 0.09);
+
+  color: var(--blue);
+
+}
+
+
+
+.xds-login-row {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin: 3px 0 16px;
+
+}
+
+.xds-login-check {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  font-size: 13.5px;
+
+  font-weight: 600;
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  user-select: none;
+
+}
+
+.xds-login-check input {
+
+  position: absolute;
+
+  opacity: 0;
+
+  width: 0;
+
+  height: 0;
+
+}
+
+.xds-login-check .box {
+
+  position: relative;
+
+  width: 20px;
+
+  height: 20px;
+
+  border-radius: 6px;
+
+  border: 1.6px solid #c7d2e4;
+
+  background: #fff;
+
+  transition: background 0.16s ease, border-color 0.16s ease;
+
+}
+
+.xds-login-check input:checked + .box {
+
+  background: var(--blue);
+
+  border-color: var(--blue);
+
+}
+
+.xds-login-check input:checked + .box::after {
+
+  content: "";
+
+  position: absolute;
+
+  left: 6px;
+
+  top: 3px;
+
+  width: 5px;
+
+  height: 9px;
+
+  border: solid #fff;
+
+  border-width: 0 2px 2px 0;
+
+  transform: rotate(42deg);
+
+}
+
+.xds-login .xds-login-link {
+
+  border: 0;
+
+  background: none;
+
+  padding: 0;
+
+  font-family: inherit;
+
+  font-size: 13.5px;
+
+  font-weight: 600;
+
+  color: var(--blue);
+
+  cursor: pointer;
+
+}
+
+.xds-login .xds-login-link:hover {
+
+  text-decoration: underline;
+
+}
+
+
+
+.xds-login-error {
+
+  margin-bottom: 13px;
+
+  padding: 11px 13px;
+
+  border-radius: 11px;
+
+  border: 1px solid #f4c7c3;
+
+  background: #fdf1f0;
+
+  font-size: 13px;
+
+  color: #b3261e;
+
+}
+
+
+
+.xds-login .xds-login-submit {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  width: 100%;
+
+  height: 54px;
+
+  border: 0;
+
+  border-radius: 13px;
+
+  background: linear-gradient(90deg, #ff9a20, #ff6200);
+
+  color: #fff;
+
+  font-family: inherit;
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 12px 26px rgba(255, 106, 0, 0.32);
+
+  transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
+
+}
+
+.xds-login .xds-login-submit:hover:not(:disabled) {
+
+  filter: brightness(1.05);
+
+  box-shadow: 0 16px 32px rgba(255, 106, 0, 0.4);
+
+}
+
+.xds-login .xds-login-submit:active:not(:disabled) {
+
+  transform: translateY(1px);
+
+}
+
+.xds-login .xds-login-submit:disabled {
+
+  opacity: 0.65;
+
+  cursor: not-allowed;
+
+  box-shadow: none;
+
+}
+
+
+
+
+/* ---------- register ---------- */
+
+.xds-login-register {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 14px;
+
+  padding: 13px 15px;
+
+  border-radius: 14px;
+
+  background: #eff5ff;
+
+  border: 1px solid #dce8fb;
+
+}
+
+.xds-login-register .ic {
+
+  display: grid;
+
+  place-items: center;
+
+  width: 38px;
+
+  height: 38px;
+
+  border-radius: 11px;
+
+  background: rgba(19, 104, 206, 0.14);
+
+  color: var(--blue);
+
+  flex: 0 0 auto;
+
+}
+
+.xds-login-register .ln {
+
+  margin: 0;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  color: var(--navy);
+
+}
+
+.xds-login-register .sub {
+
+  margin: 3px 0 0;
+
+  font-size: 12.5px;
+
+  color: var(--muted);
+
+}
+
+.xds-login-register-link {
+
+  color: var(--orange);
+
+  font-weight: 700;
+
+  text-decoration: none;
+
+}
+
+.xds-login-register-link:hover {
+
+  text-decoration: underline;
+
+}
+
+
+
+
+/* ---------- footer ---------- */
+
+.xds-login-foot {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  flex-wrap: wrap;
+
+  margin-top: 18px;
+
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(6, 44, 92, 0.1);
+
+}
+
+.xds-login-foot .links {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+}
+
+.xds-login-foot .links i {
+
+  color: rgba(6, 44, 92, 0.25);
+
+  font-style: normal;
+
+}
+
+.xds-login .xds-login-foot button {
+
+  border: 0;
+
+  padding: 0;
+
+  background: none;
+
+  font-family: inherit;
+
+  font-size: 12.5px;
+
+  color: #3c5578;
+
+  cursor: pointer;
+
+  text-decoration: underline;
+
+}
+
+.xds-login .xds-login-foot button:hover {
+
+  color: var(--blue);
+
+}
+
+.xds-login-foot .ver {
+
+  font-size: 12.5px;
+
+  color: var(--muted);
+
+}
+
+
+
+/* =========================================================
+
+   RESPONSIVE
+
+   ========================================================= */
+
+@media (max-width: 1440px) {
+
+  .xds-login-shell {
+
+    grid-template-columns: minmax(0, 58%) minmax(0, 42%);
+
+    padding: 22px 24px 28px;
+
+  }
+
+  .xds-login-hero {
+
+    margin-top: 34px;
+
+  }
+
+}
+
+
+
+@media (max-width: 1180px) {
+
+  .xds-login-shell {
+
+    grid-template-columns: minmax(0, 1fr);
+
+    gap: 26px;
+
+  }
+
+  .xds-login-right {
+
+    justify-content: center;
+
+  }
+
+  .xds-login-card {
+
+    max-width: 620px;
+
+  }
+
+  .xds-login-mock {
+
+    height: 250px;
+
+  }
+
+  .xds-login-float {
+
+    left: 0;
+
+  }
+
+}
+
+
+
+@media (max-width: 760px) {
+
+  .xds-login-shell {
+
+    padding: 18px 14px 26px;
+
+  }
+
+  .xds-login-brand-sep,
+
+  .xds-login-brand-sub {
+
+    display: none;
+
+  }
+
+  .xds-login-tagline {
+
+    font-size: 10px;
+
+    letter-spacing: 1px;
+
+  }
+
+  .xds-login-features {
+
+    grid-template-columns: minmax(0, 1fr);
+
+  }
+
+  .xds-login-mock-wrap,
+
+  .xds-login-float {
+
+    display: none;
+
+  }
+
+  .xds-login-card {
+
+    padding: 20px 18px 18px;
+
+    border-radius: 20px;
+
+  }
+
+  .xds-login-title {
+
+    font-size: 26px;
+
+  }
+
+}
+
+
+/* Sau khi bỏ SSO/OTP và chọn vai trò: cân lại card đăng nhập */
+.xds-login-register {
+  margin-top: 18px;
+}
+
+.xds-login-foot {
+  margin-top: 14px;
+}
+
+@media (min-width: 901px) and (max-height: 900px) {
+  .xds-login-register {
+    margin-top: 12px;
+  }
+
+  .xds-login-foot {
+    margin-top: 10px;
+  }
+}
+
+/* =========================================================
+   DESKTOP/LAPTOP: FIT EXACTLY ONE VIEWPORT — NO PAGE SCROLL
+   Giữ nguyên thiết kế, chỉ ép bố cục vừa 1 màn hình.
+   ========================================================= */
+
+@media (min-width: 901px) {
+  html:has(.xds-login),
+  body:has(.xds-login),
+  #root:has(.xds-login) {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body:has(.xds-login) {
+    margin: 0;
+  }
+
+  .xds-login {
+    height: 100dvh;
+    min-height: 0;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .xds-login-shell {
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    padding: 18px 24px 14px;
+    gap: 24px;
+  }
+
+  .xds-login-left,
+  .xds-login-right {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .xds-login-left {
+    justify-content: flex-start;
+  }
+
+  .xds-login-hero {
+    flex: 0 0 auto;
+    margin-top: clamp(18px, 3vh, 34px);
+  }
+
+  .xds-login-headline {
+    font-size: clamp(34px, 3.15vw, 48px);
+    line-height: 1.08;
+  }
+
+  .xds-login-desc {
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.48;
+  }
+
+  .xds-login-features {
+    margin-top: 16px;
+    gap: 10px;
+  }
+
+  .xds-login-feature {
+    padding: 10px 12px;
+    border-radius: 13px;
+  }
+
+  .xds-login-feature h3 {
+    font-size: 13px;
+  }
+
+  .xds-login-feature p {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .xds-login-fic {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  /* Phần dashboard bên trái dùng phần chiều cao còn lại thay vì đẩy trang dài ra. */
+  .xds-login-mock-wrap {
+    flex: 1 1 auto;
+    min-height: 170px;
+    max-height: 290px;
+    margin-top: 12px;
+    padding-top: 0;
+    overflow: hidden;
+  }
+
+  .xds-login-mock {
+    height: 100%;
+    min-height: 170px;
+    max-height: 290px;
+  }
+
+  .xds-login-float {
+    bottom: 18px;
+  }
+
+  .xds-login-right {
+    align-items: center;
+  }
+
+  .xds-login-card {
+    max-height: calc(100dvh - 36px);
+    overflow: hidden;
+  }
+}
+
+/* Laptop có chiều cao thấp: co nhẹ, vẫn không đổi bố cục. */
+@media (min-width: 901px) and (max-height: 800px) {
+  .xds-login-shell {
+    padding: 12px 18px 10px;
+    gap: 18px;
+  }
+
+  .xds-login-brand-name {
+    font-size: 20px;
+  }
+
+  .xds-login-brand-sub {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .xds-login-tagline {
+    font-size: 9.5px;
+    gap: 7px;
+  }
+
+  .xds-login-hero {
+    margin-top: 12px;
+  }
+
+  .xds-login-headline {
+    font-size: clamp(30px, 2.8vw, 40px);
+  }
+
+  .xds-login-desc {
+    margin-top: 8px;
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+
+  .xds-login-features {
+    margin-top: 10px;
+    gap: 7px;
+  }
+
+  .xds-login-feature {
+    padding: 7px 9px;
+  }
+
+  .xds-login-feature p {
+    font-size: 10px;
+  }
+
+  .xds-login-mock-wrap {
+    min-height: 150px;
+    max-height: 220px;
+    margin-top: 8px;
+  }
+
+  .xds-login-mock {
+    min-height: 150px;
+    max-height: 220px;
+  }
+
+  .xds-login-card {
+    padding: 20px 24px 16px;
+  }
+
+  .xds-login-title {
+    margin-top: 10px;
+    font-size: 28px;
+  }
+
+  .xds-login-subtitle {
+    margin-top: 5px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .xds-login-form {
+    margin-top: 13px;
+  }
+
+  .xds-login-label {
+    margin-bottom: 5px;
+    font-size: 12px;
+  }
+
+  .xds-login-field {
+    margin-bottom: 9px;
+  }
+
+  .xds-login .xds-login-field input {
+    height: 43px;
+    font-size: 13px;
+  }
+
+  .xds-login-row {
+    margin: 1px 0 9px;
+  }
+
+  .xds-login .xds-login-submit {
+    height: 46px;
+    font-size: 14px;
+  }
+
+  .xds-login-register {
+    margin-top: 10px;
+    padding: 9px 11px;
+  }
+
+  .xds-login-foot {
+    margin-top: 9px;
+    padding-top: 8px;
+  }
+}
+
+/* Mobile vẫn cho cuộn tự nhiên để không cắt nội dung. */
+@media (max-width: 900px) {
+  html:has(.xds-login),
+  body:has(.xds-login),
+  #root:has(.xds-login) {
+    height: auto;
+    overflow: auto;
+  }
+
+  .xds-login,
+  .xds-login-shell {
+    height: auto;
+    max-height: none;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}

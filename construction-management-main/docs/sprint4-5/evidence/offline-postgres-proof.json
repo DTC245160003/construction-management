@@ -1,0 +1,138 @@
+{
+  "schema": "operations_e2e_a7ec57e78e614ac8b7d21afb643ad194",
+  "journals": [
+    {
+      "id": 1,
+      "client_uuid": "7491a374-ba49-476e-a078-a868b5b451f9",
+      "content": "Offline Sprint45 0",
+      "revision": 3
+    },
+    {
+      "id": 2,
+      "client_uuid": "6518eb80-ead3-4e2a-86f1-a2ed2c27914a",
+      "content": "Offline Sprint45 1",
+      "revision": 3
+    },
+    {
+      "id": 3,
+      "client_uuid": "8db857b6-a13b-4c42-8064-501e557bb91a",
+      "content": "Offline Sprint45 2",
+      "revision": 3
+    },
+    {
+      "id": 4,
+      "client_uuid": "07e28578-dfd2-4f1a-9334-ae4a22559c57",
+      "content": "Offline Sprint45 3",
+      "revision": 3
+    },
+    {
+      "id": 5,
+      "client_uuid": "f2be056e-1086-4d10-ac05-056ed8e4dc26",
+      "content": "Offline Sprint45 4",
+      "revision": 3
+    },
+    {
+      "id": 6,
+      "client_uuid": "b0db3387-e07f-4e73-bb17-e583fd556d13",
+      "content": "Offline Sprint45 5",
+      "revision": 3
+    },
+    {
+      "id": 7,
+      "client_uuid": "0848b5af-a7c5-45f8-b9e3-d1fd1e8adcf9",
+      "content": "Offline Sprint45 6",
+      "revision": 3
+    },
+    {
+      "id": 8,
+      "client_uuid": "c920011f-3258-481a-ae6f-52488f290d83",
+      "content": "Offline Sprint45 7",
+      "revision": 3
+    },
+    {
+      "id": 9,
+      "client_uuid": "998d79bf-1204-47ed-98e5-1faa5a60708b",
+      "content": "Offline Sprint45 8",
+      "revision": 3
+    },
+    {
+      "id": 10,
+      "client_uuid": "b91c3329-c634-4ad2-955f-fcd963be1572",
+      "content": "Offline Sprint45 9",
+      "revision": 3
+    },
+    {
+      "id": 11,
+      "client_uuid": "ba826d59-957e-494b-ae9b-9efdb3e1cf92",
+      "content": "Offline Sprint45 10",
+      "revision": 2
+    },
+    {
+      "id": 12,
+      "client_uuid": "6da648ed-686b-41dc-afce-06ed1a350007",
+      "content": "Offline Sprint45 11",
+      "revision": 2
+    },
+    {
+      "id": 13,
+      "client_uuid": "8fcc3a80-c0ca-47fa-a806-e1fc93b71ba4",
+      "content": "Offline Sprint45 12",
+      "revision": 2
+    },
+    {
+      "id": 14,
+      "client_uuid": "bb41ba3c-94fd-448a-a4bf-755ca3f05fe6",
+      "content": "Offline Sprint45 13",
+      "revision": 2
+    },
+    {
+      "id": 15,
+      "client_uuid": "88b8275d-7559-4b73-82a3-ec2638c606f4",
+      "content": "Offline Sprint45 14",
+      "revision": 2
+    },
+    {
+      "id": 16,
+      "client_uuid": "05fe7b5f-c309-4976-a4e8-5e68368fb383",
+      "content": "Offline Sprint45 15",
+      "revision": 2
+    },
+    {
+      "id": 17,
+      "client_uuid": "715810da-7ff8-4e26-a8e7-e6137971f43f",
+      "content": "Offline Sprint45 16",
+      "revision": 2
+    },
+    {
+      "id": 18,
+      "client_uuid": "ae812064-3835-42ad-8fc8-3deea6863076",
+      "content": "Offline Sprint45 17",
+      "revision": 2
+    },
+    {
+      "id": 19,
+      "client_uuid": "ec8ec8b6-46ee-4ddd-bdfd-06609e855703",
+      "content": "Offline Sprint45 18",
+      "revision": 2
+    },
+    {
+      "id": 20,
+      "client_uuid": "b3fc6dae-9993-4cdd-a4aa-0a62c3d57c92",
+      "content": "Offline Sprint45 19",
+      "revision": 2
+    }
+  ],
+  "photos": 30,
+  "originalPhotoBytes": 84801870,
+  "maxThumbnailBytes": 30725,
+  "daily": 1,
+  "elapsedMs": 69548,
+  "shellOpenMs": 564.8000000007451,
+  "originalBytesPerPhoto": 2826729,
+  "compressedBytesPerPhoto": 945508,
+  "totalOriginalBytes": 84801870,
+  "duplicateReplay": true,
+  "queueEmpty": true,
+  "browserRestartSurvival": true,
+  "offlinePwaStart": true
+}

@@ -1,0 +1,301 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\construction-management-main\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.t31.config.js"
+    ],
+    "configFile": "D:\\construction-management-main\\frontend\\playwright.t31.config.js",
+    "rootDir": "D:/construction-management-main/frontend/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/construction-management-main/frontend/t31-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "D:/construction-management-main/frontend/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/gantt-t31.spec.js"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../docs/sprint3/t31/browser-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "node tests/fixtures/gantt-server.mjs",
+      "url": "http://127.0.0.1:5178/tests/fixtures/gantt.html",
+      "reuseExistingServer": false
+    }
+  },
+  "suites": [
+    {
+      "title": "gantt-t31.spec.js",
+      "file": "gantt-t31.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "T-31 standalone phone fixture works without mocked API or production data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1069,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T15:18:14.922Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b0a58b106881a00b0ff1-b607ae28ff83d836dbcc",
+          "file": "gantt-t31.spec.js",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "title": "T-31 shows the named cycle when results are absent",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 329,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T15:18:17.251Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b0a58b106881a00b0ff1-f4a726c8a4461123e1ec",
+          "file": "gantt-t31.spec.js",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "title": "T-31 positions every bar using hand-calculated coordinates and preserves duplicate names",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 612,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T15:18:17.610Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b0a58b106881a00b0ff1-e3f72a62ae3e950a3cc0",
+          "file": "gantt-t31.spec.js",
+          "line": 31,
+          "column": 1
+        },
+        {
+          "title": "T-31 clips bars to the visible range and does not draw nonexistent tasks at day zero",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 424,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T15:18:18.244Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b0a58b106881a00b0ff1-910efcb4b3a699f2a908",
+          "file": "gantt-t31.spec.js",
+          "line": 46,
+          "column": 1
+        },
+        {
+          "title": "T-31 windowed groups keep selection/dependencies and reset correctly after a filter",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1512,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T15:18:18.694Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b0a58b106881a00b0ff1-7df24f2f42484e8fb034",
+          "file": "gantt-t31.spec.js",
+          "line": 68,
+          "column": 1
+        },
+        {
+          "title": "T-31 500 tasks retain geometry, sticky names/header and scrolling on a mobile viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 16691,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T15:18:20.226Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "T31-scroll-metrics",
+                      "contentType": "application/json",
+                      "body": "ewogICJob3Jpem9udGFsIjogewogICAgImZwcyI6IDU4Ljc2MjY3MzI4NzgxMjk1LAogICAgInA5NUZyYW1lTXMiOiAxNi43OTk5OTk5OTk5OTkyNzIsCiAgICAibWF4RnJhbWVNcyI6IDMzLjMwMDAwMDAwMDAwMDE4LAogICAgImZyYW1lcyI6IDE0MiwKICAgICJpbnRlcnZhbHMiOiBbCiAgICAgIDMzLjMwMDAwMDAwMDAwMDE4LAogICAgICAxNi41OTk5OTk5OTk5OTk0NTQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk5ODE4LAogICAgICAxNi42OTk5OTk5OTk5OTk4MTgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk5ODE4LAogICAgICAxNi41OTk5OTk5OTk5OTk0NTQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk5ODE4LAogICAgICAxNi42OTk5OTk5OTk5OTk4MTgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzk5OTk5OTk5OTk5MjcyLAogICAgICAzMy4yOTk5OTk5OTk5OTkyNywKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzk5OTk5OTk5OTk5MjcyLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43OTk5OTk5OTk5OTkyNzIsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMzMuMjk5OTk5OTk5OTk5MjcsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzk5OTk5OTk5OTk5MjcyLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjU5OTk5OTk5OTk5ODU0NSwKICAgICAgMTYuODAwMDAwMDAwMDAxMDksCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNTk5OTk5OTk5OTk4NTQ1LAogICAgICAxNi44MDAwMDAwMDAwMDEwOSwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi41OTk5OTk5OTk5OTg1NDUsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43OTk5OTk5OTk5OTkyNzIsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NAogICAgXSwKICAgICJ0b3RhbFJvd3MiOiA1MDAsCiAgICAicmVuZGVyZWRSb3dzIjogMjksCiAgICAiYXhpcyI6ICJob3Jpem9udGFsIiwKICAgICJkdXJhdGlvbk1zIjogMjQwMCwKICAgICJ2ZXJ0aWNhbERpc3RhbmNlIjogMCwKICAgICJob3Jpem9udGFsRGlzdGFuY2UiOiA1Mzk3LAogICAgInVzZXJBZ2VudCI6ICJNb3ppbGxhLzUuMCAoV2luZG93cyBOVCAxMC4wOyBXaW42NDsgeDY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBIZWFkbGVzc0Nocm9tZS8xNTMuMC44MDEwLjEyIFNhZmFyaS81MzcuMzYiLAogICAgInZpZXdwb3J0IjogewogICAgICAid2lkdGgiOiAzOTAsCiAgICAgICJoZWlnaHQiOiA4NDQsCiAgICAgICJkcHIiOiAzCiAgICB9LAogICAgImNwdVNsb3dkb3duIjogNAogIH0sCiAgInZlcnRpY2FsIjogewogICAgImZwcyI6IDUxLjcyNTU2NDg0MzE2ODA4LAogICAgInA5NUZyYW1lTXMiOiA0OS44OTk5OTk5OTk5OTk2MzYsCiAgICAibWF4RnJhbWVNcyI6IDY2LjcwMDAwMDAwMDAwMDczLAogICAgImZyYW1lcyI6IDEyNSwKICAgICJpbnRlcnZhbHMiOiBbCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjU5OTk5OTk5OTk5ODU0NSwKICAgICAgMTYuODAwMDAwMDAwMDAxMDksCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNTk5OTk5OTk5OTk4NTQ1LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNTk5OTk5OTk5OTk4NTQ1LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjU5OTk5OTk5OTk5ODU0NSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNTk5OTk5OTk5OTk4NTQ1LAogICAgICA1MCwKICAgICAgMzMuMzAwMDAwMDAwMDAxMDksCiAgICAgIDE2Ljc5OTk5OTk5OTk5OTI3MiwKICAgICAgMTYuNSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgNTAsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi41OTk5OTk5OTk5OTg1NDUsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgNTAsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDQ5Ljg5OTk5OTk5OTk5OTYzNiwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi41OTk5OTk5OTk5OTg1NDUsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi41OTk5OTk5OTk5OTg1NDUsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjU5OTk5OTk5OTk5ODU0NSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjU5OTk5OTk5OTk5ODU0NSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjU5OTk5OTk5OTk5ODU0NSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDY2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAzMy4zOTk5OTk5OTk5OTk2MzYsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2Ljc5OTk5OTk5OTk5OTI3MiwKICAgICAgMzMuMjk5OTk5OTk5OTk5MjcsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi41OTk5OTk5OTk5OTg1NDUsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgNjYuNzAwMDAwMDAwMDAwNzMsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMzMuMzAwMDAwMDAwMDAxMDksCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNTk5OTk5OTk5OTk4NTQ1LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDQ5LjkwMDAwMDAwMDAwMTQ1NSwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi43MDAwMDAwMDAwMDA3MjgsCiAgICAgIDE2LjYwMDAwMDAwMDAwMDM2NCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjk5OTk5OTk5OTk4OTEsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjY5OTk5OTk5OTk5ODkxLAogICAgICAxNi42MDAwMDAwMDAwMDAzNjQsCiAgICAgIDE2LjcwMDAwMDAwMDAwMDcyOCwKICAgICAgMTYuNjAwMDAwMDAwMDAwMzY0LAogICAgICAxNi43OTk5OTk5OTk5OTkyNzIKICAgIF0sCiAgICAidG90YWxSb3dzIjogNTAwLAogICAgInJlbmRlcmVkUm93cyI6IDI5LAogICAgImF4aXMiOiAidmVydGljYWwiLAogICAgImR1cmF0aW9uTXMiOiAyNDAwLAogICAgInZlcnRpY2FsRGlzdGFuY2UiOiAxNDcwLAogICAgImhvcml6b250YWxEaXN0YW5jZSI6IDAsCiAgICAidXNlckFnZW50IjogIk1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIEhlYWRsZXNzQ2hyb21lLzE1My4wLjgwMTAuMTIgU2FmYXJpLzUzNy4zNiIsCiAgICAidmlld3BvcnQiOiB7CiAgICAgICJ3aWR0aCI6IDM5MCwKICAgICAgImhlaWdodCI6IDg0NCwKICAgICAgImRwciI6IDMKICAgIH0sCiAgICAiY3B1U2xvd2Rvd24iOiA0CiAgfSwKICAic3RyZXNzIjogewogICAgImZwcyI6IDkuODYzMTQ4ODEwMjU3Njc5LAogICAgInA5NUZyYW1lTXMiOiAxNjYuNzk5OTk5OTk5OTk5MjcsCiAgICAibWF4RnJhbWVNcyI6IDE4My4zMDAwMDAwMDAwMDExLAogICAgImZyYW1lcyI6IDI0LAogICAgImludGVydmFscyI6IFsKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAxNi42OTk5OTk5OTk5OTg5MSwKICAgICAgMTYuNzAwMDAwMDAwMDAwNzI4LAogICAgICAzMy4yOTk5OTk5OTk5OTkyNywKICAgICAgMTE2LjcwMDAwMDAwMDAwMDczLAogICAgICA4My4yOTk5OTk5OTk5OTkyNywKICAgICAgODMuMzk5OTk5OTk5OTk5NjQsCiAgICAgIDY2LjYwMDAwMDAwMDAwMDM2LAogICAgICAxMTYuNzAwMDAwMDAwMDAwNzMsCiAgICAgIDY2LjY5OTk5OTk5OTk5ODkxLAogICAgICA2Ni42MDAwMDAwMDAwMDAzNiwKICAgICAgMTAwLAogICAgICAxMzMuMzAwMDAwMDAwMDAxMSwKICAgICAgMTUwLAogICAgICAxNTAsCiAgICAgIDE1MCwKICAgICAgODMuMjk5OTk5OTk5OTk5MjcsCiAgICAgIDgzLjM5OTk5OTk5OTk5OTY0LAogICAgICAxNDkuODk5OTk5OTk5OTk5NjQsCiAgICAgIDE4My4zMDAwMDAwMDAwMDExLAogICAgICAxNjYuNzk5OTk5OTk5OTk5MjcsCiAgICAgIDE1MCwKICAgICAgMTY2LjYwMDAwMDAwMDAwMDM2LAogICAgICA4My4yOTk5OTk5OTk5OTkyNwogICAgXSwKICAgICJ0b3RhbFJvd3MiOiA1MDAsCiAgICAicmVuZGVyZWRSb3dzIjogMjksCiAgICAiYXhpcyI6ICJzdHJlc3MiLAogICAgImR1cmF0aW9uTXMiOiAyNDAwLAogICAgInZlcnRpY2FsRGlzdGFuY2UiOiAyMTYwMCwKICAgICJob3Jpem9udGFsRGlzdGFuY2UiOiA1Mzk3LAogICAgInVzZXJBZ2VudCI6ICJNb3ppbGxhLzUuMCAoV2luZG93cyBOVCAxMC4wOyBXaW42NDsgeDY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBIZWFkbGVzc0Nocm9tZS8xNTMuMC44MDEwLjEyIFNhZmFyaS81MzcuMzYiLAogICAgInZpZXdwb3J0IjogewogICAgICAid2lkdGgiOiAzOTAsCiAgICAgICJoZWlnaHQiOiA4NDQsCiAgICAgICJkcHIiOiAzCiAgICB9LAogICAgImNwdVNsb3dkb3duIjogNAogIH0KfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b0a58b106881a00b0ff1-a06a7804472198a8dcfa",
+          "file": "gantt-t31.spec.js",
+          "line": 91,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T15:17:44.726Z",
+    "duration": 58715.641,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,126 @@
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #ffffff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
+    rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font-family: var(--sans);
+  color: var(--text);
+  background: #ffffff;
+
+  /* Luôn dùng giao diện sáng */
+  color-scheme: light;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset toàn trang */
+html {
+  width: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+  background: #ffffff;
+}
+
+body {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+
+  display: block;
+
+  background: #ffffff;
+  color: var(--text);
+
+  font-family: var(--sans);
+
+  overflow-x: hidden;
+}
+
+/*
+  QUAN TRỌNG:
+  Không giới hạn root ở 1126px nữa.
+  Toàn bộ website sẽ chiếm 100% chiều rộng màn hình.
+*/
+#root {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  display: block;
+
+  text-align: left;
+
+  border: none;
+  box-sizing: border-box;
+
+  background: #ffffff;
+}
+
+/* Box sizing toàn cục */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Không để ảnh làm tràn màn hình */
+img {
+  max-width: 100%;
+}
+
+/* Giữ typography cơ bản cho các trang cũ */
+h1,
+h2 {
+  font-family: var(--heading);
+  color: var(--text-h);
+}
+
+p {
+  margin: 0;
+}
+
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+@media (max-width: 1024px) {
+  :root {
+    font-size: 16px;
+  }
+}

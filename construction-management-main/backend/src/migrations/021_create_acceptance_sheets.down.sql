@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS acceptance_items CASCADE;
+DROP TABLE IF EXISTS acceptance_sheets CASCADE;

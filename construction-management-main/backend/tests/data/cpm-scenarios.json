@@ -1,0 +1,354 @@
+[
+  {
+    "id": "K-01",
+    "name": "Mạng mẫu K-01: một đường găng, hai nhánh hội tụ",
+    "calculated_by": "Codex (đối chiếu tính tay từ đáp án K-01 có sẵn; tác giả gốc chưa được ghi)",
+    "calculated_on": "2026-10-01",
+    "time_basis": "Ngày tương đối từ mốc 0; EF = ES + duration_days",
+    "manual_calculation": [
+      "Xuôi: A=0..3; B=3..7; C=3..5; D=7..12; E=5..11; F=max(12,11)..15.",
+      "Ngược: F=12..15; D=7..12; E=6..12; B=3..7; C=4..6; A=0..min(3,4)=3.",
+      "Slack=LS-ES; A-B-D-F găng, C và E có slack 1."
+    ],
+    "tasks": [
+      {"id":"A","name":"A","duration_days":3},
+      {"id":"B","name":"B","duration_days":4},
+      {"id":"C","name":"C","duration_days":2},
+      {"id":"D","name":"D","duration_days":5},
+      {"id":"E","name":"E","duration_days":6},
+      {"id":"F","name":"F","duration_days":3}
+    ],
+    "dependencies": [
+      {"predecessor_task_id":"A","successor_task_id":"B","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"A","successor_task_id":"C","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"B","successor_task_id":"D","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"C","successor_task_id":"E","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"D","successor_task_id":"F","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"E","successor_task_id":"F","dependency_type":"FS","lag_days":0}
+    ],
+    "expected": [
+      {"id":"A","es":0,"ef":3,"ls":0,"lf":3,"slack":0,"isCritical":true},
+      {"id":"B","es":3,"ef":7,"ls":3,"lf":7,"slack":0,"isCritical":true},
+      {"id":"C","es":3,"ef":5,"ls":4,"lf":6,"slack":1,"isCritical":false},
+      {"id":"D","es":7,"ef":12,"ls":7,"lf":12,"slack":0,"isCritical":true},
+      {"id":"E","es":5,"ef":11,"ls":6,"lf":12,"slack":1,"isCritical":false},
+      {"id":"F","es":12,"ef":15,"ls":12,"lf":15,"slack":0,"isCritical":true}
+    ]
+  },
+  {
+    "id": "K-02",
+    "name": "Bảy công việc, đủ FS/SS/FF/SF và lag âm",
+    "calculated_by": "Codex (tính tay bằng công thức xuôi/ngược, không sinh đáp án từ engine)",
+    "calculated_on": "2026-10-01",
+    "time_basis": "Ngày tương đối từ mốc 0; EF = ES + duration_days",
+    "manual_calculation": [
+      "Xuôi: A=0..4; B=4..10 (FS); C=1..4 (SS+1).",
+      "D: ES=EF(B)-1-2=7, EF=9 (FF-1). E: ES=ES(C)+4-2=3, EF=5 (SF+4).",
+      "F: ES=max(EF(D),EF(E))=9, EF=12. G: ES=max(EF(B),EF(F))=12, EF=13.",
+      "Ngược: G=12..13; F=9..12; D=7..9; E=7..9.",
+      "B: LF=min(LF(D)+1,LS(G))=min(10,12)=10, LS=4.",
+      "C: LS=LF(E)-4=5, LF=8. A: LF=min(LS(B),LS(C)-1+4)=min(4,8)=4, LS=0.",
+      "Slack của C,E là 4; A,B,D,F,G có slack 0."
+    ],
+    "tasks": [
+      {"id":"A","name":"Chuẩn bị","duration_days":4},
+      {"id":"B","name":"Thi công móng","duration_days":6},
+      {"id":"C","name":"Chuẩn bị vật tư","duration_days":3},
+      {"id":"D","name":"Kiểm tra móng","duration_days":2},
+      {"id":"E","name":"Bàn giao vật tư","duration_days":2},
+      {"id":"F","name":"Lắp dựng","duration_days":3},
+      {"id":"G","name":"Nghiệm thu","duration_days":1}
+    ],
+    "dependencies": [
+      {"predecessor_task_id":"A","successor_task_id":"B","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"A","successor_task_id":"C","dependency_type":"SS","lag_days":1},
+      {"predecessor_task_id":"B","successor_task_id":"D","dependency_type":"FF","lag_days":-1},
+      {"predecessor_task_id":"C","successor_task_id":"E","dependency_type":"SF","lag_days":4},
+      {"predecessor_task_id":"D","successor_task_id":"F","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"E","successor_task_id":"F","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"B","successor_task_id":"G","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"F","successor_task_id":"G","dependency_type":"FS","lag_days":0}
+    ],
+    "expected": [
+      {"id":"A","es":0,"ef":4,"ls":0,"lf":4,"slack":0,"isCritical":true},
+      {"id":"B","es":4,"ef":10,"ls":4,"lf":10,"slack":0,"isCritical":true},
+      {"id":"C","es":1,"ef":4,"ls":5,"lf":8,"slack":4,"isCritical":false},
+      {"id":"D","es":7,"ef":9,"ls":7,"lf":9,"slack":0,"isCritical":true},
+      {"id":"E","es":3,"ef":5,"ls":7,"lf":9,"slack":4,"isCritical":false},
+      {"id":"F","es":9,"ef":12,"ls":9,"lf":12,"slack":0,"isCritical":true},
+      {"id":"G","es":12,"ef":13,"ls":12,"lf":13,"slack":0,"isCritical":true}
+    ]
+  },
+  {
+    "id": "K-03",
+    "name": "Hai nhánh song song lệch nhau ba ngày",
+    "calculated_by": "Codex (tính tay bằng công thức xuôi/ngược, không sinh đáp án từ engine)",
+    "calculated_on": "2026-10-01",
+    "time_basis": "Ngày tương đối từ mốc 0; EF = ES + duration_days",
+    "manual_calculation": [
+      "Nhánh A(4)-B(5) dài 9 ngày; nhánh C(2)-D(4) dài 6 ngày; chênh lệch 3 ngày.",
+      "Xuôi: A=0..4; B=4..9; C=0..2; D=2..6; E=max(9,6)..11.",
+      "Ngược: E=9..11; B=4..9; A=0..4; D=5..9; C=3..5.",
+      "C,D có slack 3; A,B,E găng."
+    ],
+    "tasks": [
+      {"id":"A","name":"Nhánh dài - phần 1","duration_days":4},
+      {"id":"B","name":"Nhánh dài - phần 2","duration_days":5},
+      {"id":"C","name":"Nhánh ngắn - phần 1","duration_days":2},
+      {"id":"D","name":"Nhánh ngắn - phần 2","duration_days":4},
+      {"id":"E","name":"Hội tụ","duration_days":2}
+    ],
+    "dependencies": [
+      {"predecessor_task_id":"A","successor_task_id":"B","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"C","successor_task_id":"D","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"B","successor_task_id":"E","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"D","successor_task_id":"E","dependency_type":"FS","lag_days":0}
+    ],
+    "expected": [
+      {"id":"A","es":0,"ef":4,"ls":0,"lf":4,"slack":0,"isCritical":true},
+      {"id":"B","es":4,"ef":9,"ls":4,"lf":9,"slack":0,"isCritical":true},
+      {"id":"C","es":0,"ef":2,"ls":3,"lf":5,"slack":3,"isCritical":false},
+      {"id":"D","es":2,"ef":6,"ls":5,"lf":9,"slack":3,"isCritical":false},
+      {"id":"E","es":9,"ef":11,"ls":9,"lf":11,"slack":0,"isCritical":true}
+    ]
+  },
+  {
+    "id": "K-01-ACTUAL-01",
+    "name": "K-01 Ca 1 (S-16/T-36): Việc găng A trễ 3 ngày (kết thúc mốc 6) -> ngày hoàn thành dự án lùi đúng 3 ngày (15 -> 18)",
+    "calculated_by": "Codex (tính tay theo AC S-16: việc trên đường găng kết thúc thực tế trễ 3 ngày thì ngày hoàn thành dự án lùi đúng 3 ngày)",
+    "calculated_on": "2026-10-06",
+    "time_basis": "Ngày tương đối từ mốc 0; A kết thúc thực tế ở ngày 6 thay vì 3",
+    "manual_calculation": [
+      "Kế hoạch gốc: A(3)-B(4)-D(5)-F(3) găng dài 15 ngày; C(2)-E(6) có slack 1.",
+      "Việc A kết thúc thực tế ở ngày 6 (trễ 3 ngày).",
+      "Xuôi: A=0..6; B=6..10; C=6..8; D=10..15; E=8..14; F=max(15,14)..18.",
+      "Ngược: F=15..18; D=10..15; E=9..15; B=6..10; C=7..9; A=0..6.",
+      "Slack: A,B,D,F găng (slack 0); C,E slack 1. Ngày hoàn thành dự án lùi từ 15 lên 18 (lùi đúng 3 ngày)."
+    ],
+    "tasks": [
+      {"id":"A","name":"A","duration_days":3,"actual_start":0,"actual_finish":6},
+      {"id":"B","name":"B","duration_days":4},
+      {"id":"C","name":"C","duration_days":2},
+      {"id":"D","name":"D","duration_days":5},
+      {"id":"E","name":"E","duration_days":6},
+      {"id":"F","name":"F","duration_days":3}
+    ],
+    "dependencies": [
+      {"predecessor_task_id":"A","successor_task_id":"B","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"A","successor_task_id":"C","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"B","successor_task_id":"D","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"C","successor_task_id":"E","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"D","successor_task_id":"F","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"E","successor_task_id":"F","dependency_type":"FS","lag_days":0}
+    ],
+    "project_finish": 18,
+    "delay_days": 3,
+    "expected": [
+      {"id":"A","es":0,"ef":6,"ls":0,"lf":6,"slack":0,"isCritical":true},
+      {"id":"B","es":6,"ef":10,"ls":6,"lf":10,"slack":0,"isCritical":true},
+      {"id":"C","es":6,"ef":8,"ls":7,"lf":9,"slack":1,"isCritical":false},
+      {"id":"D","es":10,"ef":15,"ls":10,"lf":15,"slack":0,"isCritical":true},
+      {"id":"E","es":8,"ef":14,"ls":9,"lf":15,"slack":1,"isCritical":false},
+      {"id":"F","es":15,"ef":18,"ls":15,"lf":18,"slack":0,"isCritical":true}
+    ]
+  },
+  {
+    "id": "K-01-ACTUAL-02",
+    "name": "K-01 Ca 2 (S-16/T-36): Việc không găng C trễ 1 ngày trong độ trễ cho phép (slack = 1, kết thúc mốc 6) -> ngày hoàn thành dự án không đổi (15)",
+    "calculated_by": "Codex (tính tay theo AC S-16: việc không găng trễ ít hơn hoặc bằng độ trễ cho phép thì ngày hoàn thành dự án không đổi)",
+    "calculated_on": "2026-10-06",
+    "time_basis": "Ngày tương đối từ mốc 0; C kết thúc thực tế ở mốc 6 (kế hoạch mốc 5, trễ 1 ngày trong slack)",
+    "manual_calculation": [
+      "C kế hoạch EF=5, slack=1. Thực tế kết thúc ở ngày 6.",
+      "Xuôi: A=0..3; B=3..7; C=4..6; D=7..12; E=6..12; F=max(12,12)..15.",
+      "Dự án vẫn hoàn thành ở ngày 15 (không đổi)."
+    ],
+    "tasks": [
+      {"id":"A","name":"A","duration_days":3},
+      {"id":"B","name":"B","duration_days":4},
+      {"id":"C","name":"C","duration_days":2,"actual_start":4,"actual_finish":6},
+      {"id":"D","name":"D","duration_days":5},
+      {"id":"E","name":"E","duration_days":6},
+      {"id":"F","name":"F","duration_days":3}
+    ],
+    "dependencies": [
+      {"predecessor_task_id":"A","successor_task_id":"B","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"A","successor_task_id":"C","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"B","successor_task_id":"D","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"C","successor_task_id":"E","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"D","successor_task_id":"F","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"E","successor_task_id":"F","dependency_type":"FS","lag_days":0}
+    ],
+    "project_finish": 15,
+    "delay_days": 0,
+    "expected": [
+      {"id":"A","es":0,"ef":3,"ls":0,"lf":3,"slack":0,"isCritical":true},
+      {"id":"B","es":3,"ef":7,"ls":3,"lf":7,"slack":0,"isCritical":true},
+      {"id":"C","es":4,"ef":6,"ls":4,"lf":6,"slack":0,"isCritical":true},
+      {"id":"D","es":7,"ef":12,"ls":7,"lf":12,"slack":0,"isCritical":true},
+      {"id":"E","es":6,"ef":12,"ls":6,"lf":12,"slack":0,"isCritical":true},
+      {"id":"F","es":12,"ef":15,"ls":12,"lf":15,"slack":0,"isCritical":true}
+    ]
+  },
+  {
+    "id": "K-01-ACTUAL-03",
+    "name": "K-01 Ca 3 (S-16/T-36): Việc không găng C trễ 3 ngày vượt độ trễ cho phép (kết thúc mốc 8) -> C, E trở thành găng, dự án lùi đúng phần vượt (15 -> 17)",
+    "calculated_by": "Codex (tính tay theo AC S-16: việc không găng trễ nhiều hơn độ trễ cho phép thì trở thành găng và ngày hoàn thành lùi đúng phần vượt)",
+    "calculated_on": "2026-10-06",
+    "time_basis": "Ngày tương đối từ mốc 0; C kết thúc thực tế ở mốc 8 (vượt slack 1 ngày đúng 2 ngày)",
+    "manual_calculation": [
+      "C kế hoạch EF=5, slack=1. Thực tế kết thúc ở mốc 8 (vượt 2 ngày).",
+      "Xuôi: A=0..3; B=3..7; C=6..8; D=7..12; E=8..14; F=max(12,14)..17.",
+      "Ngược: F=14..17; E=8..14; C=6..8; D=9..14; B=5..9; A=2..5.",
+      "C và E trở thành găng (slack 0). B và D có slack 2 (không còn găng).",
+      "Ngày hoàn thành dự án = 17, lùi đúng 2 ngày (phần vượt)."
+    ],
+    "tasks": [
+      {"id":"A","name":"A","duration_days":3},
+      {"id":"B","name":"B","duration_days":4},
+      {"id":"C","name":"C","duration_days":2,"actual_start":6,"actual_finish":8},
+      {"id":"D","name":"D","duration_days":5},
+      {"id":"E","name":"E","duration_days":6},
+      {"id":"F","name":"F","duration_days":3}
+    ],
+    "dependencies": [
+      {"predecessor_task_id":"A","successor_task_id":"B","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"A","successor_task_id":"C","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"B","successor_task_id":"D","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"C","successor_task_id":"E","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"D","successor_task_id":"F","dependency_type":"FS","lag_days":0},
+      {"predecessor_task_id":"E","successor_task_id":"F","dependency_type":"FS","lag_days":0}
+    ],
+    "project_finish": 17,
+    "delay_days": 2,
+    "expected": [
+      {"id":"A","es":0,"ef":3,"ls":2,"lf":5,"slack":2,"isCritical":false},
+      {"id":"B","es":3,"ef":7,"ls":5,"lf":9,"slack":2,"isCritical":false},
+      {"id":"C","es":6,"ef":8,"ls":6,"lf":8,"slack":0,"isCritical":true},
+      {"id":"D","es":7,"ef":12,"ls":9,"lf":14,"slack":2,"isCritical":false},
+      {"id":"E","es":8,"ef":14,"ls":8,"lf":14,"slack":0,"isCritical":true},
+      {"id":"F","es":14,"ef":17,"ls":14,"lf":17,"slack":0,"isCritical":true}
+    ]
+  },
+  {
+    "id": "CAL-01",
+    "name": "Ca lịch 1: Trong tuần không qua chủ nhật",
+    "calculated_by": "Codex (tính tay theo T-39 / S-17)",
+    "calculated_on": "2026-10-06",
+    "manual_calculation": [
+      "Bắt đầu Thứ năm 2026-10-01, thời lượng 2 ngày làm việc.",
+      "Ngày 1: Thứ năm 2026-10-01, Ngày 2: Thứ sáu 2026-10-02.",
+      "Kết thúc Thứ sáu 2026-10-02; số ngày làm việc giữa hai ngày = 2."
+    ],
+    "start_date": "2026-10-01",
+    "working_days": [1, 2, 3, 4, 5, 6],
+    "holidays": [],
+    "duration_days": 2,
+    "expected_finish": "2026-10-02",
+    "expected_count": 2,
+    "tasks": [{"id":"A","name":"A","duration_days":2}],
+    "dependencies": [],
+    "expected": [{"id":"A","es":0,"ef":2,"ls":0,"lf":2,"slack":0,"isCritical":true}]
+  },
+  {
+    "id": "CAL-02",
+    "name": "Ca lịch 2: Qua chủ nhật (việc 6 ngày từ thứ năm kết thúc thứ tư tuần sau)",
+    "calculated_by": "Codex (tính tay theo T-39 / S-17)",
+    "calculated_on": "2026-10-06",
+    "manual_calculation": [
+      "Bắt đầu Thứ năm 2026-10-01, thời lượng 6 ngày làm việc.",
+      "T5(1), T6(2), T7(3), CN(nghỉ), T2(4), T3(5), T4(6).",
+      "Kết thúc Thứ tư 2026-10-07; số ngày làm việc giữa hai ngày = 6."
+    ],
+    "start_date": "2026-10-01",
+    "working_days": [1, 2, 3, 4, 5, 6],
+    "holidays": [],
+    "duration_days": 6,
+    "expected_finish": "2026-10-07",
+    "expected_count": 6,
+    "tasks": [{"id":"A","name":"A","duration_days":6}],
+    "dependencies": [],
+    "expected": [{"id":"A","es":0,"ef":6,"ls":0,"lf":6,"slack":0,"isCritical":true}]
+  },
+  {
+    "id": "CAL-03",
+    "name": "Ca lịch 3: Có ngày lễ rơi vào giữa ngày làm việc (lùi đúng 1 ngày)",
+    "calculated_by": "Codex (tính tay theo T-39 / S-17)",
+    "calculated_on": "2026-10-06",
+    "manual_calculation": [
+      "Bắt đầu Thứ năm 2026-10-01, thời lượng 6 ngày làm việc. Lễ Thứ sáu 2026-10-02.",
+      "T5(1), T6(lễ nghỉ), T7(2), CN(nghỉ), T2(3), T3(4), T4(5), T5(6).",
+      "Kết thúc Thứ năm 2026-10-08; số ngày làm việc giữa hai ngày = 6."
+    ],
+    "start_date": "2026-10-01",
+    "working_days": [1, 2, 3, 4, 5, 6],
+    "holidays": ["2026-10-02"],
+    "duration_days": 6,
+    "expected_finish": "2026-10-08",
+    "expected_count": 6,
+    "tasks": [{"id":"A","name":"A","duration_days":6}],
+    "dependencies": [],
+    "expected": [{"id":"A","es":0,"ef":6,"ls":0,"lf":6,"slack":0,"isCritical":true}]
+  },
+  {
+    "id": "CAL-04",
+    "name": "Ca lịch 4: Ngày lễ trùng chủ nhật không trừ hai lần",
+    "calculated_by": "Codex (tính tay theo T-39 / S-17)",
+    "calculated_on": "2026-10-06",
+    "manual_calculation": [
+      "Bắt đầu Thứ năm 2026-10-01, thời lượng 6 ngày làm việc. Lễ Chủ nhật 2026-10-04 trùng ngày nghỉ hằng tuần.",
+      "Chủ nhật đã là ngày nghỉ hằng tuần, không bị trừ 2 lần.",
+      "Kết thúc vẫn là Thứ tư 2026-10-07 như Ca 2; số ngày làm việc giữa hai ngày = 6."
+    ],
+    "start_date": "2026-10-01",
+    "working_days": [1, 2, 3, 4, 5, 6],
+    "holidays": ["2026-10-04"],
+    "duration_days": 6,
+    "expected_finish": "2026-10-07",
+    "expected_count": 6,
+    "tasks": [{"id":"A","name":"A","duration_days":6}],
+    "dependencies": [],
+    "expected": [{"id":"A","es":0,"ef":6,"ls":0,"lf":6,"slack":0,"isCritical":true}]
+  },
+  {
+    "id": "CAL-05",
+    "name": "Ca lịch 5: Vừa có lễ ngày thường vừa có lễ trùng chủ nhật",
+    "calculated_by": "Codex (tính tay theo T-39 / S-17)",
+    "calculated_on": "2026-10-06",
+    "manual_calculation": [
+      "Bắt đầu Thứ năm 2026-10-01, thời lượng 6 ngày làm việc. Lễ 2026-10-04 (CN) và 2026-10-06 (T3).",
+      "T5(1), T6(2), T7(3), CN(lễ trùng nghỉ - trừ 1 lần), T2(4), T3(lễ nghỉ), T4(5), T5(6).",
+      "Kết thúc Thứ năm 2026-10-08; số ngày làm việc giữa hai ngày = 6."
+    ],
+    "start_date": "2026-10-01",
+    "working_days": [1, 2, 3, 4, 5, 6],
+    "holidays": ["2026-10-04", "2026-10-06"],
+    "duration_days": 6,
+    "expected_finish": "2026-10-08",
+    "expected_count": 6,
+    "tasks": [{"id":"A","name":"A","duration_days":6}],
+    "dependencies": [],
+    "expected": [{"id":"A","es":0,"ef":6,"ls":0,"lf":6,"slack":0,"isCritical":true}]
+  },
+  {
+    "id": "CAL-06",
+    "name": "Ca lịch 6: Lịch 5 ngày/tuần (nghỉ Thứ 7, CN) và có ngày lễ",
+    "calculated_by": "Codex (tính tay theo T-39 / S-17)",
+    "calculated_on": "2026-10-06",
+    "manual_calculation": [
+      "Lịch 5 ngày/tuần: T2-T6. Nghỉ T7, CN.",
+      "Bắt đầu Thứ năm 2026-10-01, thời lượng 5 ngày làm việc. Lễ Thứ hai 2026-10-05.",
+      "T5(1), T6(2), T7(nghỉ), CN(nghỉ), T2(lễ nghỉ), T3(3), T4(4), T5(5).",
+      "Kết thúc Thứ năm 2026-10-08; số ngày làm việc giữa hai ngày = 5."
+    ],
+    "start_date": "2026-10-01",
+    "working_days": [1, 2, 3, 4, 5],
+    "holidays": ["2026-10-05"],
+    "duration_days": 5,
+    "expected_finish": "2026-10-08",
+    "expected_count": 5,
+    "tasks": [{"id":"A","name":"A","duration_days":5}],
+    "dependencies": [],
+    "expected": [{"id":"A","es":0,"ef":5,"ls":0,"lf":5,"slack":0,"isCritical":true}]
+  }
+]

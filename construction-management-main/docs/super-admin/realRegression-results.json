@@ -1,0 +1,522 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.real-regression.config.js"
+    ],
+    "configFile": "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\playwright.real-regression.config.js",
+    "rootDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": "D:\\Project\\construction-management-new\\.worktrees\\sprint4-5\\frontend\\tests\\sprint45.teardown.js",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/test-results/real-regression",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "D:/Project/construction-management-new/.worktrees/sprint4-5/frontend/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "operations.real.spec.js",
+          "site.real.spec.js",
+          "sprint3.real.spec.js",
+          "projects.visual.spec.js"
+        ],
+        "timeout": 170000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../docs/sprint4-5/real-regression-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "operations.real.spec.js",
+      "file": "operations.real.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real project creation, persistence, calendar editing and project navigation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5634,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:09.627Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "365dd9f9f5e5bf6d1aa8-3a256e5efae4ac5e4636",
+          "file": "operations.real.spec.js",
+          "line": 13,
+          "column": 1
+        },
+        {
+          "title": "real member invitation becomes membership on registration, role changes and removal persist",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3059,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:15.643Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "365dd9f9f5e5bf6d1aa8-93a2e463b360c3e82fd2",
+          "file": "operations.real.spec.js",
+          "line": 73,
+          "column": 1
+        },
+        {
+          "title": "real manager assignment, worker reporting, issue notification and manager resolution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6095,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:18.727Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "365dd9f9f5e5bf6d1aa8-70906e3f11ac6fe91f78",
+          "file": "operations.real.spec.js",
+          "line": 93,
+          "column": 1
+        },
+        {
+          "title": "all sidebar routes render and selected project survives navigation; mobile does not overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8866,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:24.846Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "365dd9f9f5e5bf6d1aa8-972918df560f83b231c3",
+          "file": "operations.real.spec.js",
+          "line": 152,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "projects.visual.spec.js",
+      "file": "projects.visual.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Projects real create/edit, inline validation, retry and persistence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2902,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:33.792Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c5f787b713d454b1aa82-270803e682fe6784fa11",
+          "file": "projects.visual.spec.js",
+          "line": 16,
+          "column": 1
+        },
+        {
+          "title": "Projects filters, ordering, list menu, detail totals and responsive browser review",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4112,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:36.715Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c5f787b713d454b1aa82-b1f3c18201da9de6c59e",
+          "file": "projects.visual.spec.js",
+          "line": 65,
+          "column": 1
+        },
+        {
+          "title": "Projects loading, server error/retry and empty states render in browser",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2665,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:40.854Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c5f787b713d454b1aa82-39238d5771bed3a75fe0",
+          "file": "projects.visual.spec.js",
+          "line": 138,
+          "column": 1
+        },
+        {
+          "title": "Projects role-aware actions and shared topbar search/help work",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1559,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:43.539Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c5f787b713d454b1aa82-bc9defd78b9c41dd1791",
+          "file": "projects.visual.spec.js",
+          "line": 164,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "site.real.spec.js",
+      "file": "site.real.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "journal persists offline with photo across reload, syncs once, locks and unlocks with audit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4529,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:45.146Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f815197d69fc2f6e672c-e57cf5dcf7f1954bf13e",
+          "file": "site.real.spec.js",
+          "line": 13,
+          "column": 1
+        },
+        {
+          "title": "real acceptance approval, payment retention, return/resubmit and PDF download",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8270,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:49.698Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f815197d69fc2f6e672c-08bfde078368b029dbff",
+          "file": "site.real.spec.js",
+          "line": 63,
+          "column": 1
+        },
+        {
+          "title": "budget versions, real costs, nonnegative inventory, settings and photo gallery",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5656,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:26:57.994Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f815197d69fc2f6e672c-9ca90cf7731e6d8cd8f0",
+          "file": "site.real.spec.js",
+          "line": 111,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "sprint3.real.spec.js",
+      "file": "sprint3.real.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Gantt actual progress recalculates CPM and preserves baseline, milestone and working calendar",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 170000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5639,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-08T17:27:03.704Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e36c51d9f4733e757367-e372ad3887e182a6f138",
+          "file": "sprint3.real.spec.js",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-08T17:26:04.770Z",
+    "duration": 66017.55500000001,
+    "expected": 12,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "passed": [
+    "WBS detail and tasks",
+    "Member menu, Escape, focus and join date",
+    "Photo preview desktop/mobile",
+    "Settings section navigation"
+  ],
+  "errors": []
+}

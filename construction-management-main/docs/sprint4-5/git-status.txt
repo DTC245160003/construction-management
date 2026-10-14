@@ -1,0 +1,80 @@
+SPRINT45 WORKTREE
+Path: D:\Project\construction-management-new\.worktrees\sprint4-5
+Branch: feature/sprint4-5
+ M .github/workflows/ci.yml
+ M .gitignore
+ M backend/jest.config.cjs
+ M backend/package.json
+ M backend/scripts/operations-e2e-server.cjs
+ M backend/src/controllers/authController.js
+ M backend/src/controllers/projectOperationsController.js
+ M backend/src/controllers/siteManagementController.js
+ M backend/src/models/projectOperationsModel.js
+ M backend/src/models/siteManagementModel.js
+ M backend/src/models/userModel.js
+ M backend/src/routes/projectOperationsRoutes.js
+ M backend/src/routes/siteManagementRoutes.js
+ M backend/src/services/authService.js
+ M backend/src/services/photoService.js
+ M backend/src/services/projectOperationsService.js
+ M backend/src/services/siteManagementService.js
+ M backend/tests/migrations.test.js
+ M backend/tests/projectOperations.postgres.test.js
+ M backend/tests/siteManagement.postgres.test.js
+ M backend/tests/sprint2.postgres.test.js
+ M backend/tests/sprint3.integration.postgres.test.js
+ M frontend/eslint.config.js
+ M frontend/index.html
+ M frontend/package.json
+ M frontend/playwright.config.js
+ M frontend/public/journal-sw.js
+ M frontend/public/manifest.webmanifest
+ M frontend/src/App.jsx
+ M frontend/src/components/DashboardLayout.jsx
+ M frontend/src/components/ModuleInsights.jsx
+ M frontend/src/components/RowMenu.jsx
+ M frontend/src/pages/FieldAssignments.jsx
+ M frontend/src/pages/Login.jsx
+ M frontend/src/pages/Members.jsx
+ M frontend/src/pages/Register.jsx
+ M frontend/src/pages/SiteJournal.jsx
+ M frontend/src/services/journalOffline.js
+ M frontend/tests/operations.real.spec.js
+ M frontend/tests/site.real.spec.js
+ M frontend/tests/sprint3.real.spec.js
+ M frontend/tests/tasks.spec.js
+ M frontend/vite.config.js
+?? backend/scripts/set-sprint45-demo-admin.cjs
+?? backend/scripts/start-sprint45-demo.cjs
+?? backend/src/migrations/017_sprint4_5.down.sql
+?? backend/src/migrations/017_sprint4_5.sql
+?? backend/src/services/journalService.js
+?? backend/tests/sprint45.postgres.test.js
+?? backend/tests/sprint45DemoAdmin.postgres.test.js
+?? docs/sprint4-5/
+?? frontend/playwright.real-regression.config.js
+?? frontend/playwright.sprint45.config.js
+?? frontend/playwright.ui-regression.config.js
+?? frontend/playwright.worker-dev.config.js
+?? frontend/public/icons/
+?? frontend/public/journal-queue.js
+?? frontend/src/components/PwaUpdate.jsx
+?? frontend/src/pages/AcceptInvitation.jsx
+?? frontend/src/services/photoCompression.js
+?? frontend/src/styles/JournalSync.css
+?? frontend/tests/sprint45.real.spec.js
+?? frontend/tests/sprint45.teardown.js
+?? scripts/generate-pwa-icons.cjs
+
+ORIGINAL WORKTREE
+Path: D:\Project\construction-management-new
+Branch: feature/T46-T47
+ M .gitignore
+ M README.md
+ M docker-compose.staging.yml
+?? .worktrees/
+?? docs/sprint3/T46-T47-BACKUP-RESTORE.md
+?? scripts/Dockerfile.backup
+?? scripts/backup-scheduler.sh
+?? scripts/backup-staging.sh
+?? scripts/restore-staging.sh

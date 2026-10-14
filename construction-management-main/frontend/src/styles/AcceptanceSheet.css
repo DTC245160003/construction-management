@@ -1,0 +1,223 @@
+/* S-36: Styles cho Màn hình Lập phiếu nghiệm thu theo đợt & tự tính khối lượng phát sinh */
+
+.acceptance-sheet-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.acceptance-sheet-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+.acceptance-sheet-toolbar h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-heading, #1e293b);
+}
+
+.sheet-form-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sheet-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sheet-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-form-field label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted, #475569);
+}
+
+.sheet-form-field input,
+.sheet-form-field select,
+.sheet-form-field textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #f8fafc;
+  color: #1e293b;
+  transition: border-color 0.15s ease;
+}
+
+.sheet-form-field input:focus,
+.sheet-form-field select:focus,
+.sheet-form-field textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #ffffff;
+}
+
+.sheet-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+}
+
+.sheet-items-table th {
+  background: #f1f5f9;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.sheet-items-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  color: #1e293b;
+}
+
+.sheet-items-table tr:hover {
+  background: #f8fafc;
+}
+
+.col-s26-reported {
+  background: #f0fdf4 !important;
+  color: #166534;
+  font-weight: 500;
+}
+
+.badge-s26 {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  background: #dcfce7;
+  color: #15803d;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
+.col-prev-approved {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.col-current-input input {
+  width: 100%;
+  min-width: 110px;
+  padding: 6px 10px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.col-period-preview {
+  background: #eff6ff !important;
+  font-weight: 700;
+  color: #1d4ed8;
+  font-size: 0.95rem;
+}
+
+.badge-positive {
+  color: #15803d;
+}
+
+.badge-zero {
+  color: #64748b;
+}
+
+.badge-negative {
+  color: #b91c1c;
+}
+
+.photo-input-cell {
+  min-width: 180px;
+}
+
+.photo-input-cell input {
+  width: 100%;
+  font-size: 0.8rem;
+  padding: 4px 6px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+}
+
+.sheet-list-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.sheet-status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-DRAFT {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.status-APPROVED {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-REJECTED {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.detail-modal-body {
+  max-height: 75vh;
+  overflow-y: auto;
+  padding: 8px 4px;
+}
+
+.photo-thumb-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.photo-thumb-link {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.photo-thumb-link:hover {
+  text-decoration: underline;
+}

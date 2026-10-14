@@ -1,0 +1,77 @@
+{
+  "review": [
+    {
+      "route": "notifications",
+      "width": 1600,
+      "heading": "Thông báo",
+      "overflow": false
+    },
+    {
+      "route": "notifications",
+      "width": 1366,
+      "heading": "Thông báo",
+      "overflow": false
+    },
+    {
+      "route": "notifications",
+      "width": 768,
+      "heading": "Thông báo",
+      "overflow": false
+    },
+    {
+      "route": "notifications",
+      "width": 375,
+      "heading": "Thông báo",
+      "overflow": false
+    },
+    {
+      "route": "audit-logs",
+      "width": 1600,
+      "heading": "Nhật ký hệ thống",
+      "overflow": false
+    },
+    {
+      "route": "audit-logs",
+      "width": 1366,
+      "heading": "Nhật ký hệ thống",
+      "overflow": false
+    },
+    {
+      "route": "audit-logs",
+      "width": 768,
+      "heading": "Nhật ký hệ thống",
+      "overflow": false
+    },
+    {
+      "route": "audit-logs",
+      "width": 375,
+      "heading": "Nhật ký hệ thống",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 1600,
+      "heading": "Cài đặt",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 1366,
+      "heading": "Cài đặt",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 768,
+      "heading": "Cài đặt",
+      "overflow": false
+    },
+    {
+      "route": "settings",
+      "width": 375,
+      "heading": "Cài đặt",
+      "overflow": false
+    }
+  ],
+  "errors": []
+}
