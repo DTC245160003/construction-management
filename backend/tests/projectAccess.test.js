@@ -19,6 +19,12 @@ function createTestApp(member) {
 }
 
 describe("Project access middleware", () => {
+    test('S03 cross-project denial records the actor and route without query secrets',async()=>{
+        const model={findByProjectAndUser:jest.fn(async()=>null),recordDeniedAccess:jest.fn(async()=>{})};
+        const app=express();app.use('/projects',createProjectRoutes({memberModel:model,authorization:{requireAuth:(req,res,next)=>{req.user={id:7};next();}}}));
+        await request(app).get('/projects/12?token=private-value').expect(403);
+        expect(model.recordDeniedAccess).toHaveBeenCalledWith({projectId:12,userId:7,route:'/:projectId',method:'GET',reason:'not_a_member'});
+    });
     test("denies a user who is not a project member", async () => {
         await request(createTestApp(null))
             .get("/projects/12")

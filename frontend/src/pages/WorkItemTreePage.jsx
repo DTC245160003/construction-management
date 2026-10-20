@@ -3,7 +3,7 @@ import { Alert, Button, Form, Input, message } from "antd";
 import { Link, useSearchParams } from "react-router-dom";
 import WorkItemTree from "../components/WorkItemTree";
 import TaskForm from "../components/TaskForm";
-import { listTasks, listDependencies, saveTask } from "../services/taskApi";
+import { listTasks, listDependencies, saveTask, deleteTask } from "../services/taskApi";
 import { createWorkItem, deleteWorkItem, listWorkItems, updateWorkItem } from "../services/workItemApi";
 import { listWorkItemMilestones, createWorkItemMilestone, deleteWorkItemMilestone } from "../services/scheduleApi";
 import { numberLabel } from "../services/operationsApi";
@@ -123,6 +123,12 @@ function ProjectWorkItems({ projectId }) {
         message.success("Đã lưu công việc");
     };
 
+    const removeTask=async(taskId)=>{
+        await deleteTask(projectId,taskId);
+        setTasks(current=>current.filter(task=>task.id!==taskId));
+        setDependencies(current=>current.filter(edge=>edge.predecessor_task_id!==taskId&&edge.successor_task_id!==taskId));
+        setTaskEditor(null);message.success('Đã xóa công việc và ghi nhật ký thao tác');
+    };
     const selected = items.find((item) => item.id === selectedId);
     const selectedTasks = tasks.filter((task) => task.work_item_id === selectedId);
     return (
@@ -277,7 +283,7 @@ function ProjectWorkItems({ projectId }) {
                 )}
                 {canEdit && taskEditor && <TaskForm key={`${projectId}-${taskEditor.id || "new"}`} projectId={projectId}
                     task={taskEditor} items={items} tasks={tasks} dependencies={dependencies}
-                    onSave={persistTask} onClose={() => setTaskEditor(null)}
+                    onSave={persistTask} onDelete={removeTask} onClose={() => setTaskEditor(null)}
                     onDependencyAdded={(dependency) => setDependencies((current) => [...current, dependency])}
                     onDependencyRemoved={(id) => setDependencies((current) => current.filter((entry) => entry.id !== id))} />}
             </section>

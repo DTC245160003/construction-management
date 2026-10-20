@@ -76,6 +76,12 @@ function createTaskService({ model }) {
             return task;
         },
 
+        async remove(projectId,taskId,actorId) {
+            validateId(taskId);validateId(actorId);
+            await translateErrors(()=>model.withProjectTransaction(projectId,async transaction=>{
+                if(!await transaction.removeTask(projectId,taskId,actorId))throw inputError('Không tìm thấy công việc',404);
+            }));
+        },
         async addDependency(projectId, successorId, body) {
             validateId(successorId);
             if (!body || typeof body !== "object") throw inputError("Dữ liệu không hợp lệ");

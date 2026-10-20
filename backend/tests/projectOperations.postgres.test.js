@@ -2,6 +2,7 @@ const { Pool } = require("pg");
 const request = require("supertest");
 const { randomUUID } = require("node:crypto");
 const { runMigrations } = require("../src/run-migration");
+const { after019Applied, rollbackAfter019 } = require("./helpers/migrationVersions");
 const { hashPassword } = require("../src/config/password");
 const { operationsApp } = require("./helpers/operationsApp");
 const describePostgres = process.env.SPRINT2_TEST_DATABASE_URL ? describe : describe.skip;
@@ -54,6 +55,30 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
     const assign = (task, team = ownTeam) => agents.project_manager.put(url(`/assignments/${task}`)).send({ team_id: team });
     const plan = (task, value = 10) => agents.project_manager.put(url(`/assignments/${task}/quantity`)).send({ planned_quantity: value, unit: "m³" });
     const report = (task, body) => agents.worker.post(url(`/assignments/${task}/progress`)).send(body);
+
+    test('task deletion checks project RBAC, audits cascaded dependencies and preserves tasks with actual data',async()=>{
+        const target=tasks[0],successor=tasks[1];
+        await pool.query("INSERT INTO dependencies(predecessor_task_id,successor_task_id,dependency_type,lag_days) VALUES($1,$2,'FS',0)",[target,successor]);
+        await agents.worker.delete(url(`/tasks/${target}`)).expect(403);
+        await agents.outsider.delete(url(`/tasks/${target}`)).expect(403);
+        const denied=(await pool.query("SELECT actor_id,after_value FROM audit_logs WHERE project_id=$1 AND module='authorization' AND action='deny_project_access' ORDER BY id",[project])).rows;
+        expect(denied.map(row=>row.actor_id)).toEqual([users.worker,users.outsider]);
+        await agents.project_manager.delete(url(`/tasks/${target}`,other)).expect(403);
+        expect((await pool.query('SELECT id FROM tasks WHERE id=$1',[target])).rowCount).toBe(1);
+        await agents.project_manager.delete(url(`/tasks/${target}`)).expect(204);
+        expect((await pool.query('SELECT id FROM dependencies WHERE predecessor_task_id=$1 OR successor_task_id=$1',[target])).rowCount).toBe(0);
+        const audit=(await pool.query("SELECT actor_id,before_value FROM audit_logs WHERE project_id=$1 AND module='tasks' AND action='delete' AND object_id=$2",[project,String(target)])).rows[0];
+        expect(audit.actor_id).toBe(users.project_manager);expect(audit.before_value.task.id).toBe(target);expect(audit.before_value.dependencies).toHaveLength(1);
+        await pool.query("UPDATE tasks SET actual_start='2026-10-05',progress_percent=10 WHERE id=$1",[successor]);
+        await agents.project_manager.delete(url(`/tasks/${successor}`)).expect(409);
+        expect((await pool.query('SELECT progress_percent FROM tasks WHERE id=$1',[successor])).rows[0].progress_percent).toBe(10);
+        await pool.query('INSERT INTO baseline_history(project_id,task_id,early_start,early_finish,late_start,late_finish,user_id,created_at) VALUES($1,$2,0,3,0,3,$3,CURRENT_TIMESTAMP)',[project,tasks[2],users.project_manager]);
+        await agents.project_manager.delete(url(`/tasks/${tasks[2]}`)).expect(409);
+        expect((await pool.query('SELECT id FROM baseline_history WHERE task_id=$1',[tasks[2]])).rowCount).toBe(1);
+        await pool.query("INSERT INTO task_field_quantities(task_id,planned_quantity,unit) VALUES($1,10,'m3')",[tasks[3]]);
+        await agents.project_manager.delete(url(`/tasks/${tasks[3]}`)).expect(409);
+        expect((await pool.query('SELECT planned_quantity FROM task_field_quantities WHERE task_id=$1',[tasks[3]])).rows[0].planned_quantity).toBe('10.0000');
+    });
 
     test("project list is membership scoped and legacy global admin cannot create or bypass project membership", async () => {
         await request(app).get("/projects").expect(401);
@@ -205,6 +230,7 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
         const audit = (await agents.admin.get(url("/audit-logs"))).body.entries;
         expect(audit.filter((entry) => entry.action === "close_issue")).toHaveLength(1);
         await expect(pool.query("DELETE FROM audit_logs")).rejects.toMatchObject({ code: "23514" });
+        await rollbackAfter019(migrate);
         expect((await migrate("down"))[0]).toContain("019_reconcile_journal_lock_guards.sql");
         expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
         expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
@@ -219,6 +245,7 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
 
     test("012 rollback roundtrip works on unused schema without changing migrations 001–011", async () => {
         await pool.query("TRUNCATE projects CASCADE");
+        await rollbackAfter019(migrate);
         expect((await migrate("down"))[0]).toContain("019_reconcile_journal_lock_guards.sql");
         expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
         expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
@@ -229,6 +256,6 @@ describePostgres("Project operations on real PostgreSQL with authenticated sessi
         expect((await migrate("down"))[0]).toContain("013_create_site_management.sql");
         expect((await migrate("down"))[0]).toContain("012_create_project_operations.sql");
         expect((await pool.query("SELECT count(*)::int AS count FROM schema_migrations")).rows[0].count).toBe(11);
-        expect(await migrate("up")).toEqual(["Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql"]);
+        expect(await migrate("up")).toEqual(["Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql", ...after019Applied]);
     });
 });

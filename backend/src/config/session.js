@@ -2,7 +2,7 @@ const session = require("express-session");
 const { randomBytes } = require("crypto");
 
 const COOKIE_NAME = "construction.sid";
-const SESSION_MAX_AGE = 8 * 60 * 60 * 1000;
+const SESSION_MAX_AGE = 12 * 60 * 60 * 1000;
 
 function createSession({ store, secret, secureCookies }) {
     const configuredSecret = secret || process.env.SESSION_SECRET;
@@ -36,6 +36,7 @@ function createSession({ store, secret, secureCookies }) {
             secret: configuredSecret || randomBytes(32).toString("hex"),
             store,
             resave: false,
+            rolling: true,
             saveUninitialized: false,
             cookie: { ...cookieOptions, maxAge: SESSION_MAX_AGE }
         })

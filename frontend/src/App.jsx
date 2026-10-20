@@ -4,18 +4,18 @@ import {
     Route,
     Navigate
 } from "react-router-dom";
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import Home from "./pages/Home";
-import WorkItems from "./pages/WorkItemTreePage";
-import Schedule from "./pages/Schedule";
+const WorkItems = lazy(() => import("./pages/WorkItemTreePage"));
+const Schedule = lazy(() => import("./pages/Schedule"));
 import Members from "./pages/Members";
 import Projects from "./pages/Projects";
 import Calendar from "./pages/Calendar";
-import FieldAssignments from "./pages/FieldAssignments";
+const FieldAssignments = lazy(() => import("./pages/FieldAssignments"));
 import ProjectActivity from "./pages/ProjectActivity";
 import PendingModule from "./pages/PendingModule";
 import SiteJournal from "./pages/SiteJournal";

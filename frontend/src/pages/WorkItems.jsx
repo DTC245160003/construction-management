@@ -182,10 +182,6 @@ function Members() {
           })}
         </nav>
 
-        <div className="xds-members-sidebar-footer">
-          <div className="xds-members-sidebar-footer-title">XÂY DỰNG SỐ</div>
-          <div className="xds-members-sidebar-footer-text">Kiến tạo công trình từ dữ liệu</div>
-        </div>
       </aside>
 
       <div className="xds-members-main">

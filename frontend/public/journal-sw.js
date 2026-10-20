@@ -4,9 +4,9 @@ const CACHE_PREFIX="xds-journal-shell-",CACHE=`${CACHE_PREFIX}__XDS_BUILD__`;
 const STATIC=["/","/site-journal","/journal-queue.js","/manifest.webmanifest","/icons/icon-192.png","/icons/icon-512.png"];
 const ASSET=/^\/assets\/[^/]+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$/;
 self.addEventListener("install",(event) => event.waitUntil((async () => {
-  const cache=await caches.open(CACHE),response=await fetch("/",{ cache:"reload" }),html=await response.text();
+  const cache=await caches.open(CACHE),response=await fetch("/",{ cache:"reload",headers:{Accept:"text/html"} }),html=await response.text();
   if (!response.ok || !response.headers.get("content-type")?.includes("text/html")) throw new Error("Shell unavailable");
-  await cache.addAll(STATIC);
+  await cache.addAll(STATIC.map((path) => new Request(path,{headers:{Accept:["/","/site-journal"].includes(path)?"text/html":"*/*"}})));
   const paths=[...html.matchAll(/(?:src|href)="(\/assets\/[^"?#]+)"/g)].map((m) => m[1]).filter((p) => ASSET.test(p));
   await cache.addAll(paths);
 })()));
@@ -21,7 +21,8 @@ self.addEventListener("fetch",(event) => {
   const r=event.request,url=new URL(r.url);
   if (r.method!=="GET" || url.origin!==self.location.origin) return;
   if (r.mode==="navigate") { event.respondWith((async () => (await (await caches.open(CACHE)).match("/")) || fetch(r))()); return; }
-  if (ASSET.test(url.pathname) || STATIC.includes(url.pathname)) event.respondWith((async () => {
+  const shellRequest=["/","/site-journal"].includes(url.pathname);
+  if (ASSET.test(url.pathname) || (STATIC.includes(url.pathname) && (!shellRequest || r.headers.get("Accept")?.includes("text/html")))) event.respondWith((async () => {
     const cache=await caches.open(CACHE),hit=await cache.match(r); if (hit) return hit;
     const response=await fetch(r); if (response.ok) await cache.put(r,response.clone()); return response;
   })());

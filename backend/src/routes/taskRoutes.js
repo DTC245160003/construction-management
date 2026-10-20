@@ -25,6 +25,7 @@ function createTaskRoutes({ authorization = { requireAuth }, memberModel, model,
     router.get("/:projectId/tasks", read,controller.list);
     router.post("/:projectId/tasks", membership,controller.create);
     router.patch("/:projectId/tasks/:taskId", membership,controller.update);
+    router.delete("/:projectId/tasks/:taskId",membership,controller.remove);
     router.patch("/:projectId/tasks/:taskId/progress", membership,controller.updateProgress);
     router.get("/:projectId/dependencies", read,controller.listDependencies);
     router.post("/:projectId/tasks/:taskId/dependencies", membership,controller.addDependency);

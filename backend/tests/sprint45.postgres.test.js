@@ -3,6 +3,7 @@ const request=require("supertest");
 const sharp=require("sharp");
 const { randomUUID,createHash }=require("node:crypto");
 const { runMigrations }=require("../src/run-migration");
+const { after019Applied,rollbackAfter019 }=require("./helpers/migrationVersions");
 const { hashPassword }=require("../src/config/password");
 const { operationsApp }=require("./helpers/operationsApp");
 const describeDb=process.env.SPRINT2_TEST_DATABASE_URL ? describe : describe.skip;
@@ -191,7 +192,9 @@ describeDb("Sprint 4–5: real PostgreSQL concurrency, versions, photo manifests
     await expect(pool.query("DELETE FROM journal_photos WHERE journal_id=$1",[j.id])).rejects.toMatchObject({ code:"23514" });
     await expect(pool.query("UPDATE journal_photo_uploads SET journal_id=$2 WHERE journal_id=$1",[j.id,sibling.id])).rejects.toMatchObject({ code:"23514" });
     await expect(pool.query("DELETE FROM journal_photo_uploads WHERE journal_id=$1",[j.id])).rejects.toMatchObject({ code:"23514" });
+    await rollbackAfter019(migrate);
     await expect(migrate("down")).rejects.toThrow(/preserve lock metadata/);
+    expect(await migrate('up')).toEqual(after019Applied);
     expect((await pool.query("SELECT photo_id FROM journal_photos WHERE journal_id=$1",[j.id])).rows).toEqual([{ photo_id:photo.id }]);
     expect((await agents.viewer.get(url(`/journals/${j.id}/history`))).body.journal.is_locked).toBe(true);
   });
@@ -251,10 +254,10 @@ describeDb("Sprint 4–5: real PostgreSQL concurrency, versions, photo manifests
     await request(app).post("/auth/register").send({ email:"expired@s45.test",fullname:"Mới",password:"Test-user-123!",role:"worker",invitation_token:new URL(expired.acceptance_path,"http://test").searchParams.get("token") }).expect(409);
   });
   test("017 migration refuses data loss and roundtrips on a separate empty test schema",async () => {
-    await create(); await migrate("down"); await migrate("down"); await expect(migrate("down")).rejects.toThrow(/preserve business data/); await migrate("up");
+    await create(); await rollbackAfter019(migrate); await migrate("down"); await migrate("down"); await expect(migrate("down")).rejects.toThrow(/preserve business data/); await migrate("up");
     const empty=`empty45_${randomUUID().replaceAll("-","")}`;
     await admin.query(`CREATE SCHEMA "${empty}"`); const isolated=new Pool({ connectionString:process.env.SPRINT2_TEST_DATABASE_URL,options:`-c search_path=${empty}` });
-    try { const c=await isolated.connect(); try { await runMigrations({ client:c }); await runMigrations({ client:c,command:"down" }); await runMigrations({ client:c,command:"down" }); expect(await runMigrations({ client:c,command:"down" })).toEqual(["Rolled back: 017_sprint4_5.sql"]); expect(await runMigrations({ client:c })).toEqual(["Applied: 017_sprint4_5.sql","Applied: 018_system_administration.sql","Applied: 019_reconcile_journal_lock_guards.sql"]); } finally { c.release(); } }
+    try { const c=await isolated.connect(); try { await runMigrations({ client:c }); await rollbackAfter019(command => runMigrations({ client:c,command })); await runMigrations({ client:c,command:"down" }); await runMigrations({ client:c,command:"down" }); expect(await runMigrations({ client:c,command:"down" })).toEqual(["Rolled back: 017_sprint4_5.sql"]); expect(await runMigrations({ client:c })).toEqual(["Applied: 017_sprint4_5.sql","Applied: 018_system_administration.sql","Applied: 019_reconcile_journal_lock_guards.sql",...after019Applied]); } finally { c.release(); } }
     finally { await isolated.end(); await admin.query(`DROP SCHEMA "${empty}" CASCADE`); }
   });
 });

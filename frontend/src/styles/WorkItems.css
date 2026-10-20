@@ -128,25 +128,6 @@
   padding: 1px 6px;
 }
 
-.xds-members-sidebar-footer {
-  padding: 14px 16px 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.xds-members-sidebar-footer-title {
-  font-size: 12px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 0.4px;
-}
-
-.xds-members-sidebar-footer-text {
-  font-size: 10.5px;
-  color: #94b0d0;
-  margin-top: 2px;
-}
-
 /* ===== MAIN ===== */
 .xds-members-main {
   flex: 1 1 auto;

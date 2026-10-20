@@ -28,6 +28,13 @@ const app = createApp({
     trustProxy: false,
 });
 
+test('canonical and versioned upload endpoints accept their documented payload sizes before authentication',async()=>{
+    for(const prefix of ['/projects/1','/api/v1/projects/1']){
+        await request(app).post(prefix+'/photos').send({data:'a'.repeat(200000)}).expect(401);
+        await request(app).post(prefix+'/costs/import').send({csv:'a'.repeat(200000)}).expect(401);
+    }
+});
+
 describe("Construction Management API", () => {
     test("GET / returns the API status as JSON", async () => {
         const response = await request(app)

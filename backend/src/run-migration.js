@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { createHash } = require("crypto");
+const {verifiedLegacyHistory}=require('./migrationCompatibility');
 
 const LEGACY_MIGRATION = "001_create_users.sql";
 const COMMANDS = ["up", "down", "status", "baseline"];
@@ -8,6 +9,7 @@ const COMMANDS = ["up", "down", "status", "baseline"];
 // Keep their names and SQL intact so existing history/checksums remain valid.
 const JOURNAL_LOCK_MIGRATION = "017_add_lock_fields_to_daily_logs.sql";
 const SPRINT45_MIGRATION = "017_sprint4_5.sql";
+const ARCHIVED_TASK_DEPENDENCIES = "009_create_task_dependencies.sql";
 
 function readMigrations(directory) {
     const names = fs.readdirSync(directory)
@@ -144,6 +146,12 @@ async function runMigrations({
         let applied = history.rows[0].present
             ? (await client.query("SELECT name, checksum FROM schema_migrations ORDER BY name")).rows
             : [];
+        // This accidentally merged file duplicates version 009 and references
+        // tasks before their canonical migration. Never rewrite a database
+        // that somehow recorded it; its history needs explicit manual review.
+        if (applied.some(entry => entry.name === ARCHIVED_TASK_DEPENDENCIES)) {
+            throw new Error(`Archived invalid migration is recorded: ${ARCHIVED_TASK_DEPENDENCIES}. Manual review is required; no schema or migration history was changed.`);
+        }
         // 832f3e6 shipped baseline/milestone as 015 before the actuals commit
         // was restored. Rename only its verified history entry; never rerun DDL.
         const legacyBaseline = applied.find(entry => entry.name === "015_create_baselines_and_milestones.sql");
@@ -166,7 +174,7 @@ async function runMigrations({
             && applied.some(entry => entry.name === SPRINT45_MIGRATION)
             && applied.every(entry => entry.name <= "018_system_administration.sql");
         validateHistory(migrations.filter(entry => !(actualsMissing && entry.name === "015_add_task_actuals.sql")
-            && !(journalLockMissing && entry.name === JOURNAL_LOCK_MIGRATION)), applied);
+            && !(journalLockMissing && entry.name === JOURNAL_LOCK_MIGRATION)), await verifiedLegacyHistory(client,migrations,applied));
         const appliedNames = new Set(applied.map(entry => entry.name));
 
         if (command === "status") {

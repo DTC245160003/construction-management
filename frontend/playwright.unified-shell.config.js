@@ -1,0 +1,3 @@
+import {defineConfig} from '@playwright/test';
+import process from 'node:process';
+export default defineConfig({testDir:'./tests',testMatch:'unified-shell.spec.js',workers:1,timeout:45000,expect:{timeout:15000},outputDir:'test-results/unified-shell',reporter:[['list'],['json',{outputFile:'../docs/integration/unified-shell-results.json'}]],use:{baseURL:'http://127.0.0.1:3089',headless:true,channel:process.env.PLAYWRIGHT_CHANNEL||(process.platform==='win32'?'chrome':undefined),trace:'retain-on-failure'},webServer:{command:'node ../backend/scripts/unified-shell-e2e-server.cjs',url:'http://127.0.0.1:3089/',reuseExistingServer:false,env:{UNIFIED_SHELL_E2E:'1'},timeout:20000}});

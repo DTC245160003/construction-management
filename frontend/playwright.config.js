@@ -4,7 +4,7 @@ import process from "node:process";
 export default defineConfig({
     testDir: "./tests",
     testMatch: "**/*.spec.js",
-    testIgnore: ["**/gantt-t31.spec.js","**/sprint45.real.spec.js","**/system-admin.real.spec.js"],
+    testIgnore: ["**/gantt-t31.spec.js","**/sprint45.real.spec.js","**/system-admin.real.spec.js","**/sprint68.real.spec.js","**/unified-shell.spec.js"],
     fullyParallel: false,
     workers: 1,
     timeout: 60000,

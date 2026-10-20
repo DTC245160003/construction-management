@@ -3,11 +3,10 @@ import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-
 import useRemote from "../hooks/useRemote";
 import OperationsIcon from "./OperationsIcon";
 import PwaUpdate from "./PwaUpdate";
+import SidebarLogout from "./SidebarLogout";
 import { Modal } from "./OperationsUI";
-import { api, roleLabels } from "../services/operationsApi";
+import { roleLabels } from "../services/operationsApi";
 import { navigation, scopedLink, validProjectId,visibleNavigation } from "../services/navigation";
-import { clearOfflineIdentity } from "../services/journalOffline";
-import constructionImage from "../assets/anh_login.png";
 import "../styles/Operations.css";
 import "../styles/OperationsPolish.css";
 
@@ -28,22 +27,15 @@ export default function DashboardLayout({ title, description, actions, children,
   const feed = useRemote(validProjectId(projectId) ? `/projects/${projectId}/notifications` : null,notificationRevision);
   useEffect(() => { const changed=() => setNotificationRevision((value) => value+1); window.addEventListener("xds-notifications-changed",changed); return () => window.removeEventListener("xds-notifications-changed",changed); },[]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
-  const [loggingOut, setLoggingOut] = useState(false);
   const [query, setQuery] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
   const current = projects.data?.projects.find((project) => project.id === Number(projectId));
-  async function logout() {
-    setLoggingOut(true);
-    try { await api("/auth/logout", { method: "POST" }); localStorage.removeItem("user"); await clearOfflineIdentity(); navigate("/login"); }
-    catch (error) { setLogoutError(error.message); setLoggingOut(false); }
-  }
   return <div className={`ops-shell page-${location.pathname.slice(1)} ${className}`}>
     {menuOpen && <button className="ops-shell-scrim" aria-label="Đóng menu" onClick={() => setMenuOpen(false)} />}
     <aside className={`ops-shell-sidebar ${menuOpen ? "is-open" : ""}`} aria-label="Menu chính">
       <Link className="ops-shell-brand" to={scopedLink("/home", projectId)}><span className="ops-shell-mark">◈</span><span><strong>XÂY DỰNG SỐ</strong><small>Nền tảng điều hành thi công</small></span></Link>
       <nav>{visibleNavigation(current?.member_role,account.data?.user?.system_role).map(([label, path, icon]) => <NavLink key={path} aria-label={label} to={path==="/system-admin" ? path : scopedLink(path, projectId)} onClick={() => setMenuOpen(false)}><OperationsIcon name={icon} /><span>{label}</span>{path === "/notifications" && feed.data?.unread_count > 0 && <span className="ops-nav-count">{feed.data.unread_count}</span>}</NavLink>)}</nav>
-      <div className="ops-shell-picture" style={{ backgroundImage: `linear-gradient(0deg,#0b294b,transparent),url(${constructionImage})` }}><strong>KIẾN TẠO CÔNG TRÌNH</strong><span>Từ dữ liệu đến hiệu quả</span></div>
+      <SidebarLogout />
     </aside>
     <div className="ops-shell-body">
       <header className="ops-shell-topbar"><button className="ops-btn ops-menu-toggle" aria-label="Mở menu" onClick={() => setMenuOpen(true)}><OperationsIcon name="menu" /></button>
@@ -53,9 +45,9 @@ export default function DashboardLayout({ title, description, actions, children,
         <form className="ops-shell-search" role="search" onSubmit={(event) => { event.preventDefault(); const next = new URLSearchParams(); if (validProjectId(projectId)) next.set("projectId", projectId); if (query.trim()) next.set("q", query.trim()); navigate(`/projects?${next}`); }}>
           <OperationsIcon name="search" size={18} /><input aria-label="Tìm dự án trong hệ thống" placeholder="Tìm tên dự án, địa điểm…" value={query} onChange={(event) => setQuery(event.target.value)} /><button type="submit" aria-label="Tìm dự án"><OperationsIcon name="arrow" size={16} /></button>
         </form>
-        <div className="ops-shell-account"><NotificationLink key={projectId} projectId={projectId} state={feed} /><button className="ops-shell-help" aria-label="Trợ giúp" onClick={() => setHelpOpen(true)}><OperationsIcon name="help" /></button><div className="ops-shell-avatar" aria-hidden="true">{account.data?.user?.fullname?.slice(0, 1) || "•"}</div><div><strong>{account.data?.user?.fullname || "Tài khoản"}</strong><small>{[account.data?.user?.system_role==="super_admin" ? "Super Admin" : "Người dùng",roleLabels[current?.member_role]].filter(Boolean).join(" · ")}</small></div><button className="ops-btn ops-logout" disabled={loggingOut} onClick={logout}>Đăng xuất</button></div>
+        <div className="ops-shell-account"><NotificationLink key={projectId} projectId={projectId} state={feed} /><button className="ops-shell-help" aria-label="Trợ giúp" onClick={() => setHelpOpen(true)}><OperationsIcon name="help" /></button><div className="ops-shell-avatar" aria-hidden="true">{account.data?.user?.fullname?.slice(0, 1) || "•"}</div><div><strong>{account.data?.user?.fullname || "Tài khoản"}</strong><small>{[account.data?.user?.system_role==="super_admin" ? "Super Admin" : "Người dùng",roleLabels[current?.member_role]].filter(Boolean).join(" · ")}</small></div></div>
       </header>
-      <main className="ops-content">{logoutError && <p className="ops-notice ops-notice-error" role="alert">{logoutError}</p>}
+      <main className="ops-content">
         <div className="ops-page-heading"><div className="ops-heading-with-icon"><span className="ops-heading-icon"><OperationsIcon name={pageIcon} size={26} /></span><div><h1>{title}</h1><p>{description}</p></div></div>{actions && <div className="ops-actions">{actions}</div>}</div>
         <PwaUpdate />{children}
       </main>

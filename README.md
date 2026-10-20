@@ -2,6 +2,78 @@
 
 Hệ thống quản lý xây dựng.
 
+## Ứng dụng thống nhất Sprint 1–8
+
+Mã nguồn chính là `backend/` và `frontend/`: một Express backend phục vụ cả
+React build và API trên cùng địa chỉ, một database được chọn từ cấu hình hiện
+có. Các tài khoản cũ dùng nguyên email, mật khẩu và quyền dự án; không cần tài
+khoản QA. Báo cáo chuyển đổi và các mục chưa xác minh:
+[FINAL-INTEGRATION-SPRINT1-8](docs/FINAL-INTEGRATION-SPRINT1-8.md).
+
+Chủ hệ thống đã chọn hồ sơ Sprint 4–5 làm chuẩn và xác nhận quyền Super Admin.
+Checkpoint hợp nhất 15/10 tại **http://localhost:3082/login** giữ 9 tài khoản, 3 dự án,
+4 hạng mục, 14 công việc và các quyền theo dự án. Backup/restore, mapping FK
+và rollback import đã kiểm thử đạt; hai nguồn và copy đối chiếu 3080/3081 giữ
+nguyên. **Chưa nâng cấp database nguồn hoặc chuyển production.** Xem
+[đối chiếu và kết quả](docs/integration/ACCOUNT-SOURCES.md).
+Chủ hệ thống đã xác nhận **UAT Windows 3082 PASS**: tài khoản cũ, 3 dự án,
+dữ liệu, menu và phân quyền đúng. Samsung dùng PWA cũ tại **http://localhost:4174**
+qua ADB Wi-Fi/reverse, cùng database hợp nhất. Worker và launcher PWA cũ đã
+được xác minh sau reboot; UAT sử dụng chung Samsung PASS theo chủ máy.
+Các tiêu chí offline cụ thể còn thiếu bằng chứng; sync đang held theo yêu cầu.
+Docker build/runtime với PostgreSQL thử riêng đã PASS tại http://localhost:4188/login.
+[Hướng dẫn Windows/Samsung](docs/integration/WINDOWS-SAMSUNG-UAT.md).
+
+Phần đăng xuất sidebar được tiếp tục tại checkpoint 20/10/2026; xem
+[mã sửa, lệnh kiểm thử và trạng thái Samsung](docs/integration/logout/README.md).
+
+Ngày 20/10 đã khôi phục server laptop 3082 và PWA 4174, cùng bundle đã kiểm
+thử. Database hiện có 10 tài khoản, 3 dự án, 14 memberships, 6 nhật ký và 11
+ảnh; không restore snapshot cũ. Kết nối ADB và đăng xuất thực tế Samsung còn
+chờ thiết bị. Xem [checkpoint kết nối](docs/integration/connectivity/README.md).
+
+Khôi phục các server đã xác minh và ADB reverse khi thiết bị kết nối:
+
+```powershell
+npm --prefix backend run pwa:recover -- --windows
+```
+
+Launcher không migrate/seed/đổi mật khẩu hoặc sửa `.env`. Các bước khởi động
+với database chính bên dưới chỉ thực hiện sau khi phương án dữ liệu và nâng
+cấp nguồn được chấp thuận; trạng thái hiện tại được ghi trong báo cáo.
+
+Giữ `backend/.env` đã có. Với checkout mới, dùng `backend/.env.example` làm mẫu,
+cấu hình database mong muốn và secret ngẫu nhiên; không ghi secret vào Git.
+`DATABASE_URL` ưu tiên hơn `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD` khi có.
+Không trỏ ứng dụng chính vào `construction_sprint68_test` để thay thế dữ liệu cũ.
+
+```powershell
+# Chỉ cài dependencies ở checkout mới:
+npm --prefix backend ci
+npm --prefix frontend ci
+npm run build
+npm run db:status
+npm run db:check
+$env:PORT='3080'
+npm start
+```
+
+Sau khi schema đã được nâng cấp và kiểm tra, mở `http://localhost:3080/login`
+và đăng nhập bằng tài khoản cũ. Khởi động không tự migrate hoặc seed. Nếu còn
+migration pending, phải xác nhận backup hợp lệ, thử restore/nâng cấp bản sao và
+đối chiếu dữ liệu trước khi chạy migration trên database gốc. Không đổi mật
+khẩu hoặc tự cấp Super Admin để vượt lỗi phân quyền. CLI thủ công vẫn yêu cầu
+đúng database/email/hành động được quản trị viên xác nhận.
+
+`npm run lint`, `npm run test:unit` và `npm run test:integration` ở root dùng
+chung các bộ kiểm thử hiện có. Integration chỉ dùng database test riêng. Docker
+Compose mặc định và staging dùng Dockerfile tại root để đóng gói cùng ứng dụng;
+backend/Dockerfile giữ chế độ API-only cho phát triển.
+
+Chuẩn bị Render HTTPS: [hướng dẫn](docs/integration/RENDER-HTTPS.md). Các lệnh
+`demo:sprint45`/`demo:sprint68` phía dưới chỉ dành cho dữ liệu kiểm thử cũ;
+không phải lệnh khởi động ứng dụng thống nhất.
+
 Sprint 2 T-11–T-17: xem [audit, API, cách kiểm thử và kết quả](docs/sprint-2-result.md).
 
 Sprint 2 T-22–T-28: xem [dữ liệu CPM, chống vòng, cache và trang tiến độ](docs/sprint-2-t22-t28.md).
@@ -60,6 +132,9 @@ tiếp trên cổng mặc định `3000`. Có thể đổi cổng Docker qua bi�
 
 Compose đọc các biến database từ `backend/.env` và ghi đè `DB_HOST` trong
 container thành `host.docker.internal` để truy cập PostgreSQL trên máy host.
+Điều này áp dụng cho cấu hình `DB_*`. Nếu có `DATABASE_URL`, URL vẫn được ưu
+tiên và hostname trong URL phải truy cập được từ container; Compose không tự
+viết lại URL hoặc sửa file `.env` riêng.
 Nếu database ở máy khác, đặt biến môi trường `DOCKER_DB_HOST` trước khi chạy
 Compose. File `backend/.env` không bị sửa. `localhost` bên trong container là
 chính container đó; PostgreSQL cần cho phép kết nối từ mạng Docker.
@@ -523,3 +598,65 @@ Demo dùng `npm run demo:sprint45` trong backend, preview ở localhost:4174.
 DB gốc đang lệch checksum 014 nên chưa được nâng cấp; không sửa lịch sử để
 vượt guard. Chi tiết triển khai, test, lệnh demo và file thay đổi nằm trong
 [báo cáo Super Admin](docs/super-admin/SUPER_ADMIN_REPORT.md).
+
+### Sprint 6–8: nghiệm thu, thanh toán và báo cáo
+
+Mã nguồn bổ sung quản lý hợp đồng lá/cộng lên cây, nghiệm thu lũy kế có khóa
+PostgreSQL, phiếu điều chỉnh riêng, thanh toán theo phiếu đã duyệt, tạm giữ
+theo dự án, dự toán có phiên bản, CSV thực chi/chờ phân bổ và hồ sơ PDF tiếng
+Việt. Các trang dùng dữ liệu API thật: `/acceptance`, `/payments`,
+`/costs-materials`, `/reports`, `/site-photos` với `?projectId=<id>`.
+Xem [đối chiếu tài liệu gốc](docs/sprint6-8-requirements.md) và
+[báo cáo triển khai](docs/sprint6-8-implementation-report.md).
+
+Migration mới là `021_sprint6_8_financial_integrity`; không đổi 017–020.
+Bản `009_create_task_dependencies` trùng số trong main được lưu nguyên byte
+ở `backend/src/migrations/archive/`. Runner dừng nếu lịch sử đã ghi nhận bản
+009 này, thay vì tự sửa lịch sử. Không chạy migration lên database ứng dụng
+trước khi kiểm tra lịch sử, backup và thử nâng cấp trên bản sao riêng.
+
+Kiểm thử PostgreSQL riêng, không xóa database:
+
+```powershell
+cd backend
+npm run test:sprint68 -- --ci
+node scripts/test-sprint68.cjs --frontend test:sprint68
+node scripts/test-sprint68.cjs --frontend test:sprint45
+```
+
+Runner đọc thông tin kết nối từ `.env`, tạo `construction_sprint68_test` nếu
+chưa có và chạy các bộ kiểm thử trong schema UUID riêng. Không ghi mật khẩu
+hoặc connection string vào báo cáo. Cần quyền tạo database test lần đầu.
+Frontend cần `npm ci`, `npm run build`; Playwright cần Chrome trên Windows
+hoặc Chromium đã cài trên Linux.
+
+Demo chỉ dùng database test: chạy `npm run demo:sprint68` trong backend,
+sau đó mở terminal khác:
+
+```powershell
+cd frontend
+$env:API_PROXY_TARGET='http://127.0.0.1:3068'
+npm run build
+npm run preview -- --host 127.0.0.1 --port 4176 --strictPort
+```
+
+Đăng ký tài khoản kiểm thử ở `http://127.0.0.1:4176/register`. Nếu cần quản trị,
+cấp quyền thủ công bằng CLI `admin:bootstrap` với đúng
+`--database=construction_sprint68_test` và email đã đăng ký. Demo không tự
+tạo tài khoản quản trị, không gửi email và không nâng cấp database ứng dụng.
+
+`PHOTO_MAX_CAPTURE_AGE_DAYS` mặc định 7 ngày và
+`PHOTO_FUTURE_TOLERANCE_HOURS` mặc định 24 giờ, nhận số dương tối đa 365.
+Đây là ngưỡng đối chiếu để người duyệt xem xét, không phải kết luận ảnh giả.
+EXIF không có múi giờ hiển thị đúng giờ máy ảnh với nhãn chưa khai báo múi giờ;
+GPS thiếu được ghi rõ, không suy diễn tọa độ.
+
+`PDF_FONT_PATH` trỏ tới font TrueType hỗ trợ tiếng Việt nếu dùng font riêng.
+Docker image cài `fonts-dejavu-core` và mặc định dùng DejaVu Sans; Windows có
+fallback Arial. Thiếu font trả lỗi cấu hình rõ ràng, không xuất PDF mất dấu.
+
+`GET /health` kiểm tra ứng dụng và PostgreSQL (200/503).
+`HEALTH_DATABASE_TIMEOUT_MS` mặc định 2000, giới hạn 100–10000.
+Biến môi trường webhook, cách chạy monitor độc lập và các bước xác minh gửi
+cảnh báo cả nhóm nằm trong [hướng dẫn S-51](docs/sprint6-8/S51-HEALTH-MONITORING.md).
+Không có webhook thật trong repository. Chưa xác minh cảnh báo staging thật.

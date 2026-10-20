@@ -35,7 +35,13 @@ async function add(page,n,images=1,file=photo) {
   await d.getByRole("combobox",{ name:"Thời tiết",exact:true }).selectOption("sunny");
   await d.getByLabel("Chọn nhiều ảnh",{ exact:false }).setInputFiles(Array.from({ length:images },(_,i) => ({ ...file,name:`site-${n}-${i}.jpg` })));
   await expect(d.getByText("Đang nén ảnh dưới 1 MB…")).toHaveCount(0);
-  await d.getByRole("button",{ name:"Lưu nhật ký",exact:true }).click(); await expect(d).toHaveCount(0);
+  await d.getByRole("button",{ name:"Lưu nhật ký",exact:true }).click();
+  try { await expect(d).toHaveCount(0); }
+  catch (error) {
+    await test.info().attach(`journal-save-${n}`,{ body:await d.innerText(),contentType:"text/plain" });
+    await page.screenshot({ path:test.info().outputPath(`journal-save-${n}.png`),fullPage:true });
+    throw error;
+  }
 }
 async function evidence(page,pid) { return (await page.request.get(`${api}/__sprint45/evidence?projectId=${pid}`)).json(); }
 async function removeTestProfile(profile,directory) {
@@ -52,6 +58,14 @@ test("S-34: offline 20 journals + 30 photos survive reload and browser restart, 
   for (let i=0;i<pixels.length;i++) { seed^=seed<<13; seed^=seed>>>17; seed^=seed<<5; pixels[i]=seed>>>24; }
   const largePhoto={ name:"camera-size-fixture.jpg",mimeType:"image/jpeg",buffer:await sharp(pixels,{ raw:{ width:2200,height:1650,channels:3 } }).jpeg({ quality:88 }).toBuffer() }; expect(largePhoto.buffer.length).toBeGreaterThan(1048576);
   const { projectId }=await setup(page);
+  await page.addInitScript(() => {
+    const observer=new MutationObserver(() => {
+      if (document.querySelectorAll(".ops-sync-queue article").length===20) {
+        globalThis.journalReadyMs=performance.now(); observer.disconnect();
+      }
+    });
+    observer.observe(document,{subtree:true,childList:true});
+  });
   await page.request.post(`${api}/__sprint45/network`,{ data:{ projectId,unavailable:true } });
   await context.setOffline(true);
   for (let i=0;i<20;i++) await add(page,i,i<10 ? 2 : 1,largePhoto);
@@ -61,7 +75,9 @@ test("S-34: offline 20 journals + 30 photos survive reload and browser restart, 
   expect(initial.jobs).toHaveLength(20); expect(initial.photos).toHaveLength(30);
   expect(initial.photos.every((p) => p.originalBytes>1048576 && p.displayBytes<1048576 && p.checksum.length===64)).toBe(true);
   await page.reload(); await expect(page.locator(".ops-sync-queue article")).toHaveCount(20);
-  const shellOpenMs=await page.evaluate(() => performance.now()); expect(shellOpenMs).toBeLessThan(1000);
+  const shellOpenMs=await page.evaluate(() => performance.now());
+  await test.info().attach("shell-timing-diagnostic",{body:JSON.stringify(await page.evaluate(() => ({observedReadyMs:globalThis.journalReadyMs,assertionTimeMs:performance.now()}))),contentType:"application/json"});
+  expect(shellOpenMs).toBeLessThan(1000);
   await context.close(); context=await chromium.launchPersistentContext(profile,{ ...options,offline:true }); await context.setOffline(true); page=context.pages()[0]; page.on("pageerror",(e) => errors.push(e.message)); await page.goto("/site-journal");
   expect(await page.evaluate(() => navigator.onLine)).toBe(false); await expect(page).toHaveURL(new RegExp(`projectId=${projectId}$`));
   await expect(page.locator(".ops-sync-queue article")).toHaveCount(20);
@@ -83,6 +99,13 @@ test("S-34: offline 20 journals + 30 photos survive reload and browser restart, 
   const elapsed=Date.now()-start; expect(elapsed).toBeLessThan(180000);
   await test.info().attach("postgres-evidence",{ body:JSON.stringify({ ...before,elapsedMs:elapsed,shellOpenMs,originalBytesPerPhoto:initial.photos[0].originalBytes,compressedBytesPerPhoto:initial.photos[0].displayBytes,totalOriginalBytes:initial.photos.reduce((n,p) => n+p.originalBytes,0),duplicateReplay:true,queueEmpty:true,browserRestartSurvival:true,offlinePwaStart:true },null,2),contentType:"application/json" });
   await page.screenshot({ path:test.info().outputPath("synced-20-mobile.png"),fullPage:true });
+  } catch (error) {
+    const pending=await page.evaluate(async () => ({
+      queue:(await globalThis.XdsJournalQueue.all("queue")).map(({body,status,error,attempts}) => ({content:body.content,status,error,attempts})),
+      photos:(await globalThis.XdsJournalQueue.all("photos")).map(({status,error,attempts,serverId}) => ({status,error,attempts,serverId}))
+    })).catch(() => null);
+    await test.info().attach("failed-queue-diagnostics",{body:JSON.stringify(pending),contentType:"application/json"});
+    throw error;
   } finally { await context.close(); await removeTestProfile(profile,tmpdir()); }
 });
 test("invalid entry continues, lost responses retry safely, placeholders appear and new journals do not wait for photo upload",async ({ page,context }) => {
@@ -95,6 +118,7 @@ test("invalid entry continues, lost responses retry safely, placeholders appear 
   await expect.poll(async () => (await evidence(page,projectId)).journals.length).toBe(1);
   await page.getByRole("button",{ name:"Thử đồng bộ lại",exact:true }).click();
   await expect(page.getByTestId("pending-journals")).toHaveText("1 nhật ký chưa đồng bộ");
+  await expect(page.locator(".journal-photo-placeholder")).toHaveCount(1);
   await page.getByRole("button",{ name:"Tải lại",exact:true }).click(); await expect(page.locator(".journal-photo-placeholder")).toHaveCount(1);
   await add(page,"while-photos-pending"); await expect.poll(async () => (await evidence(page,projectId)).journals.length).toBe(2);
   await context.unroute(`**/projects/${projectId}/photos`); await page.getByRole("button",{ name:"Thử đồng bộ lại",exact:true }).click();

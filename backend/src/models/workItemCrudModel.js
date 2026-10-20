@@ -15,11 +15,13 @@ function createWorkItemCrudModel(pool) {
         };
     }
 
-    async function withParent(projectId, parentId, operation) {
-        if (parentId == null) return operation(pool);
+    async function withParent(projectId, parentId, operation, actorId) {
         const { client, release } = await getClient();
         try {
             await client.query("BEGIN");
+            await client.query('SELECT id FROM projects WHERE id=$1 FOR NO KEY UPDATE',[projectId]);
+            if(actorId)await client.query("SELECT set_config('app.actor_id',$1,true)",[String(actorId)]);
+            if(parentId!=null){
             const parent = await client.query(
                 "SELECT id, contract_quantity, contract_unit_price FROM work_items WHERE project_id = $1 AND id = $2 FOR UPDATE",
                 [projectId, parentId]
@@ -34,6 +36,7 @@ function createWorkItemCrudModel(pool) {
             const tasks = await client.query("SELECT 1 FROM tasks WHERE work_item_id = $1 LIMIT 1", [parentId]);
             if (tasks.rowCount) {
                 throw Object.assign(new Error("Hạng mục đã có công việc, không thể thêm hạng mục con"), { status: 409, expose: true });
+            }
             }
             const result = await operation(client);
             await client.query("COMMIT");
@@ -77,7 +80,7 @@ function createWorkItemCrudModel(pool) {
             return rollupWorkItemTree(rows);
         },
 
-        async create({ projectId, parentId, title, description, status, contract_quantity, unit, contract_unit_price }) {
+        async create({ projectId, parentId, title, description, status, contract_quantity, unit, contract_unit_price,actorId }) {
             const parsedQuantity = contract_quantity !== undefined && contract_quantity !== null && contract_quantity !== ""
                 ? parseDecimal(contract_quantity, 4, false)
                 : null;
@@ -95,17 +98,8 @@ function createWorkItemCrudModel(pool) {
                     RETURNING *
                 `, [projectId, parentId || null, title, description || null, status || "todo", parsedQuantity, parsedUnit, parsedPrice]);
                 
-                const newItem = res.rows[0];
-                if (parsedQuantity != null && parsedPrice != null && parsedUnit != null) {
-                    await client.query(`
-                        INSERT INTO item_contracts(project_id, work_item_id, quantity, unit, unit_price)
-                        VALUES ($1, $2, $3, $4, $5)
-                        ON CONFLICT (work_item_id)
-                        DO UPDATE SET quantity = $3, unit = $4, unit_price = $5, revision = item_contracts.revision + 1
-                    `, [projectId, newItem.id, parsedQuantity, parsedUnit, parsedPrice]).catch(() => {});
-                }
                 return res;
-            });
+            },actorId);
             const item = rows[0];
             return {
                 ...item,
@@ -114,10 +108,12 @@ function createWorkItemCrudModel(pool) {
             };
         },
 
-        async update({ projectId, itemId, parentId, title, description, status, contract_quantity, unit, contract_unit_price }) {
+        async update({ projectId, itemId, parentId, title, description, status, contract_quantity, unit, contract_unit_price,actorId }) {
             const { client, release } = await getClient();
             try {
                 await client.query("BEGIN");
+                await client.query('SELECT id FROM projects WHERE id=$1 FOR NO KEY UPDATE',[projectId]);
+                if(actorId)await client.query("SELECT set_config('app.actor_id',$1,true)",[String(actorId)]);
                 
                 // Check if current item exists and whether it has children
                 const currentRes = await client.query(
@@ -213,22 +209,6 @@ function createWorkItemCrudModel(pool) {
                 `, [projectId, itemId, nextParentId, nextTitle, nextDesc, nextStatus, parsedQuantity, parsedUnit, parsedPrice]);
 
                 const updated = updateRes.rows[0];
-
-                // Sync with item_contracts
-                if (!isParent && parsedQuantity != null && parsedPrice != null && parsedUnit != null) {
-                    await client.query(`
-                        INSERT INTO item_contracts(project_id, work_item_id, quantity, unit, unit_price)
-                        VALUES ($1, $2, $3, $4, $5)
-                        ON CONFLICT (work_item_id)
-                        DO UPDATE SET quantity = $3, unit = $4, unit_price = $5, revision = item_contracts.revision + 1
-                    `, [projectId, itemId, parsedQuantity, parsedUnit, parsedPrice]).catch(() => {});
-                } else if (!isParent && (parsedQuantity == null || parsedPrice == null)) {
-                    await client.query(`
-                        DELETE FROM item_contracts
-                        WHERE project_id = $1 AND work_item_id = $2
-                          AND NOT EXISTS (SELECT 1 FROM acceptance_forms WHERE work_item_id = $2 AND status = 'approved')
-                    `, [projectId, itemId]).catch(() => {});
-                }
 
                 await client.query("COMMIT");
                 return {

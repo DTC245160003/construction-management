@@ -11,10 +11,12 @@ const { createScheduleRoutes } = require("./routes/scheduleRoutes");
 const { createProjectOperationsRoutes } = require("./routes/projectOperationsRoutes");
 const { createSiteManagementRoutes } = require("./routes/siteManagementRoutes");
 const { createSystemAdminRoutes } = require("./routes/systemAdminRoutes");
-const corsMiddleware = require("./middleware/cors");
+const { createHealthRoutes } = require("./routes/healthRoutes");
+const {createCorsMiddleware} = require("./middleware/cors");
+const {createFrontendHosting} = require("./middleware/frontendHosting");
 const errorHandler = require("./middleware/errorHandler");
 
-function createApp({ authService, sessionStore, sessionSecret, secureCookies, trustProxy } = {}) {
+function createApp({ authService, sessionStore, sessionSecret, secureCookies, trustProxy, healthPool, frontendDirectory } = {}) {
     if (!authService || !sessionStore) {
         const pool = require("./config/database");
         authService ||= createAuthService({ userModel: createUserModel(pool) });
@@ -22,11 +24,14 @@ function createApp({ authService, sessionStore, sessionSecret, secureCookies, tr
     }
 
     const app = express();
-    app.use(corsMiddleware);
+    app.use(createCorsMiddleware());
+    if(process.env.API_ONLY!=='1')app.use(createFrontendHosting({directory:frontendDirectory}));
+    // Probes do not require a session or write to the session store.
+    app.use("/health", createHealthRoutes({ pool: healthPool || require("./config/database") }));
     app.set("trust proxy", trustProxy ?? (process.env.TRUST_PROXY === "1" ? 1 : false));
     const session = createSession({ store: sessionStore, secret: sessionSecret, secureCookies });
-    app.use("/projects/:projectId/photos", express.json({ limit: "15mb" }));
-    app.use("/projects/:projectId/costs/import", express.json({ limit: "2mb" }));
+    app.use(["/projects/:projectId/photos","/api/v1/projects/:projectId/photos"], express.json({ limit: "15mb" }));
+    app.use(["/projects/:projectId/costs/import","/api/v1/projects/:projectId/costs/import"], express.json({ limit: "2mb" }));
     app.use(express.json());
     app.use(session.middleware);
     app.use("/", routes);

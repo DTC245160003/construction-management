@@ -1,0 +1,14 @@
+/* Both existing sidebar layouts keep logout visible while only the menu scrolls. */
+.ops-shell .ops-shell-sidebar,
+.xds-members-page .xds-members-sidebar { display:flex; flex-direction:column; height:100vh; height:100dvh; max-height:100dvh; overflow:hidden; }
+.ops-shell .ops-shell-brand,
+.xds-members-page .xds-members-brand { flex:0 0 auto; }
+.ops-shell .ops-shell-sidebar nav,
+.xds-members-page .xds-members-nav { flex:1 1 auto; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior-y:contain; }
+.xds-sidebar-logout { flex:0 0 auto; padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px)); border-top:1px solid #ffffff24; background:#0b2f53; }
+.xds-sidebar-logout-button { display:flex; align-items:center; gap:13px; width:100%; min-height:44px; padding:10px 13px; border:1px solid #ffffff33; border-radius:7px; background:transparent; color:#fff; font:inherit; text-align:left; cursor:pointer; }
+.xds-sidebar-logout-button svg { flex-shrink:0; }
+.xds-sidebar-logout-button:hover { background:#ffffff12; }
+.xds-sidebar-logout-button:focus-visible { outline:3px solid #8bbaff; outline-offset:2px; }
+.xds-sidebar-logout-button:disabled { opacity:.65; cursor:wait; }
+.xds-sidebar-logout-error { margin:0 0 8px; max-height:110px; overflow-y:auto; color:#ffe4e6; font-size:12px; line-height:1.5; }

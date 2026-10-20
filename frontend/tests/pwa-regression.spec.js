@@ -7,6 +7,12 @@ test("public routes render and Vite dependencies load without service-worker fai
   page.on("pageerror",(error) => errors.push(error.message));
   await page.goto("/login");
   await expect(page.getByRole("button",{ name:"Đăng nhập",exact:true })).toBeVisible();
+  // Ant Design belongs to the lazy WBS/schedule modules, so login and the
+  // offline journal do not pay its startup cost. Still verify the dependency
+  // actually loads when navigating to a module that uses it.
+  expect(await page.evaluate(() => performance.getEntriesByType("resource").some((entry) => entry.name.includes("/node_modules/.vite/deps/antd.js")))).toBe(false);
+  await page.goto("/work-items");
+  await expect(page.getByRole("heading",{name:"Chọn dự án để tiếp tục",exact:true})).toBeVisible();
   await expect.poll(() => page.evaluate(() => performance.getEntriesByType("resource").some((entry) => entry.name.includes("/node_modules/.vite/deps/antd.js")))).toBe(true);
   await page.goto("/register");
   await expect(page.getByRole("button",{ name:"Tạo tài khoản",exact:true })).toBeVisible();

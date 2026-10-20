@@ -10,3 +10,10 @@ frontend/dist/
 frontend/test-results/
 frontend/playwright-report/
 .tmp/
+
+tmp/
+.private/
+*.dump
+*.dump.partial
+backups/staging/*.counts
+!backend/.env.example

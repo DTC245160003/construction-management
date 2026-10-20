@@ -7,12 +7,14 @@ export default function useRemote(path, refreshKey = "") {
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
+    const reconnect=()=>setAttempt(value=>value+1);
+    window.addEventListener('online',reconnect);
     api(path, { signal: controller.signal }).then((data) => {
       if (!controller.signal.aborted) setState({ path, loading: false, data, error: null });
     }).catch((error) => {
       if (!controller.signal.aborted) setState({ path, loading: false, data: null, error });
     });
-    return () => controller.abort();
+    return () => {controller.abort();window.removeEventListener('online',reconnect);};
   }, [path, attempt, refreshKey]);
   const reload = () => {
     setState({ path, loading: Boolean(path), data: null, error: null });

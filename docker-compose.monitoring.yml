@@ -1,0 +1,15 @@
+# Optional overlay: docker compose -f docker-compose.staging.yml -f docker-compose.monitoring.yml up -d
+services:
+  staging-monitor:
+    image: node:24-bookworm-slim
+    init: true
+    restart: unless-stopped
+    user: node
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    env_file:
+      - ${STAGING_MONITOR_ENV_FILE:-./backend/.env.monitoring}
+    volumes:
+      - ./scripts/staging-health-monitor.cjs:/monitor/staging-health-monitor.cjs:ro
+    command: [node, /monitor/staging-health-monitor.cjs]

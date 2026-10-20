@@ -7,7 +7,7 @@ import { Empty,Field,FormActions,Modal,NoProject,Notice,RemoteState } from "../c
 import useRemote from "../hooks/useRemote";
 import { api,dateLabel,projectPath,today } from "../services/operationsApi";
 import { photoUrl } from "../services/siteApi";
-import { loadJournals,pendingJournals,queueStatus,removePending,savePending,syncJournals,retrySync,storageStatus,requestPersistentStorage,registerBackgroundSync } from "../services/journalOffline";
+import { loadJournals,queueSnapshot,queueStatus,removePending,savePending,syncJournals,retrySync,storageStatus,requestPersistentStorage,registerBackgroundSync } from "../services/journalOffline";
 import { prepareLocalPhoto } from "../services/photoCompression";
 import { validProjectId } from "../services/navigation";
 import "../styles/SiteModules.css";
@@ -16,7 +16,7 @@ import "../styles/JournalSync.css";
 function LocalPhoto({ file }) {
   const [url,setUrl]=useState("");
   useEffect(() => { const next=URL.createObjectURL(file); Promise.resolve().then(() => setUrl(next)); return () => URL.revokeObjectURL(next); },[file]);
-  return <img src={url || undefined} alt={file.name || "Ảnh lưu trên thiết bị"} />;
+  return <img src={url || undefined} loading="lazy" decoding="async" alt={file.name || "Ảnh lưu trên thiết bị"} />;
 }
 function ArchivedPhoto({ photo }) {
   const [url,setUrl]=useState("");
@@ -125,7 +125,26 @@ function ProjectJournal({ projectId }) {
   },[projectId,attempt]);
   useEffect(() => {
     const uid=state.user?.id; if (!uid) return; let alive=true;
-    const refresh=async () => { const [pending,status,space]=await Promise.all([pendingJournals(projectId,uid),queueStatus(projectId,uid),storageStatus()]); if (alive) { setQueue(pending); setSync(status); setStorage(space); } };
+    let refreshing=null,refreshAgain=false,previousCounts=null;
+    const refresh=() => {
+      if (refreshing) { refreshAgain=true; return refreshing; }
+      refreshing=(async () => {
+        do {
+          refreshAgain=false;
+          const [{pending,status},space]=await Promise.all([queueSnapshot(projectId,uid),storageStatus()]);
+          if (alive) {
+            setQueue(pending); setSync(status); setStorage(space);
+            // A saved journal must become visible even while a later photo
+            // upload is still running. Waiting for sync() to finish all photos
+            // leaves the server record hidden behind the old cached list.
+            const advanced=previousCounts && (status.journals<previousCounts.journals || status.photos<previousCounts.photos);
+            previousCounts={journals:status.journals,photos:status.photos};
+            if(advanced)reloadActive().catch(()=>{});
+          }
+        } while (alive && refreshAgain);
+      })().finally(() => { refreshing=null; });
+      return refreshing;
+    };
     const reloadActive=async () => { const who=await globalThis.XdsJournalQueue.get("control","identity"); if (alive && navigator.onLine && who?.userId===uid) setAttempt((n) => n+1); };
     const run=async () => {
       await refresh(); const identity=await globalThis.XdsJournalQueue.get("control","identity"); if (running.current || !navigator.onLine || identity?.userId!==uid) return; running.current=true;

@@ -102,6 +102,20 @@ test("T-12 create/edit from tree, only leaves, immediate integer duration valida
     expect(state.calls.filter((call) => call.method === "GET")).toEqual(initialReads);
 });
 
+test('S05 deleting a task requires confirmation and updates the shared tree only after API success',async({page})=>{
+    const state=await mockProject(page);
+    const dialog=await openTask(page);
+    await dialog.getByRole('button',{name:'Xóa công việc',exact:true}).click();
+    expect(state.calls.filter(call=>call.method==='DELETE')).toHaveLength(0);
+    await page.getByRole('button',{name:'Hủy',exact:true}).click();
+    await expect(dialog).toBeVisible();expect(state.calls.filter(call=>call.method==='DELETE')).toHaveLength(0);
+    await dialog.getByRole('button',{name:'Xóa công việc',exact:true}).click();
+    await page.getByRole('button',{name:'Xác nhận xóa',exact:true}).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.locator('.task-tree-row').filter({hasText:'Đổ bê tông'})).toHaveCount(0);
+    expect(state.calls.filter(call=>call.method==='DELETE')).toEqual([{path:'/projects/1/tasks/1',method:'DELETE',body:null}]);
+});
+
 test("T-14 searchable predecessor, four types, signed lag, current list, duplicate and self blocked", async ({ page }) => {
     const state = await mockProject(page);
     const dialog = await openTask(page);

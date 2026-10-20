@@ -52,6 +52,31 @@ function createTaskModel(pool) {
             });
         },
 
+        async removeTask(projectId,taskId,actorId) {
+            // Keep the task row locked until the surrounding project transaction
+            // commits. Concurrent actual updates/FK inserts cannot slip past the
+            // history check and be erased by the subsequent deletion.
+            const task=(await pool.query(`SELECT t.* FROM tasks t
+                JOIN work_items w ON w.id=t.work_item_id
+                WHERE w.project_id=$1 AND t.id=$2 FOR UPDATE OF t`,[projectId,taskId])).rows[0];
+            if(!task)return false;
+            const linked=await pool.query(`SELECT 1 FROM task_assignments WHERE task_id=$1
+                UNION ALL SELECT 1 FROM daily_progress WHERE task_id=$1
+                UNION ALL SELECT 1 FROM task_issues WHERE task_id=$1
+                UNION ALL SELECT 1 FROM task_assignment_history WHERE task_id=$1
+                UNION ALL SELECT 1 FROM task_field_quantities WHERE task_id=$1
+                UNION ALL SELECT 1 FROM baselines WHERE task_id=$1
+                UNION ALL SELECT 1 FROM baseline_history WHERE task_id=$1
+                UNION ALL SELECT 1 FROM project_milestones WHERE task_id=$1 LIMIT 1`,[taskId]);
+            if(linked.rowCount||task.actual_start||task.actual_finish||Number(task.progress_percent)>0)throw Object.assign(new Error('Công việc có dữ liệu thực tế, kế hoạch gốc hoặc lịch sử hiện trường, không thể xóa.'),{status:409,expose:true});
+            // Canonical migration 010 uses ON DELETE RESTRICT, so remove edges
+            // explicitly in the same transaction instead of assuming a cascade.
+            const dependencies=(await pool.query('DELETE FROM dependencies WHERE predecessor_task_id=$1 OR successor_task_id=$1 RETURNING *',[taskId])).rows.sort((a,b)=>a.id-b.id);
+            await pool.query('DELETE FROM tasks WHERE id=$1',[taskId]);
+            await pool.query(`INSERT INTO audit_logs(project_id,actor_id,module,action,object_id,before_value)
+                VALUES($1,$2,'tasks','delete',$3,$4)`,[projectId,actorId,String(taskId),{task,dependencies}]);
+            return true;
+        },
         async listDependencies(projectId) {
             const { rows } = await pool.query(`
                 SELECT d.* FROM dependencies d
