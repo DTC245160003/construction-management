@@ -9,7 +9,7 @@ function createSiteManagementController({ service, pdfService }) {
         saveSettings:async (req,res) => res.json({ site:await service.saveSettings(project(req),actor(req),body(req)) }),
         preferences:async (req,res) => res.json(await service.savePreferences(req.user.id,body(req))),
         profile:async (req,res) => res.json({ user:await service.profile(req.user.id,body(req)) }),
-        photos:async (req,res) => res.json(await service.photoList(project(req),actor(req))),
+        photos:async (req,res) => res.set('Cache-Control','private, no-store').json(await service.photoList(project(req),actor(req))),
         uploadPhoto:async (req,res) => res.status(201).json({ photo:await service.uploadPhoto(project(req),actor(req),body(req)) }),
         photoFile:async (req,res) => {
             const photo=await service.photo(project(req),actor(req),record(req));
@@ -33,6 +33,8 @@ function createSiteManagementController({ service, pdfService }) {
         acceptance:async (req,res) => res.json(await service.acceptanceData(project(req),actor(req))),
         contract:async (req,res) => res.json({ contract:await service.saveContract(project(req),actor(req),record(req),body(req)) }),
         saveAcceptance:async (req,res) => res.status(record(req) ? 200 : 201).json({ form:await service.saveAcceptance(project(req),actor(req),record(req),body(req)) }),
+        createAdjustment:async (req,res) => res.status(201).json({form:await service.createAdjustment(project(req),actor(req),record(req),body(req))}),
+        savePaymentTerms:async (req,res) => res.json({terms:await service.savePaymentTerms(project(req),actor(req),body(req))}),
         transitionAcceptance:async (req,res) => res.json({ form:await service.transitionAcceptance(project(req),actor(req),record(req),body(req)) }),
         payments:async (req,res) => res.json(await service.paymentData(project(req),actor(req))),
         savePayment:async (req,res) => res.status(record(req) ? 200 : 201).json({ request:await service.savePayment(project(req),actor(req),record(req),body(req)) }),

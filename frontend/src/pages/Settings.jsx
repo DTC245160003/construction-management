@@ -17,8 +17,13 @@ function ProjectSettings({ projectId,onAccountChange }) {
   const [modal,setModal] = useState(null); const [busy,setBusy] = useState(false); const [error,setError] = useState(""); const [message,setMessage] = useState("");
   const [preferenceOverrides,setPreferenceOverrides] = useState({});
   async function preference(type,enabled) {
-    setBusy(true); setError(""); setPreferenceOverrides((current) => ({ ...current,[type]:enabled }));
-    try { await api(projectPath(projectId,"/preferences"),{ method:"PUT",body:{ type,email_enabled:enabled } }); state.reload(); }
+    setBusy(true); setError("");
+    try {
+      await api(projectPath(projectId,"/preferences"),{ method:"PUT",body:{ type,email_enabled:enabled } });
+      // Confirm the persisted preference before showing the new checkbox state;
+      // an immediate reload must not turn an optimistic change back on.
+      setPreferenceOverrides((current) => ({ ...current,[type]:enabled })); state.reload();
+    }
     catch (failure) { setError(failure.message); setPreferenceOverrides((current) => { const next={ ...current }; delete next[type]; return next; }); } finally { setBusy(false); }
   }
   function saved() { setModal(null); setMessage("Đã lưu cài đặt."); state.reload(); account.reload(); onAccountChange(); }

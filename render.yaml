@@ -1,0 +1,30 @@
+# Preparation only: no service or database has been deployed by this task.
+# Configure DATABASE_URL for an independently restored, verified merged staging copy.
+services:
+  - type: web
+    name: xay-dung-so-staging
+    runtime: docker
+    plan: 0.5c-512mb
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: "off"
+    healthCheckPath: /health
+    preDeployCommand: npm run db:check
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: APP_URL
+        sync: false
+      - key: DB_POOL_MAX
+        value: "10"
+      - key: HEALTH_DATABASE_TIMEOUT_MS
+        value: "2000"

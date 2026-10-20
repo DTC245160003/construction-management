@@ -49,6 +49,8 @@ function createSiteManagementRoutes({ pool,authorization={ requireAuth } } = {})
     route("post","/:projectId/acceptance",FIELD,controller.saveAcceptance);
     route("put","/:projectId/acceptance/:recordId",FIELD,controller.saveAcceptance);
     route("post","/:projectId/acceptance/:recordId/transition",[...FIELD,"viewer"],controller.transitionAcceptance);
+    route("post","/:projectId/acceptance/:recordId/adjustments",MANAGE,controller.createAdjustment);
+    route("put","/:projectId/payment-terms",MANAGE,controller.savePaymentTerms);
     route("get","/:projectId/payments",FINANCE,controller.payments);
     route("post","/:projectId/payments",["admin","accountant"],controller.savePayment);
     route("put","/:projectId/payments/:recordId",["admin","accountant"],controller.savePayment);

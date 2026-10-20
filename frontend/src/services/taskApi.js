@@ -28,3 +28,7 @@ export async function addDependency(projectId, taskId, values) {
 export async function removeDependency(projectId, taskId, dependencyId) {
     await axios.delete(`${base(projectId)}/tasks/${taskId}/dependencies/${dependencyId}`, config);
 }
+
+export async function deleteTask(projectId,taskId){
+    await axios.delete(`${base(projectId)}/tasks/${taskId}`,config);
+}

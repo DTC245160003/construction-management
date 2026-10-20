@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Button, Divider, Form, Input, InputNumber, Modal, Select, Space } from "antd";
+import { Alert, Button, Divider, Form, Input, InputNumber, Modal, Popconfirm, Select, Space } from "antd";
 import { addDependency, removeDependency } from "../services/taskApi";
 
 const integerRule = (min, message) => ({
@@ -7,7 +7,7 @@ const integerRule = (min, message) => ({
         ? Promise.resolve() : Promise.reject(new Error(message))
 });
 
-export default function TaskForm({ projectId, task, items, tasks, dependencies, onSave, onDependencyAdded, onDependencyRemoved, onClose }) {
+export default function TaskForm({ projectId, task, items, tasks, dependencies, onSave, onDelete, onDependencyAdded, onDependencyRemoved, onClose }) {
     const [form] = Form.useForm();
     const [dependencyForm] = Form.useForm();
     const [saving, setSaving] = useState(false);
@@ -30,6 +30,10 @@ export default function TaskForm({ projectId, task, items, tasks, dependencies, 
         }
     };
 
+    const destroy=async()=>{
+        setSaving(true);setError('');
+        try{await onDelete(task.id);}catch(requestError){setError(requestError.response?.data?.message||'Không thể xóa công việc');}finally{setSaving(false);}
+    };
     const add = async (values) => {
         if (dependencyBusy) return;
         if (incoming.some((entry) => entry.predecessor_task_id === values.predecessor_task_id)) {
@@ -85,6 +89,9 @@ export default function TaskForm({ projectId, task, items, tasks, dependencies, 
                     <InputNumber step={1} changeOnBlur={false} className="task-number-input" />
                 </Form.Item>
                 <Button type="primary" htmlType="submit" loading={saving}>Lưu công việc</Button>
+                {task.id && onDelete && <Popconfirm title="Xóa công việc và các quan hệ liên quan?" description="Lịch sử thao tác được giữ lại. Công việc có dữ liệu thực tế không được xóa." okText="Xác nhận xóa" cancelText="Hủy" onConfirm={destroy}>
+                    <Button htmlType="button" danger disabled={saving||dependencyBusy} style={{marginLeft:12}}>Xóa công việc</Button>
+                </Popconfirm>}
             </Form>
             <Divider>Quan hệ phụ thuộc</Divider>
             {!task.id ? <p>Lưu công việc để thêm quan hệ phụ thuộc.</p> : <>

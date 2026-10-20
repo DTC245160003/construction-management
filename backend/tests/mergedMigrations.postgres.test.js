@@ -5,6 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { runMigrations } = require("../src/run-migration");
 const { createSiteManagementModel } = require("../src/models/siteManagementModel");
+const { after019Applied, rollbackAfter019 } = require("./helpers/migrationVersions");
 
 const describePostgres = process.env.SPRINT2_TEST_DATABASE_URL ? describe : describe.skip;
 const source = path.join(__dirname, "../src/migrations");
@@ -66,8 +67,8 @@ describePostgres("Merged migration histories preserve deployed branch data", () 
                 const beforeWrites = branch === "sprint45" ? (await client.query("SELECT * FROM journal_writes ORDER BY operation_uuid")).rows : [];
 
                 expect(await runMigrations({ client })).toEqual(branch === "main"
-                    ? ["Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", `Applied: ${reconciliation}`]
-                    : [`Applied: ${lockMigration}`, `Applied: ${reconciliation}`]);
+                    ? ["Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", `Applied: ${reconciliation}`, ...after019Applied]
+                    : [`Applied: ${lockMigration}`, `Applied: ${reconciliation}`, ...after019Applied]);
                 const afterHistory = (await client.query("SELECT * FROM schema_migrations ORDER BY name")).rows;
                 expect(afterHistory.filter(entry => beforeHistory.some(before => before.name === entry.name))).toEqual(beforeHistory);
                 expect((await client.query("SELECT * FROM tasks ORDER BY id")).rows).toEqual(beforeTasks);
@@ -83,8 +84,11 @@ describePostgres("Merged migration histories preserve deployed branch data", () 
                     expect((await client.query("SELECT is_locked,revision FROM journal_daily_info WHERE project_id=$1", [project])).rows[0]).toEqual({ is_locked: true, revision: 1 });
                 }
                 await expect(client.query("UPDATE site_journals SET content='Forbidden change' WHERE id=$1", [journal])).rejects.toMatchObject({ code: "23514" });
+                await rollbackAfter019(command => runMigrations({ client, command }));
+                const beforeRefusedRollback = (await client.query("SELECT * FROM schema_migrations ORDER BY name")).rows;
                 await expect(runMigrations({ client, command: "down" })).rejects.toThrow(/preserve lock metadata/);
-                expect((await client.query("SELECT * FROM schema_migrations ORDER BY name")).rows).toEqual(afterHistory);
+                expect((await client.query("SELECT * FROM schema_migrations ORDER BY name")).rows).toEqual(beforeRefusedRollback);
+                expect(await runMigrations({ client })).toEqual(after019Applied);
                 expect(await runMigrations({ client })).toEqual(["No pending migrations."]);
             });
         } finally {
@@ -127,7 +131,7 @@ describePostgres("Merged migration histories preserve deployed branch data", () 
                 const currentDay = (await client.query("SELECT updated_at::text AS locked_at,changed_by AS locked_by FROM journal_day_locks WHERE project_id=$1", [project])).rows[0];
                 expect(currentDay.locked_at).not.toBe(beforeFlags[0].locked_at);
                 const beforeAudits = (await client.query("SELECT * FROM audit_logs ORDER BY id")).rows;
-                expect(await runMigrations({ client })).toEqual(["Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", `Applied: ${reconciliation}`]);
+                expect(await runMigrations({ client })).toEqual(["Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", `Applied: ${reconciliation}`, ...after019Applied]);
                 const upgradedFlags = (await client.query("SELECT id,is_locked,locked_at::text AS locked_at,locked_by FROM site_journals ORDER BY id")).rows;
                 expect(upgradedFlags[0]).toEqual({ id: records[0], is_locked: true, ...currentDay });
                 expect(upgradedFlags.slice(1)).toEqual(beforeFlags.slice(1));
@@ -151,7 +155,7 @@ describePostgres("Merged migration histories preserve deployed branch data", () 
         }
     });
 
-    test("both 017 migrations and 018/019 roundtrip in canonical order on an empty test schema", async () => {
+    test("both 017 migrations and later versions roundtrip in canonical order on an empty test schema", async () => {
         await withSchema(async client => {
             expect(await runMigrations({ client })).toEqual(names.map(name => `Applied: ${name}`));
             for (const name of names.slice(16).reverse()) {

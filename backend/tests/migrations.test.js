@@ -16,6 +16,7 @@ const history = names.map((name, index) => ({
     name,
     checksum: createHash("sha256").update(sql[index]).digest("hex")
 }));
+const laterNames = names.filter(name => name > "020_add_contract_fields_to_work_items.sql");
 
 function legacyColumns() {
     return [
@@ -86,7 +87,7 @@ describe("Migration runner (no database connection)", () => {
             "Applied: 015_add_task_actuals.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql",
             "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql",
             "Applied: 019_reconcile_journal_lock_guards.sql",
-            "Applied: 020_add_contract_fields_to_work_items.sql"
+            "Applied: 020_add_contract_fields_to_work_items.sql", ...laterNames.map(name => `Applied: ${name}`)
         ]);
         expect(statements(client).filter(statement => sql.includes(statement))).toEqual([sql[14], ...sql.slice(16)]);
         expect(client.query).toHaveBeenCalledWith("UPDATE schema_migrations SET name = $1 WHERE name = $2 AND checksum = $3",
@@ -100,7 +101,7 @@ describe("Migration runner (no database connection)", () => {
             "pending: 015_add_task_actuals.sql", "applied: 016_create_baselines_and_milestones.sql",
             "pending: 017_add_lock_fields_to_daily_logs.sql", "pending: 017_sprint4_5.sql",
             "pending: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql",
-            "pending: 020_add_contract_fields_to_work_items.sql"
+            "pending: 020_add_contract_fields_to_work_items.sql", ...laterNames.map(name => `pending: ${name}`)
         ]);
         expect(statements(client).some(statement => statement.startsWith("UPDATE"))).toBe(false);
         await expect(runMigrations({ client: makeClient({ applied: [...history.slice(0, 14), { ...legacy, checksum: "bad" }] }) })).rejects.toThrow("checksum/history");
@@ -129,7 +130,7 @@ describe("Migration runner (no database connection)", () => {
         await expect(runMigrations({ client })).resolves.toEqual([
             "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql",
             "Applied: 019_reconcile_journal_lock_guards.sql",
-            "Applied: 020_add_contract_fields_to_work_items.sql"
+            "Applied: 020_add_contract_fields_to_work_items.sql", ...laterNames.map(name => `Applied: ${name}`)
         ]);
         expect(statements(client).filter(statement => sql.includes(statement)))
             .toEqual(sql.filter((_, index) => !applied.some(entry => entry.name === names[index])));
@@ -142,12 +143,13 @@ describe("Migration runner (no database connection)", () => {
         const client = makeClient({ applied });
         await expect(runMigrations({ client })).resolves.toEqual([
             "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 019_reconcile_journal_lock_guards.sql",
-            "Applied: 020_add_contract_fields_to_work_items.sql"
+            "Applied: 020_add_contract_fields_to_work_items.sql", ...laterNames.map(name => `Applied: ${name}`)
         ]);
         expect(statements(client).filter(statement => sql.includes(statement))).toEqual([
             sql[names.indexOf("017_add_lock_fields_to_daily_logs.sql")],
             sql[names.indexOf("019_reconcile_journal_lock_guards.sql")],
-            sql[names.indexOf("020_add_contract_fields_to_work_items.sql")]
+            sql[names.indexOf("020_add_contract_fields_to_work_items.sql")],
+            ...laterNames.map(name => sql[names.indexOf(name)])
         ]);
         expect(statements(client).some(statement => statement.startsWith("UPDATE schema_migrations"))).toBe(false);
     });
@@ -159,7 +161,7 @@ describe("Migration runner (no database connection)", () => {
         expect((await runMigrations({ client, command: "status" })).slice(16)).toEqual([
             "pending: 017_add_lock_fields_to_daily_logs.sql", "applied: 017_sprint4_5.sql",
             "applied: 018_system_administration.sql", "pending: 019_reconcile_journal_lock_guards.sql",
-            "pending: 020_add_contract_fields_to_work_items.sql"
+            "pending: 020_add_contract_fields_to_work_items.sql", ...laterNames.map(name => `pending: ${name}`)
         ]);
         expect(statements(client).some(statement => /CREATE|INSERT|UPDATE|DELETE/.test(statement))).toBe(false);
     });
@@ -192,8 +194,27 @@ describe("Migration runner (no database connection)", () => {
         }
     });
 
-    test.each(["017_unrecognized.sql", "018_unrecognized.sql"])(
-        "the released 017 pair does not permit another duplicate version: %s", async name => {
+    test("the accidentally merged 009 files are preserved outside active discovery", () => {
+        expect(names).toContain("009_create_tasks.sql");
+        expect(names).not.toContain("009_create_task_dependencies.sql");
+        const archived = fs.readFileSync(path.join(directory, "archive/009_create_task_dependencies.sql"), "utf8").replace(/\r\n/g, "\n");
+        expect(createHash("sha256").update(archived).digest("hex"))
+            .toBe("7e0b00c4741e42d42700b1284cacc035959ac087ac2a1f90050fd08a7a1a6414");
+        expect(fs.readFileSync(path.join(directory, "archive/009_create_task_dependencies.down.sql"))).toHaveLength(0);
+    });
+
+    test.each(["up", "down", "status", "baseline"])("an applied archived 009 fails %s before any history normalization or DDL", async command => {
+        const legacy = { ...history016, name: "015_create_baselines_and_milestones.sql" };
+        const applied = [...history.slice(0, 14), legacy, { name: "009_create_task_dependencies.sql", checksum: "recorded-legacy-checksum" }]
+            .sort((a, b) => a.name.localeCompare(b.name));
+        const client = makeClient({ applied });
+        await expect(runMigrations({ client, command })).rejects.toThrow("Archived invalid migration is recorded");
+        expect(statements(client).some(statement => /CREATE|INSERT|UPDATE|DELETE/.test(statement))).toBe(false);
+        expect(statements(client).at(-1)).toBe("ROLLBACK");
+    });
+
+    test.each(["009_create_task_dependencies.sql", "017_unrecognized.sql", "018_unrecognized.sql"])(
+        "the released 017 pair does not permit additional duplicate versions: %s", async name => {
             const files = jest.spyOn(fs, "readdirSync").mockReturnValue([...names, name]);
             const client = makeClient();
             try {

@@ -3,6 +3,7 @@ const express = require("express");
 const request = require("supertest");
 const { randomUUID } = require("node:crypto");
 const { runMigrations } = require("../src/run-migration");
+const { after019Applied, rollbackAfter019 } = require("./helpers/migrationVersions");
 const { createTaskModel } = require("../src/models/taskModel");
 const { createTaskRoutes } = require("../src/routes/taskRoutes");
 const { createWorkItemCrudModel } = require("../src/models/workItemCrudModel");
@@ -128,6 +129,7 @@ describePostgres("Sprint 2 real PostgreSQL constraints, migrations and API", () 
     });
 
     test("rollback refuses populated tables, then down 010/down 009/up succeeds without changing T-08", async () => {
+        await rollbackAfter019(migrate);
         expect((await migrate("down"))[0]).toContain("019_reconcile_journal_lock_guards.sql");
         expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
         expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
@@ -152,7 +154,7 @@ describePostgres("Sprint 2 real PostgreSQL constraints, migrations and API", () 
             .toEqual({ tasks: null, dependencies: null });
         expect((await pool.query("SELECT count(*)::int AS count FROM work_items")).rows[0].count).toBe(3);
         expect(await migrate("up")).toEqual([
-            "Applied: 009_create_tasks.sql", "Applied: 010_create_dependencies.sql", "Applied: 011_create_schedule_results.sql", "Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql"
+            "Applied: 009_create_tasks.sql", "Applied: 010_create_dependencies.sql", "Applied: 011_create_schedule_results.sql", "Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql", ...after019Applied
         ]);
     });
 
@@ -430,6 +432,7 @@ describePostgres("Sprint 2 real PostgreSQL constraints, migrations and API", () 
     });
 
     test("011 schema enforces one result per task, FK, down protection and re-up", async () => {
+        await rollbackAfter019(migrate);
         expect((await migrate("down"))[0]).toContain("019_reconcile_journal_lock_guards.sql");
         expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
         expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
@@ -452,7 +455,7 @@ describePostgres("Sprint 2 real PostgreSQL constraints, migrations and API", () 
         expect((await migrate("down"))[0]).toContain("011_create_schedule_results.sql");
         expect((await pool.query("SELECT to_regclass('schedule_results') AS name")).rows[0].name).toBeNull();
         expect(await model.list(project)).toHaveLength(1);
-        expect(await migrate("up")).toEqual(["Applied: 011_create_schedule_results.sql", "Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql"]);
+        expect(await migrate("up")).toEqual(["Applied: 011_create_schedule_results.sql", "Applied: 012_create_project_operations.sql", "Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql", ...after019Applied]);
         expect(await dirty()).toBe(true);
         await request(app).get(scheduleUrl()).expect(200);
     });

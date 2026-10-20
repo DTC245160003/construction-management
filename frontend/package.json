@@ -8,17 +8,20 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "playwright test",
+    "test:logout": "playwright test --config playwright.logout.config.js",
     "test:pwa": "npm run build && playwright test --config playwright.pwa.config.js",
     "test:sprint45": "playwright test --config playwright.sprint45.config.js",
     "test:system-admin": "playwright test --config playwright.system-admin.config.js",
     "test:real-regression": "playwright test --config playwright.real-regression.config.js",
     "test:ui-regression": "playwright test --config playwright.ui-regression.config.js",
     "test:worker-dev": "playwright test --config playwright.worker-dev.config.js",
-    "test:unit": "node --test tests/gantt-unit.test.mjs tests/schedule-view-model.test.mjs tests/project-calendar.test.mjs tests/journal-identity.test.mjs",
+    "test:unit": "node --test tests/gantt-unit.test.mjs tests/schedule-view-model.test.mjs tests/project-calendar.test.mjs tests/journal-identity.test.mjs tests/finance-view-model.test.mjs",
     "test:t31": "playwright test --config playwright.t31.config.js",
     "test:t31:serve": "node tests/fixtures/gantt-server.mjs",
     "test:preview": "playwright test --config playwright.preview.config.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:sprint68": "playwright test --config playwright.sprint68.config.js",
+    "test:unified-shell": "playwright test --config playwright.unified-shell.config.js"
   },
   "dependencies": {
     "antd": "^6.6.5",
@@ -26,6 +29,9 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4"
+  },
+  "overrides": {
+    "source-map-js": "1.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

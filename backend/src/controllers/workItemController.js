@@ -26,7 +26,8 @@ function createWorkItemController({ model }) {
                     status,
                     contract_quantity,
                     unit,
-                    contract_unit_price
+                    contract_unit_price,
+                    actorId:req.user.id
                 });
                 return res.status(201).json({ item });
             } catch (error) {
@@ -62,7 +63,8 @@ function createWorkItemController({ model }) {
                     status,
                     contract_quantity,
                     unit,
-                    contract_unit_price
+                    contract_unit_price,
+                    actorId:req.user.id
                 });
                 if (!item) {
                     return res.status(404).json({ message: "Không tìm thấy hạng mục" });

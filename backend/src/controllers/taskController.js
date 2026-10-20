@@ -9,6 +9,10 @@ function createTaskController({ service, progressService }) {
         async update(req, res) {
             res.json({ task: await service.save(Number(req.params.projectId), Number(req.params.taskId), req.body) });
         },
+        async remove(req,res){
+            await service.remove(Number(req.params.projectId),Number(req.params.taskId),req.user.id);
+            res.sendStatus(204);
+        },
         async updateProgress(req, res) {
             res.json({ task: await progressService.updateProgress(
                 Number(req.params.projectId), Number(req.params.taskId), req.body

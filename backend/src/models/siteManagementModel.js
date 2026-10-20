@@ -113,29 +113,31 @@ function createSiteManagementModel(pool) {
         linkJournalPhotos: async (journalId, ids) => { await query("DELETE FROM journal_photos WHERE journal_id=$1", [journalId]); await query("INSERT INTO journal_photos(journal_id,photo_id) SELECT $1,unnest($2::integer[])", [journalId,ids]); },
         contracts: (projectId) => query(`SELECT c.*,w.title AS item_name,coalesce(a.approved,0)::text AS approved_quantity,coalesce(d.reported,0)::text AS reported_quantity
             FROM item_contracts c JOIN work_items w ON w.id=c.work_item_id
-            LEFT JOIN (SELECT work_item_id,sum(quantity) approved FROM acceptance_forms WHERE status='approved' GROUP BY work_item_id) a ON a.work_item_id=c.work_item_id
+            LEFT JOIN (SELECT work_item_id,sum(quantity) approved FROM effective_acceptances GROUP BY work_item_id) a ON a.work_item_id=c.work_item_id
             LEFT JOIN (SELECT t.work_item_id,sum(d.quantity) reported FROM daily_progress d JOIN tasks t ON t.id=d.task_id GROUP BY t.work_item_id) d ON d.work_item_id=c.work_item_id
             WHERE c.project_id=$1 ORDER BY c.work_item_id`, [projectId]),
-        contract: (projectId, itemId) => one(`SELECT c.*,coalesce((SELECT sum(quantity) FROM acceptance_forms WHERE work_item_id=$2 AND status='approved'),0)::text AS approved_quantity
+        contract: (projectId, itemId) => one(`SELECT c.*,coalesce((SELECT sum(quantity) FROM effective_acceptances WHERE work_item_id=$2),0)::text AS approved_quantity
             FROM item_contracts c WHERE c.project_id=$1 AND c.work_item_id=$2`, [projectId,itemId]),
         saveContract: (projectId, itemId, values) => one(`INSERT INTO item_contracts(project_id,work_item_id,quantity,unit,unit_price) VALUES($1,$2,$3,$4,$5)
             ON CONFLICT(work_item_id) DO UPDATE SET quantity=$3,unit=$4,unit_price=$5,revision=item_contracts.revision+1 RETURNING *`, [projectId,itemId,values.quantity,values.unit,values.unit_price]),
         acceptances: (projectId) => query(`SELECT a.*,a.day::text AS day,w.title AS item_name,u.fullname AS author,ap.fullname AS approver,
             coalesce((SELECT json_agg(photo_id ORDER BY photo_id) FROM acceptance_photos WHERE acceptance_id=a.id),'[]'::json) AS photo_ids,
-            EXISTS(SELECT 1 FROM payment_items WHERE acceptance_id=a.id) AS in_payment
+            EXISTS(SELECT 1 FROM payment_items WHERE acceptance_id=a.id AND NOT released) AS in_payment,
+            EXISTS(SELECT 1 FROM effective_acceptances WHERE id=a.id) AS effective,
+            (SELECT id FROM acceptance_forms WHERE adjustment_of=a.id AND status='approved') AS superseded_by
             FROM acceptance_forms a JOIN work_items w ON w.id=a.work_item_id JOIN users u ON u.id=a.created_by LEFT JOIN users ap ON ap.id=a.approved_by
             WHERE a.project_id=$1 ORDER BY a.id DESC`, [projectId]),
         acceptance: (projectId, id) => one("SELECT *,day::text AS day FROM acceptance_forms WHERE project_id=$1 AND id=$2", [projectId,id]),
         saveAcceptance: (projectId, userId, id, a) => id ? one(`UPDATE acceptance_forms SET period=$3,day=$4,cumulative=$5,previous_cumulative=$6,quantity=$5::numeric-$6::numeric,
             notes=$7,unit=$8,unit_price=$9,status='draft',return_reason=NULL,revision=revision+1 WHERE project_id=$1 AND id=$2 RETURNING *`, [projectId,id,a.period,a.day,a.cumulative,a.previous_cumulative,a.notes,a.unit,a.unit_price])
-            : one(`INSERT INTO acceptance_forms(project_id,work_item_id,created_by,period,day,cumulative,previous_cumulative,quantity,unit,unit_price,notes)
-                VALUES($1,$2,$3,$4,$5,$6,$7,$6::numeric-$7::numeric,$8,$9,$10) RETURNING *`, [projectId,a.work_item_id,userId,a.period,a.day,a.cumulative,a.previous_cumulative,a.unit,a.unit_price,a.notes]),
+            : one(`INSERT INTO acceptance_forms(project_id,work_item_id,created_by,period,day,cumulative,previous_cumulative,quantity,unit,unit_price,notes,adjustment_of,adjustment_reason)
+                VALUES($1,$2,$3,$4,$5,$6,$7,$6::numeric-$7::numeric,$8,$9,$10,$11,$12) RETURNING *`, [projectId,a.work_item_id,userId,a.period,a.day,a.cumulative,a.previous_cumulative,a.unit,a.unit_price,a.notes,a.adjustment_of||null,a.adjustment_reason||null]),
         linkAcceptancePhotos: async (id, photos) => { await query("DELETE FROM acceptance_photos WHERE acceptance_id=$1", [id]); await query("INSERT INTO acceptance_photos(acceptance_id,photo_id) SELECT $1,unnest($2::integer[])", [id,photos]); },
         transitionAcceptance: (projectId,id,actorId,status,reason) => one(`UPDATE acceptance_forms SET status=$3::varchar,return_reason=$4,revision=revision+1,
             approved_by=CASE WHEN $3::varchar='approved' THEN $5::integer ELSE NULL END,approved_at=CASE WHEN $3::varchar='approved' THEN CURRENT_TIMESTAMP ELSE NULL END
             WHERE project_id=$1 AND id=$2 RETURNING *`, [projectId,id,status,reason,actorId]),
         payments: (projectId) => query(`SELECT p.*,p.day::text AS day,u.fullname AS author,ap.fullname AS approver,
-            coalesce((SELECT json_agg(json_build_object('acceptance_id',i.acceptance_id,'item_name',w.title,'quantity',i.quantity::text,'unit',a.unit,'unit_price',i.unit_price::text,'amount',i.amount::text) ORDER BY i.acceptance_id)
+            coalesce((SELECT json_agg(json_build_object('acceptance_id',i.acceptance_id,'item_name',w.title,'quantity',i.quantity::text,'unit',a.unit,'unit_price',i.unit_price::text,'amount',i.amount::text,'released',i.released) ORDER BY i.acceptance_id)
             FROM payment_items i JOIN acceptance_forms a ON a.id=i.acceptance_id JOIN work_items w ON w.id=a.work_item_id WHERE payment_id=p.id),'[]'::json) AS items
             FROM payment_requests p JOIN users u ON u.id=p.created_by LEFT JOIN users ap ON ap.id=p.approved_by WHERE p.project_id=$1 ORDER BY p.id DESC`, [projectId]),
         payment: (projectId,id) => one("SELECT * FROM payment_requests WHERE project_id=$1 AND id=$2", [projectId,id]),
@@ -148,8 +150,8 @@ function createSiteManagementModel(pool) {
             return one(`UPDATE payment_requests SET gross=t.gross,retained=round(t.gross*retention_rate/100,2),net=t.gross-round(t.gross*retention_rate/100,2)
                 FROM (SELECT sum(amount) gross FROM payment_items WHERE payment_id=$1) t WHERE id=$1 RETURNING payment_requests.*`, [result.id]);
         },
-        paymentSource: (projectId,ids,paymentId) => query(`SELECT a.id FROM acceptance_forms a LEFT JOIN payment_items p ON p.acceptance_id=a.id
-            WHERE a.project_id=$1 AND a.id=ANY($2::integer[]) AND a.status='approved' AND (p.payment_id IS NULL OR p.payment_id=$3)`, [projectId,ids,paymentId]),
+        paymentSource: (projectId,ids,paymentId) => query(`SELECT a.id FROM acceptance_forms a LEFT JOIN payment_items p ON p.acceptance_id=a.id AND NOT p.released
+            WHERE a.project_id=$1 AND a.id=ANY($2::integer[]) AND a.status='approved' AND EXISTS(SELECT 1 FROM effective_acceptances WHERE id=a.id) AND (p.payment_id IS NULL OR p.payment_id=$3)`, [projectId,ids,paymentId]),
         transitionPayment: (projectId,id,actorId,status,reason) => one(`UPDATE payment_requests SET status=$3::varchar,return_reason=$4,revision=revision+1,
             approved_by=CASE WHEN $3::varchar='approved' THEN $5::integer ELSE NULL END,approved_at=CASE WHEN $3::varchar='approved' THEN CURRENT_TIMESTAMP ELSE NULL END
             WHERE project_id=$1 AND id=$2 RETURNING *`, [projectId,id,status,reason,actorId]),
@@ -178,7 +180,7 @@ function createSiteManagementModel(pool) {
             (coalesce(i.issued,0)-n.quantity_per_unit*coalesce(a.approved,0))::text AS variance
             FROM keys k JOIN work_items w ON w.id=k.work_item_id JOIN materials m ON m.id=k.material_id
             LEFT JOIN material_norms n ON n.work_item_id=k.work_item_id AND n.material_id=k.material_id
-            LEFT JOIN (SELECT work_item_id,sum(quantity) approved FROM acceptance_forms WHERE status='approved' GROUP BY work_item_id) a ON a.work_item_id=k.work_item_id
+            LEFT JOIN (SELECT work_item_id,sum(quantity) approved FROM effective_acceptances GROUP BY work_item_id) a ON a.work_item_id=k.work_item_id
             LEFT JOIN (SELECT work_item_id,material_id,sum(quantity) issued FROM inventory_transactions WHERE direction='out' GROUP BY work_item_id,material_id) i ON i.work_item_id=k.work_item_id AND i.material_id=k.material_id`, [projectId]),
         async notify(projectId,userId,type,message,path,eventKey = null) {
             const notification = await one(`INSERT INTO notifications(project_id,user_id,type,message,target_path,event_key) VALUES($1,$2,$3,$4,$5,$6)
@@ -190,6 +192,19 @@ function createSiteManagementModel(pool) {
         },
         milestones: (projectId) => query("SELECT *,due_date::text AS due_date FROM project_milestones WHERE project_id=$1 ORDER BY project_milestones.due_date,id", [projectId]),
         createMilestone: (projectId,userId,m) => one("INSERT INTO project_milestones(project_id,created_by,task_id,title,due_date) VALUES($1,$2,$3,$4,$5) RETURNING *", [projectId,userId,m.task_id,m.title,m.due_date]),
+        paymentTerms: (projectId) => one('SELECT * FROM project_payment_terms WHERE project_id=$1',[projectId]),
+        savePaymentTerms: (projectId,actorId,rate) => one(`INSERT INTO project_payment_terms(project_id,updated_by,retention_rate) VALUES($1,$2,$3)
+            ON CONFLICT(project_id) DO UPDATE SET retention_rate=$3,updated_by=$2,revision=project_payment_terms.revision+1,updated_at=CURRENT_TIMESTAMP RETURNING *`,[projectId,actorId,rate]),
+        baselineContext: (projectId) => one('SELECT *,original_start_date::text AS original_start_date FROM original_baseline_context WHERE project_id=$1',[projectId]),
+        originalBaseline: (projectId) => query(`SELECT DISTINCT ON(task_id) * FROM (
+            SELECT task_id,early_finish,created_at FROM baselines WHERE project_id=$1
+            UNION ALL SELECT task_id,early_finish,created_at FROM baseline_history WHERE project_id=$1
+            ) b ORDER BY task_id,created_at`,[projectId]),
+        taskActuals: (projectId) => query(`SELECT t.id,t.actual_finish::text AS actual_finish,t.progress_percent FROM tasks t JOIN work_items w ON w.id=t.work_item_id WHERE w.project_id=$1`,[projectId]),
+        scheduleMilestoneAlerts: (projectId) => query(`SELECT a.id,m.name AS title,m.target_date::text AS due_date,w.title AS item_name,
+            a.overdue_working_days AS delay_days,a.critical_path AS critical_chain,TRUE AS overdue
+            FROM milestone_alerts a JOIN milestones m ON m.id=a.milestone_id JOIN work_items w ON w.id=m.work_item_id
+            WHERE a.project_id=$1 AND a.status='open' ORDER BY m.target_date,a.id`,[projectId]),
         auditLogs: operations.auditLogs
     };
 }

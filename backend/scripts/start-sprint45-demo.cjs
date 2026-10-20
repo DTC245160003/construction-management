@@ -1,28 +1,19 @@
 const path=require("node:path");
-const { Pool }=require("pg");
-const { runMigrations }=require("../src/run-migration");
-const { seedRoles }=require("../src/seed-roles");
+const {createDatabaseConfig}=require('../src/config/databaseConfig');
+const {databaseName,targetDatabase}=require('../src/config/databaseTarget');
 require("dotenv").config({ path:path.join(__dirname,"../.env"),quiet:true });
 
 async function main() {
     const database=process.env.SPRINT45_DEMO_DB || "construction_sprint45_demo";
-    if (!/^[a-z][a-z0-9_]{0,62}$/.test(database) || database===process.env.DB_NAME) throw new Error("Use a separate demo database name");
-    const connection={ host:process.env.DB_HOST,port:process.env.DB_PORT,user:process.env.DB_USER,password:process.env.DB_PASSWORD };
-    const existing=new Pool({ ...connection,database:process.env.DB_NAME });
-    try {
-        if (!(await existing.query("SELECT 1 FROM pg_database WHERE datname=$1",[database])).rowCount) {
-            await existing.query(`CREATE DATABASE "${database}"`);
-        }
-    } finally { await existing.end(); }
-    const demo=new Pool({ ...connection,database });
-    try {
-        const client=await demo.connect();
-        try { for (const message of await runMigrations({ client })) console.log(message); await seedRoles(client); }
-        finally { client.release(); }
-    } finally { await demo.end(); }
-    process.env.DB_NAME=database;
+    const config=createDatabaseConfig();
+    if (!/^[a-z][a-z0-9_]{0,62}$/.test(database) || database===databaseName(config)) throw new Error("Use a separate, reviewed database copy");
+    // This historical database contains real user accounts. Startup must never
+    // create, migrate or seed it. The unified server checks schema read-only.
+    if(config.connectionString)process.env.DATABASE_URL=targetDatabase(config,database).connectionString;
+    else process.env.DB_NAME=database;
     process.env.PORT ||= "3045";
-    console.log(`Sprint 4-5 demo database: ${database}. Existing database is unchanged.`);
-    require("../src/server");
+    console.log(`Historical Sprint 4-5 startup: ${database}; no automatic migration or seed. Use a verified upgraded copy.`);
+    await require("../src/server").main();
 }
-main().catch((error) => { console.error("Demo startup failed:",error.code || error.message); process.exitCode=1; });
+if(require.main===module)main().catch((error) => { console.error("Demo startup failed:",error.code || error.message); process.exitCode=1; });
+module.exports={main};

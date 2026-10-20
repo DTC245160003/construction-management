@@ -3,6 +3,7 @@ const request = require("supertest");
 const sharp = require("sharp");
 const { randomUUID } = require("node:crypto");
 const { runMigrations } = require("../src/run-migration");
+const { after019Applied, rollbackAfter019 } = require("./helpers/migrationVersions");
 const { hashPassword } = require("../src/config/password");
 const { operationsApp } = require("./helpers/operationsApp");
 const { createNotificationWorker } = require("../src/services/notificationWorker");
@@ -129,9 +130,13 @@ describePostgres("Site management against real PostgreSQL and session authorizat
         await agents.admin.put(url(`/contracts/${parent}`)).send({ quantity:"10",unit:"m³",unit_price:"1",revision:0 }).expect(422);
         await contract();
         await agents.engineer.post(url("/acceptance")).send({ work_item_id:leaf,period:"Over",day:"2026-10-05",cumulative:"10.0001" }).expect(422);
-        const first=await makeAcceptance(),second=await makeAcceptance();
-        for (const form of [first,second]) await agents.engineer.post(url(`/acceptance/${form.id}/transition`)).send({ action:"submit",revision:1 }).expect(200);
-        const approvals=await Promise.all([first,second].map((form) => agents.viewer.post(url(`/acceptance/${form.id}/transition`)).send({ action:"approve",revision:2 })));
+        // Original S-37 requires creation races to be rejected, before approval.
+        const payload={work_item_id:leaf,period:'Concurrent',day:'2026-10-05',cumulative:'7',photo_ids:[]};
+        const drafts=await Promise.all([agents.engineer.post(url('/acceptance')).send(payload),agents.admin.post(url('/acceptance')).send(payload)]);
+        expect(drafts.map(response=>response.status).sort()).toEqual([201,409]);
+        const first=drafts.find(response=>response.status===201).body.form;
+        await agents.engineer.post(url(`/acceptance/${first.id}/transition`)).send({ action:"submit",revision:1 }).expect(200);
+        const approvals=await Promise.all([1,2].map(() => agents.viewer.post(url(`/acceptance/${first.id}/transition`)).send({ action:"approve",revision:2 })));
         expect(approvals.map((response) => response.status).sort()).toEqual([200,409]);
         expect((await pool.query("SELECT sum(quantity)::text AS total FROM acceptance_forms WHERE status='approved'")).rows[0].total).toBe("7.0000");
         const approved=approvals.find((response) => response.status===200).body.form;
@@ -229,6 +234,7 @@ describePostgres("Site management against real PostgreSQL and session authorizat
     test("013 rollback refuses data, then roundtrips safely on an unused schema", async () => {
         const model=createSiteManagementModel(pool);
         await model.transaction(project,async (t) => t.saveSettings(project,{ latitude:21,longitude:105,radius_m:50 }));
+        await rollbackAfter019(migrate);
         expect((await migrate("down"))[0]).toContain("019_reconcile_journal_lock_guards.sql");
         expect((await migrate("down"))[0]).toContain("018_system_administration.sql");
         expect((await migrate("down"))[0]).toContain("017_sprint4_5.sql");
@@ -239,6 +245,6 @@ describePostgres("Site management against real PostgreSQL and session authorizat
         await expect(migrate("down")).rejects.toThrow(/operational data/);
         await pool.query("TRUNCATE projects CASCADE"); await pool.query("DELETE FROM notification_preferences");
         expect((await migrate("down"))[0]).toContain("013_create_site_management.sql");
-        expect(await migrate("up")).toEqual(["Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql"]);
+        expect(await migrate("up")).toEqual(["Applied: 013_create_site_management.sql", "Applied: 014_create_project_invitations.sql", "Applied: 015_add_task_actuals.sql", "Applied: 016_create_baselines_and_milestones.sql", "Applied: 017_add_lock_fields_to_daily_logs.sql", "Applied: 017_sprint4_5.sql", "Applied: 018_system_administration.sql", "Applied: 019_reconcile_journal_lock_guards.sql", ...after019Applied]);
     });
 });

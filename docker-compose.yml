@@ -3,8 +3,9 @@ name: construction-management-docker
 services:
   backend:
     build:
-      context: ./backend
-    image: construction-management-backend:local
+      context: .
+      dockerfile: Dockerfile
+    image: construction-management:local
     init: true
     env_file:
       - ./backend/.env

@@ -1,6 +1,6 @@
 const { parse } = require("csv-parse/sync");
 const v = require("./siteValidation");
-const { preparePhoto, distance } = require("./photoService");
+const { preparePhoto,reviewPhoto } = require("./photoService");
 const { workingDate } = require("./workingCalendar");
 const MANAGE = ["admin","project_manager","manager"];
 const ACCEPT_APPROVE = [...MANAGE,"viewer"];
@@ -9,22 +9,7 @@ const PAYMENT_APPROVE = ["admin","viewer"];
 const EMAIL_TYPES = ["acceptance_returned","payment_returned","milestone_overdue"];
 const dayNow = () => new Intl.DateTimeFormat("en-CA",{ timeZone:"Asia/Ho_Chi_Minh" }).format(new Date());
 function requireRole(actor, roles) { if (!roles.includes(actor.role)) throw v.problem(403,"Bạn không có quyền thực hiện thao tác này"); }
-function costComparison(items,budgets,costs,contracts) {
-    const current = new Map();
-    for (const budget of budgets) if (!current.has(budget.work_item_id)) current.set(budget.work_item_id,budget);
-    function row(item,trail = new Set()) {
-        if (trail.has(item.id)) throw v.problem(422,"Cây hạng mục có vòng lặp");
-        const next = new Set([...trail,item.id]);
-        const children = items.filter((entry) => entry.parent_id===item.id).map((child) => row(child,next));
-        const budget = children.length ? children.reduce((sum,child) => sum+v.scaled(child.budget,2),0n) : v.scaled(current.get(item.id)?.amount || "0",2);
-        const actual = costs.filter((cost) => cost.work_item_id===item.id).reduce((sum,cost) => sum+v.scaled(cost.amount,2),0n)+children.reduce((sum,child) => sum+v.scaled(child.actual,2),0n);
-        const contract = contracts.find((entry) => entry.work_item_id===item.id);
-        const accepted = contract ? Number(contract.approved_quantity)/Number(contract.quantity)*100 : null;
-        return { ...item,budget:v.formatted(budget),actual:v.formatted(actual),variance:v.formatted(budget-actual),usage_percent:budget ? Number(actual)/Number(budget)*100 : null,
-            accepted_percent:accepted,warning:budget>0n && actual*100n>budget*80n && accepted!==null && accepted<80,version:current.get(item.id)?.version || 0 };
-    }
-    return items.map((item) => row(item));
-}
+const {costComparison,contractRollup,valueProgress,baselineComparison}=require('./financeSummary');
 function createSiteManagementService({ model }) {
     async function tx(projectId,operation) {
         try { return await model.transaction(projectId,operation); }
@@ -93,7 +78,11 @@ function createSiteManagementService({ model }) {
             if (values.latitude!==null && (!Number.isFinite(values.latitude) || Math.abs(values.latitude)>90 || !Number.isFinite(values.longitude) || Math.abs(values.longitude)>180 || !Number.isInteger(values.radius_m) || values.radius_m<1 || values.radius_m>2147483647)) throw v.problem(400,"Tọa độ hoặc bán kính công trường không hợp lệ");
             return tx(projectId,async (t) => { const previous=await t.settings(projectId); v.revision(previous?.revision || 0,body.revision); const result=await t.saveSettings(projectId,values); await t.audit(projectId,actor.id,"settings","update_site",projectId,previous,result); return result; });
         },
-        async photoList(projectId,actor) { return { photos:await model.photos(projectId,actor.role==="worker" ? actor.id : null),member_role:actor.role }; },
+        async photoList(projectId,actor) {
+            const site=await model.settings(projectId);
+            const photos=(await model.photos(projectId,actor.role==='worker'?actor.id:null)).map(photo=>{const review=reviewPhoto(photo,{site});return {...photo,review,distance_m:review.distance_m,suspicious:review.needs_review};});
+            return {photos,member_role:actor.role};
+        },
         async uploadPhoto(projectId,actor,body) {
             const prepared = await preparePhoto(body);
             return tx(projectId,async (t) => {
@@ -110,8 +99,8 @@ function createSiteManagementService({ model }) {
                 if (existing) { if (existing.project_id!==projectId || existing.uploaded_by!==actor.id || existing.content_hash!==prepared.content_hash || existing.work_item_id!==prepared.work_item_id || (upload && upload.photo_id!==existing.id)) throw v.problem(409,"Mã tải ảnh đã được sử dụng"); return existing; }
                 if (journal) await unlocked(t,projectId,journal.day,journal.id);
                 const site=await t.settings(projectId);
-                prepared.distance_m=site?.latitude!=null && prepared.latitude!=null ? Math.round(distance(site.latitude,site.longitude,prepared.latitude,prepared.longitude)) : null;
-                prepared.suspicious=prepared.distance_m!==null && prepared.distance_m>site.radius_m;
+                const review=reviewPhoto(prepared,{site});
+                prepared.metadata.review=review;prepared.distance_m=review.distance_m;prepared.suspicious=review.needs_review;
                 const photo=await t.createPhoto(projectId,actor.id,prepared);
                 if (upload) {
                     await t.completePhotoUpload(upload.client_uuid,photo.id); await t.attachJournalPhoto(upload.journal_id,photo.id);
@@ -136,7 +125,14 @@ function createSiteManagementService({ model }) {
         },
         ...require("./journalService").createJournalService({ model }),
 
-        async acceptanceData(projectId,actor) { return { forms:await model.acceptances(projectId),contracts:await model.contracts(projectId),items:await model.items(projectId),member_role:actor.role,can_edit:[...MANAGE,"engineer"].includes(actor.role),can_approve:ACCEPT_APPROVE.includes(actor.role) }; },
+        async acceptanceData(projectId,actor) {
+            return tx(projectId,async t=>{
+                const forms=await t.acceptances(projectId),contracts=await t.contracts(projectId),items=await t.items(projectId),site=await t.settings(projectId);
+                const allPhotos=new Map((await t.photos(projectId)).map(p=>[p.id,p]));
+                for(const form of forms) form.photo_reviews=form.photo_ids.map(id=>allPhotos.get(id)).filter(Boolean).map(photo=>({photo_id:photo.id,filename:photo.filename,...reviewPhoto(photo,{referenceDate:form.day,site})}));
+                return {forms,contracts,items,contract_rollup:contractRollup(items,contracts),member_role:actor.role,can_edit:[...MANAGE,'engineer'].includes(actor.role),can_adjust:MANAGE.includes(actor.role),can_approve:ACCEPT_APPROVE.includes(actor.role)};
+            });
+        },
         async saveContract(projectId,actor,itemId,body) {
             const values={ quantity:v.decimal(body.quantity,4),unit:v.text(body.unit,"Đơn vị",30),unit_price:v.decimal(body.unit_price,2,true) };
             return tx(projectId,async (t) => { await item(t,projectId,itemId,true); const previous=await t.contract(projectId,itemId); v.revision(previous?.revision || 0,body.revision); if (previous && previous.unit!==values.unit && v.scaled(previous.approved_quantity)>0n) throw v.problem(409,"Không thể đổi đơn vị khi đã có nghiệm thu duyệt"); const result=await t.saveContract(projectId,itemId,values); await t.audit(projectId,actor.id,"acceptance","update_contract",itemId,previous,result); return result; });
@@ -146,13 +142,34 @@ function createSiteManagementService({ model }) {
             return tx(projectId,async (t) => {
                 await item(t,projectId,values.work_item_id,true); const contract=await t.contract(projectId,values.work_item_id);
                 if (!contract) throw v.problem(422,"Hạng mục chưa có khối lượng hợp đồng và đơn giá");
-                if (v.scaled(values.cumulative)>v.scaled(contract.quantity) || v.scaled(values.cumulative)<=v.scaled(contract.approved_quantity)) throw v.problem(422,"Lũy kế phải lớn hơn phần đã duyệt và không vượt khối lượng hợp đồng");
                 const previous=id ? await t.acceptance(projectId,v.id(id)) : null;
                 if (id && !previous) throw v.problem(404,"Không tìm thấy phiếu");
                 if (previous) { canEditRecord(actor,previous); v.revision(previous.revision,body.revision); if (!["draft","returned"].includes(previous.status)) throw v.problem(409,"Chỉ sửa phiếu nháp hoặc đã trả lại"); if (previous.work_item_id!==values.work_item_id) throw v.problem(409,"Không được đổi hạng mục của phiếu đã lập"); }
                 await photos(t,projectId,values.photo_ids,actor,values.work_item_id);
-                const result=await t.saveAcceptance(projectId,actor.id,id,{ ...values,previous_cumulative:contract.approved_quantity,unit:contract.unit,unit_price:contract.unit_price });
+                if(v.scaled(values.cumulative)>v.scaled(contract.quantity))throw v.problem(422,`Lũy kế ${values.cumulative} vượt khối lượng hợp đồng ${contract.quantity} ${contract.unit}`);
+                const original=previous?.adjustment_of ? await t.acceptance(projectId,previous.adjustment_of) : null;
+                const previousCumulative=original ? original.previous_cumulative : contract.approved_quantity;
+                if(v.scaled(values.cumulative)<=v.scaled(previousCumulative))throw v.problem(422,`Lũy kế phải lớn hơn ${previousCumulative} ${contract.unit} đã được duyệt trước đợt này`);
+                const result=await t.saveAcceptance(projectId,actor.id,id,{ ...values,previous_cumulative:previousCumulative,unit:original?.unit||contract.unit,unit_price:original?.unit_price||contract.unit_price });
                 await t.linkAcceptancePhotos(result.id,values.photo_ids); await t.audit(projectId,actor.id,"acceptance",id ? "update" : "create",result.id,previous,result); return result;
+            });
+        },
+        async createAdjustment(projectId,actor,id,body) {
+            requireRole(actor,MANAGE);
+            const reason=v.text(body.reason,'Lý do điều chỉnh',2000),cumulative=v.decimal(body.cumulative,4);
+            return tx(projectId,async t=>{
+                const original=await t.acceptance(projectId,v.id(id));
+                if(!original||original.status!=='approved')throw v.problem(409,'Chỉ lập điều chỉnh cho phiếu đã duyệt');
+                v.revision(original.revision,body.revision);
+                const contract=await t.contract(projectId,original.work_item_id);
+                const effective=(await t.acceptances(projectId)).find(f=>f.id===original.id);
+                if(!effective.effective||effective.in_payment)throw v.problem(409,'Chỉ điều chỉnh phiếu đã duyệt còn hiệu lực, chưa thuộc đề nghị thanh toán còn hiệu lực');
+                if(v.scaled(cumulative)>v.scaled(contract.quantity)||v.scaled(cumulative)<=v.scaled(original.previous_cumulative))throw v.problem(422,`Lũy kế điều chỉnh phải lớn hơn ${original.previous_cumulative} và không vượt hợp đồng ${contract.quantity} ${contract.unit}`);
+                const photoIds=v.ids(body.photo_ids||effective.photo_ids||[]);await photos(t,projectId,photoIds,actor,original.work_item_id);
+                const values={work_item_id:original.work_item_id,period:v.text(body.period,'Đợt điều chỉnh'),day:v.date(body.day),cumulative,previous_cumulative:original.previous_cumulative,unit:original.unit,unit_price:original.unit_price,notes:v.text(body.notes,'Ghi chú',2000,true),adjustment_of:original.id,adjustment_reason:reason};
+                const result=await t.saveAcceptance(projectId,actor.id,null,values);await t.linkAcceptancePhotos(result.id,photoIds);
+                await t.audit(projectId,actor.id,'acceptance','create_adjustment',result.id,original,result);
+                return {...result,adjustment_delta:v.formatted(v.scaled(cumulative)-v.scaled(original.cumulative),4)};
             });
         },
         async transitionAcceptance(projectId,actor,id,body) {
@@ -164,16 +181,24 @@ function createSiteManagementService({ model }) {
                 const previous=await t.acceptance(projectId,v.id(id)); if (!previous) throw v.problem(404,"Không tìm thấy phiếu"); v.revision(previous.revision,body.revision);
                 if (status==="submitted") { canEditRecord(actor,previous); if (previous.status!=="draft") throw v.problem(409,"Chỉ trình duyệt phiếu nháp"); }
                 else if (previous.status!=="submitted") throw v.problem(409,"Phiếu chưa chờ duyệt");
-                if (status!=="returned") { const contract=await t.contract(projectId,previous.work_item_id); if (v.scaled(contract.approved_quantity)!==v.scaled(previous.previous_cumulative)) throw v.problem(409,"Lũy kế đã thay đổi. Trả lại phiếu để cập nhật trước khi duyệt."); }
+                if (status!=="returned") { const contract=await t.contract(projectId,previous.work_item_id); const original=previous.adjustment_of?await t.acceptance(projectId,previous.adjustment_of):null; const effectivePrevious=original?v.scaled(original.previous_cumulative):v.scaled(contract.approved_quantity); if (effectivePrevious!==v.scaled(previous.previous_cumulative)) throw v.problem(409,"Lũy kế đã thay đổi. Trả lại phiếu để cập nhật trước khi duyệt."); }
                 const result=await t.transitionAcceptance(projectId,id,actor.id,status,reason); await t.audit(projectId,actor.id,"acceptance",body.action,id,previous,result);
                 if (status==="returned") await notifyReturn(t,projectId,result,"acceptance_returned","acceptance"); return result;
             });
         },
-        async paymentData(projectId,actor) { return { requests:await model.payments(projectId),acceptances:await model.acceptances(projectId),can_edit:PAYMENT_EDIT.includes(actor.role),can_approve:PAYMENT_APPROVE.includes(actor.role),member_role:actor.role }; },
+        async paymentData(projectId,actor) { return tx(projectId,async t=>{
+            const requests=await t.payments(projectId),approved=requests.filter(p=>p.status==='approved');
+            const retention_summary=Object.fromEntries(['gross','retained','net'].map(key=>[key,v.formatted(approved.reduce((sum,p)=>sum+v.scaled(p[key],2),0n))]));
+            return {requests,acceptances:await t.acceptances(projectId),contract_terms:await t.paymentTerms(projectId),retention_summary,can_manage_terms:MANAGE.includes(actor.role),can_edit:PAYMENT_EDIT.includes(actor.role),can_approve:PAYMENT_APPROVE.includes(actor.role),member_role:actor.role};
+        }); },
+        async savePaymentTerms(projectId,actor,body) {
+            requireRole(actor,MANAGE);const rate=v.decimal(body.retention_rate,2,true);if(v.scaled(rate,2)>10000n)throw v.problem(400,'Tỷ lệ tạm giữ từ 0 đến 100%');
+            return tx(projectId,async t=>{const previous=await t.paymentTerms(projectId);v.revision(previous?.revision||0,body.revision);const result=await t.savePaymentTerms(projectId,actor.id,rate);await t.audit(projectId,actor.id,'payments','contract_retention',projectId,previous,result);return result;});
+        },
         async savePayment(projectId,actor,id,body) {
-            requireRole(actor,PAYMENT_EDIT); const values={ period:v.text(body.period,"Kỳ thanh toán"),day:v.date(body.day),retention_rate:v.decimal(body.retention_rate,2,true),acceptance_ids:v.ids(body.acceptance_ids,100) };
+            requireRole(actor,PAYMENT_EDIT); const values={ period:v.text(body.period,"Kỳ thanh toán"),day:v.date(body.day),retention_rate:v.decimal(body.retention_rate??'0',2,true),acceptance_ids:v.ids(body.acceptance_ids,100) };
             if (v.scaled(values.retention_rate,2)>10000n || !values.acceptance_ids.length) throw v.problem(400,"Chọn phiếu nghiệm thu và tỷ lệ tạm giữ từ 0 đến 100%");
-            return tx(projectId,async (t) => { const previous=id ? await t.payment(projectId,v.id(id)) : null; if (id && !previous) throw v.problem(404,"Không tìm thấy đề nghị"); if (previous) { v.revision(previous.revision,body.revision); if (!["draft","returned"].includes(previous.status)) throw v.problem(409,"Đề nghị đã trình/duyệt không thể sửa"); }
+            return tx(projectId,async (t) => { const terms=await t.paymentTerms(projectId); if(terms)values.retention_rate=terms.retention_rate; const previous=id ? await t.payment(projectId,v.id(id)) : null; if (id && !previous) throw v.problem(404,"Không tìm thấy đề nghị"); if (previous) { v.revision(previous.revision,body.revision); if (!["draft","returned"].includes(previous.status)) throw v.problem(409,"Đề nghị đã trình/duyệt không thể sửa"); }
                 if ((await t.paymentSource(projectId,values.acceptance_ids,id)).length!==values.acceptance_ids.length) throw v.problem(409,"Chỉ được dùng phiếu nghiệm thu đã duyệt và chưa thuộc đề nghị khác");
                 const result=await t.savePayment(projectId,actor.id,id,values); await t.audit(projectId,actor.id,"payments",id ? "update" : "create",result.id,previous,{ ...result,acceptance_ids:values.acceptance_ids }); return result; });
         },
@@ -183,14 +208,16 @@ function createSiteManagementService({ model }) {
             const reason=v.text(body.reason,"Lý do trả lại",2000,status!=="returned");
             return tx(projectId,async (t) => { const previous=await t.payment(projectId,v.id(id)); if (!previous) throw v.problem(404,"Không tìm thấy đề nghị"); v.revision(previous.revision,body.revision); if ((status==="submitted" && previous.status!=="draft") || (status!=="submitted" && previous.status!=="submitted")) throw v.problem(409,"Trạng thái đề nghị không phù hợp"); const result=await t.transitionPayment(projectId,id,actor.id,status,reason); await t.audit(projectId,actor.id,"payments",body.action,id,previous,result); if (status==="returned") await notifyReturn(t,projectId,result,"payment_returned","payments"); return result; });
         },
-        async costsData(projectId,actor) { return tx(projectId,async (t) => { const items=await t.items(projectId),budgets=await t.budgets(projectId),costs=await t.costs(projectId),contracts=await t.contracts(projectId); return { items,budgets,costs,comparison:costComparison(items,budgets,costs,contracts),materials:await t.materials(projectId),inventory:await t.inventory(projectId),norms:await t.norms(projectId),reconciliation:await t.reconciliation(projectId),can_edit:[...MANAGE,"accountant"].includes(actor.role) }; }); },
+        async costsData(projectId,actor) { return tx(projectId,async (t) => { const items=await t.items(projectId),budgets=await t.budgets(projectId),costs=await t.costs(projectId),contracts=await t.contracts(projectId); return { items,budgets,costs,comparison:costComparison(items,budgets,costs,contracts),can_manage_budget:MANAGE.includes(actor.role),materials:await t.materials(projectId),inventory:await t.inventory(projectId),norms:await t.norms(projectId),reconciliation:await t.reconciliation(projectId),can_edit:[...MANAGE,"accountant"].includes(actor.role) }; }); },
         async saveBudget(projectId,actor,body) { const values={ work_item_id:v.id(body.work_item_id),amount:v.decimal(body.amount,2,true),notes:v.text(body.notes,"Ghi chú",2000,true) }; return tx(projectId,async (t) => { await item(t,projectId,values.work_item_id,true); const previous=(await t.budgets(projectId)).find((entry) => entry.work_item_id===values.work_item_id); v.revision(previous?.version || 0,body.version); const result=await t.saveBudget(projectId,actor.id,values); await t.audit(projectId,actor.id,"costs","budget_version",result.id,previous,result); return result; }); },
         async saveCost(projectId,actor,body) { return tx(projectId,(t) => saveCost(t,projectId,actor,body)); },
         async importCosts(projectId,actor,body) {
             const batch=v.uuid(body.client_uuid); if (typeof body.csv!=="string" || Buffer.byteLength(body.csv)>1024*1024) throw v.problem(400,"CSV tối đa 1 MB"); let rows;
             try { rows=parse(body.csv,{ columns:true,bom:true,skip_empty_lines:true,trim:true }); } catch { throw v.problem(400,"CSV không hợp lệ"); }
             if (!rows.length || rows.length>1000) throw v.problem(400,"CSV phải có từ 1 đến 1000 dòng");
-            return tx(projectId,async (t) => { const results=[]; for (let index=0;index<rows.length;index++) { const row=rows[index]; const hex=v.hash(`${batch}:${index}`); const uuid=`${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-8${hex.slice(17,20)}-${hex.slice(20,32)}`; try { results.push(await saveCost(t,projectId,actor,{ ...row,work_item_id:row.work_item_id ? Number(row.work_item_id) : null,client_uuid:uuid })); } catch (error) { if (error.expose) error.message=`Dòng ${index+2}: ${error.message}`; throw error; } } return { count:results.length }; });
+            return tx(projectId,async (t) => { const results=[]; for (let index=0;index<rows.length;index++) { const row={...rows[index]};
+                if(row.work_item_id){const source=String(row.work_item_id).trim();const id=Number(source);const found=Number.isInteger(id)&&id>0&&id<=2147483647?await t.item(projectId,id):null;if(!found?.is_leaf){row.work_item_id='';row.notes=`[Chờ phân bổ: mã hạng mục CSV ${source.slice(0,100)}] ${row.notes||''}`;}}
+                const hex=v.hash(`${batch}:${index}`); const uuid=`${hex.slice(0,8)}-${hex.slice(8,12)}-4${hex.slice(13,16)}-8${hex.slice(17,20)}-${hex.slice(20,32)}`; try { results.push(await saveCost(t,projectId,actor,{ ...row,work_item_id:row.work_item_id ? Number(row.work_item_id) : null,client_uuid:uuid })); } catch (error) { if (error.expose) error.message=`Dòng ${index+2}: ${error.message}`; throw error; } } return { count:results.length }; });
         },
         async allocateCost(projectId,actor,id,body) { return tx(projectId,async (t) => { await item(t,projectId,v.id(body.work_item_id),true); const previous=(await t.costs(projectId)).find((entry) => entry.id===v.id(id)); if (!previous) throw v.problem(404,"Không tìm thấy khoản chi"); v.revision(previous.revision,body.revision); const result=await t.allocateCost(projectId,id,body.work_item_id,body.revision); await t.audit(projectId,actor.id,"costs","allocate_cost",id,previous,result); return result; }); },
         async createMaterial(projectId,actor,body) { const values={ name:v.text(body.name,"Tên vật tư"),unit:v.text(body.unit,"Đơn vị",30) }; return tx(projectId,async (t) => { const result=await t.createMaterial(projectId,values); await t.audit(projectId,actor.id,"materials","create",result.id,null,result); return result; }); },
@@ -208,16 +235,16 @@ function createSiteManagementService({ model }) {
         async report(projectId,actor) {
             return tx(projectId,async (t,lock) => {
                 const project=await t.project(projectId),calendar=await t.calendar(projectId),holidays=(await t.holidays(projectId)).map((entry) => entry.day),today=dayNow();
-                const tasks=(await t.tasks(projectId,lock)).map((task) => { const finish_date=workingDate(project.start_date,task.ef-1,calendar.working_days,holidays); const complete=task.planned_quantity && task.reported_quantity>=task.planned_quantity; return { ...task,finish_date,complete,is_late:Boolean(finish_date && finish_date<today && !complete) }; });
+                const actuals=new Map((await t.taskActuals(projectId)).map(x=>[x.id,x]));
+                const tasks=(await t.tasks(projectId,lock)).map((task) => { const finish_date=workingDate(project.start_date,task.ef-1,calendar.working_days,holidays); const complete=Boolean(actuals.get(task.id)?.actual_finish)||Number(actuals.get(task.id)?.progress_percent)===100||Boolean(task.planned_quantity && task.reported_quantity>=task.planned_quantity); return { ...task,finish_date,complete,is_late:Boolean(finish_date && finish_date<today && !complete) }; });
                 const milestones=(await t.milestones(projectId)).map((m) => { const task=tasks.find((entry) => entry.id===m.task_id); return { ...m,complete:Boolean(task?.complete),overdue:!task?.complete && m.due_date<today }; });
                 const members=await t.participants(projectId);
                 for (const m of milestones.filter((entry) => entry.overdue)) for (const user of members.filter((user) => [...MANAGE,"viewer"].includes(user.role))) await t.notify(projectId,user.id,"milestone_overdue",`Mốc đã quá hạn: ${m.title}`,`/reports?projectId=${projectId}`,`milestone:${m.id}`);
                 for (const task of tasks.filter((entry) => entry.isCritical && entry.is_late)) for (const user of members.filter((user) => [...MANAGE,"viewer"].includes(user.role))) await t.notify(projectId,user.id,"critical_overdue",`Công việc găng đang trễ: ${task.name}`,`/field-assignments?projectId=${projectId}&taskId=${task.id}`,`critical:${task.id}:${task.finish_date}`);
                 const dates=tasks.map((task) => task.finish_date).filter(Boolean).sort();
-                const known=tasks.length && tasks.every((task) => task.planned_quantity);
-                const duration=tasks.reduce((sum,task) => sum+task.duration_days,0);
-                const progress=known ? tasks.reduce((sum,task) => sum+Math.min(task.reported_quantity/task.planned_quantity,1)*task.duration_days,0)/duration*100 : null;
-                return { project,tasks,milestones,progress,planned_finish:dates.at(-1) || null,forecast_finish:null,items:await t.items(projectId),contracts:await t.contracts(projectId),acceptances:await t.acceptances(projectId),payments:await t.payments(projectId),costs:await t.costs(projectId),budgets:await t.budgets(projectId),can_manage:MANAGE.includes(actor.role) };
+                const items=await t.items(projectId),contracts=await t.contracts(projectId);
+                const baseline=baselineComparison(await t.originalBaseline(projectId),await t.baselineContext(projectId),dates.at(-1)||null,calendar,holidays);
+                return { project,tasks,milestones,...valueProgress(items,contracts),...baseline,items,contracts,acceptances:await t.acceptances(projectId),payments:await t.payments(projectId),costs:await t.costs(projectId),budgets:await t.budgets(projectId),schedule_milestone_alerts:await t.scheduleMilestoneAlerts(projectId),can_manage:MANAGE.includes(actor.role) };
             });
         }
     };

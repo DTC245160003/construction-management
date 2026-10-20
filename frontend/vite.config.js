@@ -52,12 +52,17 @@ const developmentServiceWorkerCleanup = {
   }
 }
 
+let journalBuildDirectory;
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [developmentServiceWorkerCleanup, react(), {
     name: 'version-journal-service-worker', apply: 'build',
+    configResolved(config) {
+      journalBuildDirectory=path.resolve(config.root,config.build.outDir);
+    },
     closeBundle() {
-      const directory=path.resolve('dist');
+      const directory=journalBuildDirectory;
       const digest=createHash('sha256');
       for (const file of ['index.html','journal-sw.js','journal-queue.js','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png']) digest.update(fs.readFileSync(path.join(directory,file)));
       const version=digest.digest('hex').slice(0,16);

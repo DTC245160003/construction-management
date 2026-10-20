@@ -10,6 +10,43 @@ async function login(page, role = "admin") {
 }
 async function fixture(page) { return (await page.request.get("http://127.0.0.1:3031/__fixture")).json(); }
 
+test("logout: real mobile login, session invalidation, queued photo preservation and next-account RBAC", async ({ page, context }) => {
+  const { projectId, workItemId } = await fixture(page);
+  await page.setViewportSize({ width:411, height:808 });
+  const uiLogin=async role => {
+    await page.goto("/login"); await page.locator("#xds-identifier").fill(`${role}@e2e.test`); await page.locator("#xds-password").fill("Operations-only-E2E-123!");
+    await page.getByRole("button",{ name:"Đăng nhập",exact:true }).click(); await expect(page).toHaveURL(/\/home$/);
+  };
+  await uiLogin("engineer");
+  const engineer=(await (await page.request.get("/auth/me")).json()).user;
+  await page.goto(`/home?projectId=${projectId}`);
+  await page.getByRole("button",{ name:"Mở menu",exact:true }).click();
+  await expect(page.getByRole("navigation").getByRole("link",{ name:"Nhật ký công trường",exact:true })).toBeVisible();
+  await expect(page.getByRole("navigation").getByRole("link",{ name:"Thanh toán",exact:true })).toHaveCount(0);
+  await page.evaluate(async ({ userId, projectId, workItemId }) => {
+    await globalThis.XdsJournalQueue.save({ key:"real-logout-draft",userId,projectId,createdAt:1,body:{ work_item_id:workItemId,client_uuid:crypto.randomUUID(),content:"Desktop-isolated logout draft" },photos:[{ clientUuid:crypto.randomUUID(),file:new File([new Uint8Array([3,7,128,255])],"retained.jpg",{type:"image/jpeg"}) }] });
+  },{ userId:engineer.id,projectId,workItemId });
+  const retained=()=>page.evaluate(async()=>({ journals:await globalThis.XdsJournalQueue.all("queue"),photos:await Promise.all((await globalThis.XdsJournalQueue.all("photos")).map(async p=>({ key:p.key,userId:p.userId,bytes:[...new Uint8Array(await p.file.arrayBuffer())] }))) }));
+  const before=await retained(),cookie=(await context.cookies()).find(c=>c.name==="construction.sid"); expect(cookie).toBeTruthy();
+  await page.screenshot({ path:test.info().outputPath("logout-samsung-viewport.png") });
+  page.once("dialog",dialog=>dialog.accept()); await page.getByRole("button",{ name:"Đăng xuất",exact:true }).click(); await expect(page).toHaveURL(/\/login$/);
+  expect((await page.request.get("/auth/me")).status()).toBe(401);
+  expect((await page.request.get("/auth/me",{ headers:{ Cookie:`${cookie.name}=${cookie.value}` } })).status()).toBe(401);
+  expect(await retained()).toEqual(before);
+  await page.goBack();
+  await expect(page.getByText(engineer.fullname,{ exact:true })).toHaveCount(0);
+  await expect(page.getByRole("navigation").getByRole("link",{ name:"Nhật ký công trường",exact:true })).toHaveCount(0);
+  expect((await page.request.get("/auth/me")).status()).toBe(401);
+  await page.goto("/login"); await page.reload(); expect(await retained()).toEqual(before);
+  await uiLogin("worker"); const worker=(await (await page.request.get("/auth/me")).json()).user; expect(worker.id).not.toBe(engineer.id);
+  await page.goto(`/home?projectId=${projectId}`); await page.getByRole("button",{ name:"Mở menu",exact:true }).click();
+  await expect(page.getByRole("navigation").getByRole("link",{ name:"Giao việc hiện trường",exact:true })).toBeVisible();
+  await expect(page.getByRole("navigation").getByRole("link",{ name:"Nhật ký công trường",exact:true })).toHaveCount(0);
+  expect((await page.request.post(`/projects/${projectId}/journals`,{ data:{} })).status()).toBe(403);
+  expect((await page.request.get("/admin/users")).status()).toBe(403);
+  expect(await retained()).toEqual(before);
+});
+
 test("real project creation, persistence, calendar editing and project navigation", async ({ page }) => {
   const createdName = `Công trình kiểm thử mới ${Date.now()}`;
   const errors = []; page.on("pageerror", (error) => errors.push(error.message));
@@ -155,6 +192,9 @@ test("all sidebar routes render and selected project survives navigation; mobile
 
   const errors = []; page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`/projects?projectId=${projectId}`);
+  // Membership/account fetches finish after the shell's two public links.
+  // Wait for the same full menu contract before taking a synchronous snapshot.
+  await expect(page.getByRole('navigation').getByRole('link')).toHaveCount(17);
   const links = await page.getByRole("navigation").getByRole("link").evaluateAll((elements) => elements.map((element) => ({ href: element.getAttribute("href"), name: element.textContent })));
   expect(links).toHaveLength(17);
   expect(links.some(link=>link.href==="/system-admin")).toBe(true);

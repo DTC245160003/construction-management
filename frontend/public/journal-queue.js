@@ -24,11 +24,42 @@
     if (typeof window!=="undefined") window.dispatchEvent(new Event("xds-queue-changed"));
     else if (globalThis.clients) for (const c of await globalThis.clients.matchAll()) c.postMessage({ type:"XDS_QUEUE_CHANGED" });
   }
-  async function identity(uid) {
-    await transaction(["cache","control"],"readwrite",(t) => {
-      if (uid==null) { t.objectStore("cache").delete("last-user"); t.objectStore("control").delete("identity"); }
-      else { t.objectStore("cache").put({ key:"last-user",value:Number(uid) }); t.objectStore("control").put({ key:"identity",userId:Number(uid),generation:crypto.randomUUID() }); }
+  async function beginLogout() {
+    const token=crypto.randomUUID();
+    await transaction("control","readwrite",(t) => {
+      const s=t.objectStore("control"),r=s.get("logout");
+      r.onsuccess=() => s.put({ ...r.result,key:"logout",tokens:[...(r.result?.tokens || []),token] });
+    });
+    await changed(); return token;
+  }
+  async function cancelLogout(token) {
+    await transaction("control","readwrite",(t) => {
+      const s=t.objectStore("control"),r=s.get("logout");
+      r.onsuccess=() => {
+        if (!r.result?.tokens?.includes(token)) return;
+        const tokens=r.result.tokens.filter((value) => value!==token);
+        if (tokens.length || r.result.completed) s.put({ ...r.result,tokens }); else s.delete("logout");
+      };
     }); await changed();
+  }
+  async function identity(uid,options={}) {
+    let accepted=false;
+    await transaction(["cache","control"],"readwrite",(t) => {
+      const s=t.objectStore("control"),current=s.get("identity"),guard=s.get("logout");
+      guard.onsuccess=() => {
+        if (("expectedGeneration" in options) && (guard.result || current.result?.generation!==options.expectedGeneration)) return;
+        if (options.logoutToken && !guard.result?.tokens?.includes(options.logoutToken)) return;
+        accepted=true;
+        if (uid==null) {
+          t.objectStore("cache").delete("last-user"); s.delete("identity");
+          if (options.logout!==false) s.put({ key:"logout",completed:true,token:crypto.randomUUID() });
+        } else {
+          t.objectStore("cache").put({ key:"last-user",value:Number(uid) });
+          accepted={ key:"identity",userId:Number(uid),generation:crypto.randomUUID() };
+          s.put(accepted); s.delete("logout");
+        }
+      };
+    }); if (accepted) await changed(); return accepted;
   }
   async function save(entry) {
     const photos=entry.photos || [],body={ ...entry.body,photo_ids:[...new Set([...(entry.body.photo_ids || []),...photos.filter((p) => p.photoId).map((p) => p.photoId)])],operation_uuid:entry.body.operation_uuid || crypto.randomUUID(),pending_photos:photos.filter((p) => !p.photoId).map((p) => ({ client_uuid:p.clientUuid,filename:p.file.name || p.filename })) };
@@ -43,8 +74,9 @@
   }
   async function pending(pid,uid) {
     const [entries,photos]=await Promise.all([all("queue"),all("photos")]);
-    return entries.filter((e) => belongs(e,pid,uid)).sort((a,b) => a.createdAt-b.createdAt || a.key.localeCompare(b.key)).map((e) => ({ ...e,photos:e.photos?.length ? e.photos : photos.filter((p) => p.journalKey===e.key) }));
+    return pendingRows(entries,photos,pid,uid);
   }
+  const pendingRows=(entries,photos,pid,uid) => entries.filter((e) => belongs(e,pid,uid)).sort((a,b) => a.createdAt-b.createdAt || a.key.localeCompare(b.key)).map((e) => ({ ...e,photos:e.photos?.length ? e.photos : photos.filter((p) => p.journalKey===e.key) }));
   async function remove(key) {
     await transaction(["queue","photos"],"readwrite",(t) => {
       t.objectStore("queue").delete(key); const s=t.objectStore("photos"),r=s.getAll(); r.onsuccess=() => { for (const p of r.result) if (p.journalKey===key && !p.serverId) s.delete(p.key); };
@@ -52,6 +84,13 @@
   }
   async function status(pid,uid) {
     const [journals,photos,last,lease]=await Promise.all([all("queue"),all("photos"),get("control",`success:${uid}:${pid}`),get("control","sync-lease")]);
+    return queueState(journals,photos,last,lease,pid,uid);
+  }
+  async function snapshot(pid,uid) {
+    const [journals,photos,last,lease]=await Promise.all([all("queue"),all("photos"),get("control",`success:${uid}:${pid}`),get("control","sync-lease")]);
+    return {pending:pendingRows(journals,photos,pid,uid),status:queueState(journals,photos,last,lease,pid,uid)};
+  }
+  function queueState(journals,photos,last,lease,pid,uid) {
     const entries=journals.filter((e) => belongs(e,pid,uid)),images=photos.filter((e) => belongs(e,pid,uid) && e.status!=="archived"),archives=photos.filter((e) => belongs(e,pid,uid) && e.status==="archived");
     const errors=[...entries,...images].filter((e) => e.error).map((e) => ({ key:e.key,kind:e.file ? "photo" : "journal",message:e.error,status:e.status,conflict:e.conflict }));
     const syncing=lease?.expires>Date.now() && lease.userId===Number(uid);
@@ -81,12 +120,13 @@
   }
   const eligible=(e) => !["error","conflict","archived"].includes(e.status) && (e.attempts || 0)<5 && (e.nextAttemptAt || 0)<=Date.now();
   async function sync(pid,uid) {
-    const who=await get("control","identity"); if (!who || who.userId!==Number(uid)) return { saved:0 };
+    const who=await get("control","identity"); if (!who || who.userId!==Number(uid) || await get("control","logout")) return { saved:0 };
     const jobs=[...await all("queue"),...await all("photos")].filter((e) => belongs(e,pid,uid));
     if (!jobs.some(eligible)) return { saved:0,retryable:jobs.some((e) => e.status==="retry" && (e.attempts || 0)<5) };
     const owner=await lease(Number(uid)); if (!owner) return { saved:0 };
     let saved=0;
-    const active=async () => { const c=await get("control","identity"); if (c?.generation!==who.generation) return false; return (await request("/auth/me")).user.id===Number(uid); };
+    const current=async () => !(await get("control","logout")) && (await get("control","identity"))?.generation===who.generation;
+    const active=async () => await current() && (await request("/auth/me")).user.id===Number(uid) && await current();
     try {
       if (!await active()) return { saved };
       for (const old of await pending(pid,uid)) if (old.photos?.length && !old.body.pending_photos) await save(old);
@@ -98,20 +138,20 @@
           try {
             const response=await request(`/projects/${pid}/journals/sync`,{ expected_user_id:Number(uid),entries:[entry.body] }),result=response.results[0];
             if (!result.ok) throw Object.assign(new Error(result.message || "Xung đột phiên bản: mở so sánh để chọn bản giữ"),{ status:result.status,conflict:result.conflict });
-            if ((await get("control","identity"))?.generation!==who.generation) break;
+            if (!await current()) break;
             await transaction(["queue","photos"],"readwrite",(t) => {
               const queue=t.objectStore("queue"),check=queue.get(entry.key); check.onsuccess=() => { if (check.result?.body.operation_uuid===entry.body.operation_uuid) queue.delete(entry.key); };
               const photos=t.objectStore("photos"),r=photos.getAll(); r.onsuccess=() => { for (const p of r.result) if (p.journalKey===entry.key) photos.put({ ...p,serverId:result.journal.id }); };
             }); saved++; await changed();
-          } catch(e) { await failed("queue",entry,e); if (e.status===401 || !e.status) break; }
+          } catch(e) { if (!await current()) break; await failed("queue",entry,e); if (e.status===401 || !e.status) break; }
           continue;
         }
         const photo=(await all("photos")).filter((e) => belongs(e,pid,uid) && e.serverId && eligible(e)).sort((a,b) => a.createdAt-b.createdAt || a.key.localeCompare(b.key))[0]; if (!photo) break;
         try {
           await request(`/projects/${pid}/photos`,{ expected_user_id:Number(uid),journal_id:photo.serverId,work_item_id:photo.workItemId,client_uuid:photo.clientUuid,filename:photo.file.name || photo.filename,data:await base64(photo.file),...(photo.display ? { display_data:await base64(photo.display) } : {}),...(photo.checksum ? { checksum:photo.checksum } : {}) });
-          if ((await get("control","identity"))?.generation!==who.generation) break;
+          if (!await current()) break;
           await transaction("photos","readwrite",(t) => t.objectStore("photos").delete(photo.key)); await changed();
-        } catch(e) { await failed("photos",photo,e); if (e.status===401 || !e.status) break; }
+        } catch(e) { if (!await current()) break; await failed("photos",photo,e); if (e.status===401 || !e.status) break; }
       }
       const remaining=await status(pid,uid); if (!remaining.journals && !remaining.photos) await put("control",{ key:`success:${uid}:${pid}`,at:Date.now() });
       return { saved,retryable:[...await all("queue"),...await all("photos")].some((e) => belongs(e,pid,uid) && e.status==="retry") };
@@ -126,5 +166,5 @@
     if (entry) { const left=await status(entry.projectId,entry.userId); if (!left.journals && !left.photos) await put("control",{ key:`success:${entry.userId}:${entry.projectId}`,at:Date.now() }); }
     await changed();
   }
-  globalThis.XdsJournalQueue={ get,all,put,save,pending,remove,status,retry,sync,identity,changed,resolveLocal };
+  globalThis.XdsJournalQueue={ get,all,put,save,pending,remove,status,snapshot,retry,sync,identity,beginLogout,cancelLogout,changed,resolveLocal };
 })();

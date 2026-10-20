@@ -1,6 +1,8 @@
 const path = require("node:path");
 const os = require("node:os");
 const { Pool } = require("pg");
+const {createDatabaseConfig}=require('../src/config/databaseConfig');
+const {targetDatabase}=require('../src/config/databaseTarget');
 
 function bootstrapConfig(env,args) {
     const value=name => args.find(a => a.startsWith(`--${name}=`))?.slice(name.length+3);
@@ -10,7 +12,7 @@ function bootstrapConfig(env,args) {
     if (!["grant","revoke"].includes(action)) throw new Error("Action must be grant or revoke");
     const confirmation=`${action.toUpperCase()}_SUPER_ADMIN:${database}:${email}`;
     return { email,action,confirmation,confirmed:value("confirm")===confirmation,dryRun:args.includes("--dry-run"),
-        connection:{ host:env.DB_HOST,port:env.DB_PORT,user:env.DB_USER,password:env.DB_PASSWORD,database } };
+        connection:env.DATABASE_URL?targetDatabase(createDatabaseConfig(env),database):{ host:env.DB_HOST,port:env.DB_PORT,user:env.DB_USER,password:env.DB_PASSWORD,database } };
 }
 
 async function bootstrapAdmin(pool,{ email,action,confirmed,database,operator="server_cli" }) {
@@ -46,7 +48,8 @@ async function main() {
         if (actual.name!==config.connection.database) throw new Error("Target database mismatch");
         const account=(await pool.query("SELECT id,system_role,is_active FROM users WHERE lower(email)=$1",[config.email])).rows[0];
         if (!account) throw new Error("Account must already exist; register it first. No account or password was created");
-        console.log(`Target: ${actual.name} at ${config.connection.host || "localhost"}:${config.connection.port || "5432"}; database operator: ${actual.database_user}`);
+        const url=config.connection.connectionString?new URL(config.connection.connectionString):null;
+        console.log(`Target: ${actual.name} at ${url?.hostname || config.connection.host || "localhost"}:${url?.port || config.connection.port || "5432"}; database operator: ${actual.database_user}`);
         console.log(`Action: ${config.action} Super Admin for ${config.email}; current system role: ${account.system_role}`);
         if (config.dryRun) { console.log(`Read-only preview. Required confirmation: ${config.confirmation}`); return; }
         if (!config.confirmed && process.stdin.isTTY && process.stdout.isTTY) {
