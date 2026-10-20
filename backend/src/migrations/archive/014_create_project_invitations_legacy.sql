@@ -18,3 +18,4 @@ CREATE TABLE project_invitations (
 CREATE UNIQUE INDEX project_invitations_pending_email_idx
     ON project_invitations(project_id, lower(email)) WHERE status = 'pending';
 CREATE INDEX project_invitations_email_idx ON project_invitations(lower(email), status);
+
